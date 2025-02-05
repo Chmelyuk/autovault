@@ -1,6 +1,7 @@
 // CarDetails.js
 import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient"; // Подключаем настроенный клиент
+import './CarDetails.css'
 import logo_car from '../logo_car.png'
 
 
