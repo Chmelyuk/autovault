@@ -1,0 +1,343 @@
+/* Общие стили */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #121212;
+    /* темный фон */
+    color: #e0e0e0;
+    /* светлый текст */
+    height: 100vh;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Навигационная панель */
+.header {
+    background-color: #1f1f1f;
+    color: #fff;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h1 {
+    font-size: 1.5rem;
+}
+
+.header button {
+    background-color: #6200ea;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.header button:hover {
+    background-color: #3700b3;
+}
+
+/* Главный контейнер Dashboard */
+.dashboard {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Карточки с деталями машины */
+.car-details,
+.repair-history,
+.maintenance-history {
+    background-color: #2c2c2c;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+h2,
+h3 {
+    margin-bottom: 15px;
+}
+
+/* Кнопки для добавления ремонта и ТО */
+.add-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.add-buttons button {
+    background-color: #03dac6;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.add-buttons button:hover {
+    background-color: #018786;
+}
+
+/* Список ремонтов и обслуживания */
+ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+ul li {
+    background-color: #3a3a3a;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+ul li button {
+    background-color: #ff5722;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+ul li button:hover {
+    background-color: #e64a19;
+}
+
+/* Модальные окна */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.modal-content {
+    background-color: #2c2c2c;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.modal-content h3 {
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+}
+
+.modal-content input,
+.modal-content textarea,
+.modal-content select {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 1px solid #333;
+    background-color: #1f1f1f;
+    color: #e0e0e0;
+}
+
+.modal-content button {
+    background-color: #6200ea;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+    margin-right: 10px;
+
+    
+}
+
+.modal-content button:hover {
+    background-color: #3700b3;
+}
+
+.modal-content button.cancel {
+    background-color: #ff5722;
+}
+
+.modal-content button.cancel:hover {
+    background-color: #e64a19;
+}
+
+/* Обертка для кнопок */
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    /* Размещает кнопки справа */
+    gap: 10px;
+    /* Расстояние между кнопками */
+}
+
+.button-container button {
+    background-color: #6200ea;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.button-container button:hover {
+    background-color: #3700b3;
+}
+
+.button-container button:last-child {
+    background-color: #ff5722;
+}
+
+.button-container button:last-child:hover {
+    background-color: #e64a19;
+}
+
+/* Контейнер для кнопок добавления */
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    /* Расстояние между кнопками */
+    margin-top: 20px;
+}
+
+/* Стили для кнопок */
+.add-button {
+    background-color: #4CAF50;
+    /* Зеленый цвет для кнопки */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Эффект наведения */
+.add-button:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+    /* Легкий подъем кнопки */
+}
+
+/* Эффект при клике */
+.add-button:active {
+    background-color: #388e3c;
+    transform: translateY(1px);
+    /* Легкое опускание кнопки */
+}
+.car-details {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background-color: #f8f8f8;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.car-details img {
+    width: 150px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.car-details .info {
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+.car-details h3 {
+    margin-bottom: 10px;
+    font-size: 24px;
+    color: #333;
+}
+
+.car-details p {
+    margin: 5px 0;
+    font-size: 16px;
+}
+
+.car-details .turbo {
+    font-weight: bold;
+    color: #ff6347;
+    /* Tomato color for Turbocharged */
+}
+
+.car-details .info p {
+    margin-left: 10px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    /* Меньше расстояния между чекбоксом и текстом */
+}
+
+.checkbox-label input {
+    margin-right: 4px;
+    /* Уменьшаем отступ */
+    transform: scale(1);
+    /* Возвращаем чекбокс к нормальному размеру */
+}
+
+.checkbox-label span {
+   margin-left: -200px;
+    /* Дополнительно выравниваем текст */
+}
+
+.checkbox-label {
+    font-size: 16px;
+    /* Устанавливаем размер шрифта */
+}
+
+@media (max-width: 480px) {
+    .checkbox-label span {
+            margin-left: -150px;
+            /* Дополнительно выравниваем текст */
+        }
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Расстояние между чекбоксом и текстом */
+}
+
+.checkbox-container input[type="checkbox"] {
+    margin: 0;
+    transform: scale(1.2);
+    /* Опционально: увеличьте чекбокс */
+}
