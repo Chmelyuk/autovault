@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/Chmelyuk/autovault.git/static/css/main.9e11a0ad.css",
-    "main.js": "/Chmelyuk/autovault.git/static/js/main.59b89fa3.js",
-    "static/js/952.83142e4a.chunk.js": "/Chmelyuk/autovault.git/static/js/952.83142e4a.chunk.js",
-    "index.html": "/Chmelyuk/autovault.git/index.html",
-    "main.9e11a0ad.css.map": "/Chmelyuk/autovault.git/static/css/main.9e11a0ad.css.map",
-    "main.59b89fa3.js.map": "/Chmelyuk/autovault.git/static/js/main.59b89fa3.js.map",
-    "952.83142e4a.chunk.js.map": "/Chmelyuk/autovault.git/static/js/952.83142e4a.chunk.js.map"
+    "main.css": "/autovault/static/css/main.9e11a0ad.css",
+    "main.js": "/autovault/static/js/main.3aee01e7.js",
+    "static/js/952.83142e4a.chunk.js": "/autovault/static/js/952.83142e4a.chunk.js",
+    "index.html": "/autovault/index.html",
+    "main.9e11a0ad.css.map": "/autovault/static/css/main.9e11a0ad.css.map",
+    "main.3aee01e7.js.map": "/autovault/static/js/main.3aee01e7.js.map",
+    "952.83142e4a.chunk.js.map": "/autovault/static/js/952.83142e4a.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.9e11a0ad.css",
-    "static/js/main.59b89fa3.js"
+    "static/js/main.3aee01e7.js"
   ]
 }
