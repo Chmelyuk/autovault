@@ -8,6 +8,7 @@ body {
   background-color: #121212;
     color: white;
     font-family: 'Arial', sans-serif;
+    min-width: 100%;
 }
 
 code {

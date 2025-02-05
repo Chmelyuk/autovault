@@ -10,7 +10,7 @@
 }
 
 .car-details img {
-    width: 150px;
+    width: 200px;
     height: auto;
     margin-right: 20px;
     border-radius: 10px;
@@ -22,7 +22,7 @@
 }
 
 .car-text{
-    color: #d8d3d3 !important;
+    color: #706e6e !important;
 }
 
 .car-details h3 {

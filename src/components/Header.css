@@ -74,7 +74,28 @@ header {
     background-color: #6200ea;
     color: white;
 }
+/* Стили для кастомной кнопки загрузки файла */
+.custom-file-upload {
+    background-color: transparent;
+    color: #e0e0e0;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    text-align: center;
+}
 
+.custom-file-upload:hover {
+    background-color: #6200ea;
+    color: white;
+}
+
+/* Скрываем стандартный input[type="file"] */
+.file-input {
+    display: none;
+}
 /* Анимация для выпадающего меню */
 @keyframes fadeIn {
     0% {

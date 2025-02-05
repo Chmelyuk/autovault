@@ -6,6 +6,7 @@ import CarTracker from "./CarTracker";
 
 
 export default function Dashboard({ user, supabase, handleLogout }) {
+    const [cars, setCars] = useState([]);
 const [repairSubcategory, setRepairSubcategory] = useState(""); // 🔹 Для подкатегории
 const [customCategory, setCustomCategory] = useState(""); // 🔹 Для "Другое"
 const [repairMileage, setRepairMileage] = useState(""); // 🔹 Для пробега
@@ -30,8 +31,34 @@ const [editRepair, setEditRepair] = useState(null);
     tireRotation: false,
     coolantFlush: false,
   });
+  
+  const fetchCars = async () => {  // 🆕 Теперь fetchCars доступна в компоненте
+    if (!user) return;
+
+    const { data, error } = await supabase
+        .from("cars")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+    console.log("📡 Загруженные машины:", data);
+
+    if (error) {
+        console.error("❌ Ошибка при загрузке машин:", error.message);
+    } else {
+        setCars(data);
+        setCar(data.length > 0 ? data[0] : null);
+    }
+};
+
+useEffect(() => {
+    fetchCars(); // ✅ Теперь fetchCars вызывается правильно
+}, [user]);
+
   const updateCar = async () => {
     if (!editCar || !editCar.id) return;
+
+    console.log("🔄 Отправляем обновленные данные:", editCar);
 
     const { data, error } = await supabase
       .from("cars")
@@ -51,27 +78,42 @@ const [editRepair, setEditRepair] = useState(null);
       .single();
 
     if (error) {
-      console.error("Error updating car details:", error.message);
+      console.error("❌ Ошибка при обновлении машины:", error.message);
     } else {
-      setCar(data); // Обновляем машину в состоянии
+      console.log("✅ Успешное обновление машины:", data);
+      setCar(data); // Обновляем состояние
       closeEditModal();
     }
-  };
-  useEffect(() => {
+};
+
+useEffect(() => {
     const fetchCarDetails = async () => {
-      if (!user) return;
-      const { data, error } = await supabase.from("cars").select("*").eq("user_id", user.id).single();
-      if (error) {
-        console.error("Fetch error:", error.message);
-      } else {
-        setCar(data);
-        fetchRepairs(data.id);
-        fetchMaintenance(data.id);
-      }
+        if (!user) return;
+        const { data, error } = await supabase
+            .from("cars")
+            .select("*")
+            .eq("user_id", user.id)
+            .maybeSingle(); // 👈 Добавил `maybeSingle()`, чтобы не было ошибки при пустом ответе
+
+        if (error) {
+            console.error("Fetch error:", error.message);
+        } else if (data) {
+            setCar(data);
+        }
     };
 
     fetchCarDetails();
-  }, [user, supabase]);
+}, [user]);
+
+// 🔹 Загружаем ремонты только после загрузки машины
+useEffect(() => {
+    if (car?.id) {
+        fetchRepairs(car.id);
+        fetchMaintenance(car.id);
+    }
+}, [car]);
+
+
 const openEditMaintenanceModal = (maintenanceRecord) => {
   setEditMaintenance({ ...maintenanceRecord });
   setIsEditMaintenanceModalOpen(true);
@@ -103,10 +145,24 @@ const updateMaintenance = async () => {
 
   // Получение списка ремонтов
   const fetchRepairs = async (carId) => {
-    const { data, error } = await supabase.from("repairs").select("*").eq("car_id", carId);
-    if (error) console.error("Error fetching repairs:", error.message);
-    else setRepairs(data);
-  };
+    console.log("📡 Загружаем ремонты для car_id:", carId, "и user_id:", user.id);
+
+    const { data, error } = await supabase
+        .from("repairs")
+        .select("*")
+        .eq("car_id", carId)
+        .eq("user_id", user.id); // 👈 Фильтр по `user_id`
+
+    if (error) {
+        console.error("❌ Ошибка при загрузке ремонтов:", error.message);
+    } else {
+        console.log("✅ Полученные ремонты:", data);
+        setRepairs(data);
+    }
+};
+useEffect(() => {
+    console.log("🔹 Текущий user.id:", user?.id);
+}, [user]);
 
   // Получение истории ТО
   const fetchMaintenance = async (carId) => {
@@ -182,7 +238,7 @@ const deleteRepair = async (repairId) => {
         }
 
         console.log("✅ Ремонт добавлен:", data);
-        setRepairs([...repairs, ...data]);
+        setRepairs(prev => [...prev, ...data]); // ✅ Теперь состояние обновляется правильно
         setIsRepairModalOpen(false);
         setRepairCategory("");
         setRepairSubcategory("");
@@ -197,6 +253,7 @@ const deleteRepair = async (repairId) => {
         console.error("❌ Ошибка при добавлении ремонта:", err);
     }
 };
+
 
 {updateStatus && <div className="update-status">{updateStatus}</div>}
   // Добавление планового ТО
@@ -377,11 +434,7 @@ const calculateOilChangeMileage = (car, maintenanceRecords) => {
   const lastMileage = lastOilChange.oil_change_mileage;
   const nextChangeAt = lastMileage + interval;
   const remainingMileage = nextChangeAt - car.mileage;
-
-  console.log(`Текущий пробег: ${car.mileage}`);
-  console.log(`Пробег последней замены масла: ${lastMileage}`);
-  console.log(`Следующая замена на: ${nextChangeAt}`);
-  console.log(`Осталось до замены: ${remainingMileage}`);
+ 
 
   return remainingMileage <= 0
     ? "🔴 Требуется замена!"
@@ -398,6 +451,29 @@ const shouldChangeOil = (currentMileage, lastOilChangeMileage, lastOilChangeDate
 
     return mileageExceeded || timeExceeded;
 };
+
+useEffect(() => {
+    if (car?.id) {
+        fetchRepairs(car.id);
+        fetchMaintenance(car.id);
+    }
+}, [car]);
+
+useEffect(() => {
+    if (car?.id) {
+        console.log("📡 Загружаем данные для машины:", car.id);
+
+        fetchRepairs(car.id);
+        fetchMaintenance(car.id);
+    }
+}, [car]);
+
+useEffect(() => {
+    if (car?.id) {
+        fetchRepairs(car.id); // Загружаем ремонты для выбранного автомобиля
+        fetchMaintenance(car.id); // Также обновляем данные о ТО, если это необходимо
+    }
+}, [car]);
   return (
     <>
     
@@ -485,12 +561,31 @@ const shouldChangeOil = (currentMileage, lastOilChangeMileage, lastOilChangeDate
             </form>
           </div>
         </div>
-      )}
-     <Header handleLogout={handleLogout} user={user} openEditModal={openEditModal} />
-      <div className="dashboard">
-        <h2>Welcome</h2>
-        <CarDetails user={user} supabase={supabase} car={car} setCar={setCar} />
+      )} 
 
+     <Header fetchCars={fetchCars} fetchRepairs={fetchRepairs}
+       handleLogout={handleLogout} user={user} openEditModal={openEditModal} />
+     
+      <div className="dashboard">
+       <div className="car-selector-wrapper">
+    <select 
+        className="car-selector" 
+        value={car?.id} 
+        onChange={(e) => setCar(cars.find(c => c.id === e.target.value))}
+    >
+        {cars.map(c => (
+            <option key={c.id} value={c.id}>
+                {c.brand} {c.model} ({c.year})
+            </option>
+        ))}
+    </select>
+</div>
+              <CarDetails user={user} supabase={supabase} car={car} setCar={setCar} />
+        {car && maintenanceRecords.length > 0 ? (
+  <p><strong>Замена масла:</strong> {calculateOilChangeMileage(car, maintenanceRecords)}</p>
+) : (
+  <p>⏳ Загружаем данные...</p>
+)}
         {/* Кнопки для добавления ремонтов и ТО */}
         <div className="action-buttons">
     <button className="add-button" onClick={() => setIsRepairModalOpen(true)}>Add Repair</button>
@@ -500,17 +595,13 @@ const shouldChangeOil = (currentMileage, lastOilChangeMileage, lastOilChangeDate
         {/* Отображение списка ремонтов */}
         <h3>Repair History</h3>
         <CarTracker user={user} car={car} supabase={supabase} setCar={setCar} />
-       {car && maintenanceRecords.length > 0 ? (
-  <p><strong>Замена масла:</strong> {calculateOilChangeMileage(car, maintenanceRecords)}</p>
-) : (
-  <p>⏳ Загружаем данные...</p>
-)}
-       <ul>
+       
+   <div className='repair-history'>    <ul>
   {repairs.length > 0 ? (
     repairs.map((repair) => (
       <li key={repair.id}>
         <strong>{repair.category}</strong> 
-        {repair.subcategory && ` / ${repair.subcategory}`} 
+        {repair.subcategory && ` Subcategory: ${repair.subcategory}`} 
         <p>{repair.description}</p>
         {repair.mileage && <p>🛠 Пробег на момент ремонта: {repair.mileage} км</p>}
 
@@ -526,12 +617,12 @@ const shouldChangeOil = (currentMileage, lastOilChangeMileage, lastOilChangeDate
   ) : (
     <p>Нет данных о ремонтах.</p>
   )}
-</ul>
+</ul></div>
 
         {/* Отображение истории ТО */}
        
-
-<ul>
+<div className="repair-history">
+<ul >
   {maintenanceRecords.map((record) => (
     <li key={record.id}>
       {new Date(record.date).toLocaleDateString()}<br/> 
@@ -551,7 +642,7 @@ const shouldChangeOil = (currentMileage, lastOilChangeMileage, lastOilChangeDate
       </div>
     </li>
   ))}
-</ul>
+</ul></div>
       </div>
 
       {/* Модальное окно для ремонта */}
@@ -778,7 +869,7 @@ const shouldChangeOil = (currentMileage, lastOilChangeMileage, lastOilChangeDate
       </form>
     </div>
   </div>
-)}
+)} 
 {isEditRepairModalOpen && (
   <div className="modal">
     <div className="modal-content">
