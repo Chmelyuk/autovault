@@ -1,16 +1,16 @@
 {
   "files": {
-    "main.css": "/autovault/static/css/main.5cc815e8.css",
-    "main.js": "/autovault/static/js/main.fd5f5924.js",
+    "main.css": "/autovault/static/css/main.c3f15d49.css",
+    "main.js": "/autovault/static/js/main.55c38734.js",
     "static/js/952.83142e4a.chunk.js": "/autovault/static/js/952.83142e4a.chunk.js",
     "static/media/logo_car.png": "/autovault/static/media/logo_car.0514d9d6fd9a505de255.png",
     "index.html": "/autovault/index.html",
-    "main.5cc815e8.css.map": "/autovault/static/css/main.5cc815e8.css.map",
-    "main.fd5f5924.js.map": "/autovault/static/js/main.fd5f5924.js.map",
+    "main.c3f15d49.css.map": "/autovault/static/css/main.c3f15d49.css.map",
+    "main.55c38734.js.map": "/autovault/static/js/main.55c38734.js.map",
     "952.83142e4a.chunk.js.map": "/autovault/static/js/952.83142e4a.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.5cc815e8.css",
-    "static/js/main.fd5f5924.js"
+    "static/css/main.c3f15d49.css",
+    "static/js/main.55c38734.js"
   ]
 }
