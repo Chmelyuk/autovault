@@ -147,21 +147,17 @@ const deleteRepair = async (repairId) => {
 };
 
   // Добавление ремонта
-  const addRepair = async () => {
+ const addRepair = async () => {
     if (!car) {
         console.error("Ошибка: Машина не выбрана!");
         return;
     }
 
-    // Определяем финальную категорию и подкатегорию
-    const finalCategory = repairCategory === "Other" ? customCategory : repairCategory;
-    const finalSubcategory = repairSubcategory === "Other" ? customCategory : repairSubcategory;
-
     console.log("Добавляем ремонт:", {
         user_id: user.id,
         car_id: car.id,
-        category: finalCategory,
-        subcategory: finalSubcategory,
+        category: repairCategory,
+        subcategory: repairSubcategory,
         description: repairDescription,
         mileage: parseInt(repairMileage, 10),
         date: new Date().toISOString(),
@@ -172,8 +168,8 @@ const deleteRepair = async (repairId) => {
             {
                 user_id: user.id,
                 car_id: car.id,
-                category: finalCategory,
-                subcategory: finalSubcategory || null,
+                category: repairCategory,
+                subcategory: repairSubcategory || null,
                 description: repairDescription,
                 mileage: parseInt(repairMileage, 10) || null,
                 date: new Date().toISOString(),
@@ -185,22 +181,23 @@ const deleteRepair = async (repairId) => {
             return;
         }
 
-        console.log("Repair added:", data);
-
-        // Обновляем состояние
+        console.log("✅ Ремонт добавлен:", data);
         setRepairs([...repairs, ...data]);
-
-        // Закрываем модальное окно и очищаем поля
         setIsRepairModalOpen(false);
         setRepairCategory("");
         setRepairSubcategory("");
-        setCustomCategory("");
         setRepairDescription("");
         setRepairMileage("");
+
+        // 🔹 Если введён пробег больше текущего, обновляем `car.mileage`
+        if (repairMileage && parseInt(repairMileage, 10) > car.mileage) {
+            updateCarMileage(parseInt(repairMileage, 10));
+        }
     } catch (err) {
-        console.error("Unexpected error:", err);
+        console.error("❌ Ошибка при добавлении ремонта:", err);
     }
 };
+
 {updateStatus && <div className="update-status">{updateStatus}</div>}
   // Добавление планового ТО
  const addMaintenance = async () => {
@@ -238,8 +235,32 @@ const deleteRepair = async (repairId) => {
         console.log("Maintenance added:", data);
         setMaintenanceRecords([...maintenanceRecords, ...data]);
         setIsMaintenanceModalOpen(false);
+
+        // 🔹 Если введён пробег больше текущего, обновляем `car.mileage`
+        if (maintenance.oilChange && maintenance.oilChangeMileage > car.mileage) {
+            updateCarMileage(maintenance.oilChangeMileage);
+        }
     } catch (err) {
         console.error("Unexpected error:", err);
+    }
+};
+const updateCarMileage = async (newMileage) => {
+    if (!car || newMileage <= car.mileage) return; // Пробег обновляется только если он выше
+
+    console.log(`🔹 Обновляем пробег: ${car.mileage} → ${newMileage} км`);
+
+    const { data, error } = await supabase
+        .from("cars")
+        .update({ mileage: newMileage })
+        .eq("id", car.id)
+        .select("*")
+        .single();
+
+    if (error) {
+        console.error("❌ Ошибка обновления пробега:", error.message);
+    } else {
+        console.log("✅ Пробег успешно обновлён:", data);
+        setCar(data); // Обновляем машину в `useState`
     }
 };
 
@@ -513,7 +534,7 @@ const shouldChangeOil = (currentMileage, lastOilChangeMileage, lastOilChangeDate
 <ul>
   {maintenanceRecords.map((record) => (
     <li key={record.id}>
-      {new Date(record.date).toLocaleDateString()}: 
+      {new Date(record.date).toLocaleDateString()}<br/> 
       {record.oil_change && `Oil Change on ${record.oil_change_date ? new Date(record.oil_change_date).toLocaleDateString() : "Unknown Date"} at ${record.oil_change_mileage || "Unknown"} km`}
       {record.filter_change && " Filter Change,"}
       {record.brake_check && " Brake Check,"}
