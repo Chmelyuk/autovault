@@ -2,17 +2,20 @@
 .car-details {
     display: flex;
     align-items: center;
-    background-color: #1e1e1e;
+    background-color: #0b1723 !important;
     color: #ffffff !important;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    max-width: 100%;
+    
 }
 
 .car-details img {
-    width: 200px;
+    max-width: 150px;
     height: auto;
-    margin-right: 20px;
+    margin: 20px;
     border-radius: 10px;
     border: 2px solid #ffffff33;
 }
@@ -22,7 +25,7 @@
 }
 
 .car-text{
-    color: #706e6e !important;
+    color: #7595b3 !important;
 }
 
 .car-details h3 {
@@ -118,4 +121,28 @@
 .turbo-checkbox input {
     width: 20px;
     height: 20px;
+}
+
+.details-button {
+    background-color: #f39c12;
+    color: #000;
+    font-size: 16px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    min-width: 130px;
+    /* Фиксированная ширина, чтобы текст не скакал */
+    text-align: center;
+}
+
+.details-button:hover {
+    background-color: #e67e22;
+    transform: scale(1.05);
+}
+
+.details-button:active {
+    background-color: #d35400;
+    transform: scale(0.98);
 }

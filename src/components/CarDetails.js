@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient"; // Подключаем настроенный клиент
 import './CarDetails.css'
-import logo_car from '../logo_car.png'
+import logo_car from '../components/logo_car.png'
 
 
 
@@ -18,6 +18,8 @@ export default function CarDetails({ user, car, setCar }) {
   const [suggestedBrands, setSuggestedBrands] = useState([]);
   const [suggestedModels, setSuggestedModels] = useState([]);
   const [turbocharged, setTurbocharged] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+
   
 
   // Функция для получения брендов
@@ -123,14 +125,21 @@ export default function CarDetails({ user, car, setCar }) {
     <div className="car-details">
   <img src={logo_car} alt="Car" />
   <div className="info">
-    <h3 className="car-title">Your Car</h3>
-    <p className="car-text">{car.brand} {car.model} ({car.year})</p>
-    <p className="car-text">Engine: {car.engine} {car.turbocharged && <span className="turbo">(Turbocharged)</span>}</p>
-    <p className="car-text">Mileage: {car.mileage} km</p>
-        <p className="car-text">Fuel Type: {car.fuelType}</p>
-    <p className="car-text">Transmission: {car.transmissionType}</p>
-    <p className="car-text">VIN: {car.vin}</p>
-  </div>
+  <h3 className="car-title">Your Car</h3>
+  <p className="car-text">{car.brand} {car.model} ({car.year})</p>
+  <p className="car-text">Mileage: {car.mileage} km</p>
+  <p className="car-text">Fuel Type: {car.fuelType}</p>
+  <p className="car-text">Transmission: {car.transmissionType}</p>
+ <button className="details-button" onClick={() => setShowDetails(!showDetails)}>
+  {showDetails ? "Hide Details" : "Show Details"}
+</button>
+  {showDetails && (
+    <>
+      <p className="car-text">Engine: {car.engine} {car.turbocharged && <span className="turbo">(Turbocharged)</span>}</p>
+      <p className="car-text">VIN: {car.vin}</p>
+    </>
+  )}
+</div>
 </div>
 ) : (
 <div className="add-car-form">

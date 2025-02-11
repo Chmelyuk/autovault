@@ -3,6 +3,7 @@ import Header from './Header';
 import CarDetails from './CarDetails';
 import './Dashboard.css'
 import CarTracker from "./CarTracker";
+import ProgressBar from './ProgressBar';
 
 
 export default function Dashboard({ user, supabase, handleLogout }) {
@@ -474,6 +475,56 @@ useEffect(() => {
         fetchMaintenance(car.id); // Также обновляем данные о ТО, если это необходимо
     }
 }, [car]);
+
+
+const calculateRemainingMileage = (car, maintenanceRecords) => {
+  const lastOilChange = maintenanceRecords
+    .filter((record) => record.oil_change && record.oil_change_mileage)
+    .sort((a, b) => b.oil_change_mileage - a.oil_change_mileage)[0];
+
+  if (!lastOilChange) return 0;
+
+  const lastMileage = lastOilChange.oil_change_mileage;
+  const nextChangeAt = lastMileage + calculateTotalMileageInterval(car, maintenanceRecords);
+  const remainingMileage = nextChangeAt - car.mileage;
+
+  return remainingMileage > 0 ? remainingMileage : 0;
+};
+
+const getProgressColor = (percentage) => {
+    if (percentage >= 75) return "green";  // ✅ Хорошее состояние
+    if (percentage >= 40) return "orange"; // ⚠️ Пора планировать замену
+    return "red";  // 🔴 Срочно менять!
+};
+const calculateTotalMileageInterval = (car, maintenanceRecords) => {
+  const baseIntervals = {
+    Petrol: 10000,
+    Diesel: 8000,
+    Hybrid: 12000,
+    Electric: null,
+  };
+
+  let interval = baseIntervals[car.fuelType] || 10000;
+  if (interval === null) return 0;
+
+  if (car.mileage > 200000) interval *= 0.8;
+  else if (car.mileage > 100000) interval *= 0.9;
+
+  switch (car.oilType) {
+    case "Semi-Synthetic":
+      interval *= 0.85;
+      break;
+    case "Mineral":
+      interval *= 0.75;
+      break;
+    default:
+      break;
+  }
+
+  return Math.round(interval / 500) * 500;
+};
+
+
   return (
     <>
     
@@ -582,7 +633,20 @@ useEffect(() => {
 </div>
               <CarDetails user={user} supabase={supabase} car={car} setCar={setCar} />
         {car && maintenanceRecords.length > 0 ? (
-  <p><strong>Замена масла:</strong> {calculateOilChangeMileage(car, maintenanceRecords)}</p>
+  <p>{car && maintenanceRecords.length > 0 ? (
+  <div>
+    <strong> Замена масла:</strong>
+    <br/>
+    <br/>
+    <br/>
+    <ProgressBar 
+      progress={calculateRemainingMileage(car, maintenanceRecords)} 
+      total={calculateTotalMileageInterval(car, maintenanceRecords)} 
+    />
+  </div>
+) : (
+  <p>⏳ Загружаем данные...</p>
+)}</p>
 ) : (
   <p>⏳ Загружаем данные...</p>
 )}
@@ -621,7 +685,7 @@ useEffect(() => {
 
         {/* Отображение истории ТО */}
        
-<div className="repair-history">
+<div className="maintenance-history">
 <ul >
   {maintenanceRecords.map((record) => (
     <li key={record.id}>
@@ -632,14 +696,25 @@ useEffect(() => {
       {record.tire_rotation && " Tire Rotation,"}
       {record.coolant_flush && " Coolant Flush"}
 
-      {record.oil_change && (
-        <p><strong>До следующей замены:</strong> {calculateOilChangeMileage(car, maintenanceRecords)}</p>
-      )}
+      
+
+
+
 
       <div className="button-container">
         <button onClick={() => openEditMaintenanceModal(record)}>Edit</button>
         <button onClick={() => deleteMaintenance(record.id)}>Delete</button>
+        
       </div>
+      <br/>
+      {record.oil_change && ( 
+    <ProgressBar 
+      progress={calculateRemainingMileage(car, maintenanceRecords)} 
+      total={calculateTotalMileageInterval(car, maintenanceRecords)} 
+    />
+  
+
+)}
     </li>
   ))}
 </ul></div>
