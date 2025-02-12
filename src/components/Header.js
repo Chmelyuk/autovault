@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import './Header.css';
 import { supabase } from '../supabaseClient';
 import { QRCodeSVG } from 'qrcode.react';
-import QRScanner from './QRScanner'; // Импортируем компонент сканера
+import QRScanner from './QRScanner';
 
-export default function Header({ user, handleLogout, openEditModal, fetchCars, fetchRepairs, fetchMaintenance }) {
+export default function Header({ user, handleLogout, openEditModal, fetchCars, fetchRepairs,fetchMaintenance }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
   const [qrData, setQrData] = useState(null);
@@ -15,124 +15,104 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  const handleDownloadRepairs = async () => {
-    try {
-      // Загружаем данные о машинах
-      const { data: cars, error: carError } = await supabase
-        .from("cars")
-        .select("*")
-        .eq("user_id", user.id); // Фильтр по пользователю
-
-      if (carError) {
-        console.error("Ошибка при загрузке данных о машинах:", carError);
-        return;
-      }
-
-      if (cars.length === 0) {
-        console.error("Машины не найдены");
-        return;
-      }
-
-      const car = cars[0]; // Выбираем первую машину из списка
-
-      // Загружаем данные о ремонтах
-      const { data: repairs, error: repairsError } = await supabase
-        .from("repairs")
-        .select("*")
-        .eq("car_id", car.id); // Фильтр по машине
-
-      if (repairsError) {
-        console.error("Ошибка при загрузке данных о ремонтах:", repairsError);
-        return;
-      }
-
-      // Формируем данные для QR-кода
-      const exportData = {
-        car,
-        repairs,
-      };
-
-      setQrData(JSON.stringify(exportData));
-      setShowQRCode(true);
-    } catch (error) {
-      console.error("Ошибка при формировании QR-кода:", error);
-    }
-  };
-
-  const handleScanSuccess = async (data) => {
+  /** 📌 Функция генерации QR-кода вместо JSON-файла */
+  const handleGenerateQRCode = async () => {
   try {
-    // Парсим данные из QR-кода
-    const fileData = JSON.parse(data);
+    const { data: cars, error: carError } = await supabase
+      .from("cars")
+      .select("*")
+      .eq("user_id", user.id);
 
-    console.log("📂 Данные из QR-кода:", fileData);
+    if (carError || !cars.length) {
+      console.error("❌ Ошибка загрузки машины:", carError || "Машины не найдены");
+      return;
+    }
 
-    let newCarId;
+    const car = cars[0]; // Берем первую машину пользователя
+    setQrData(car.id); // Передаем только car_id
+    setShowQRCode(true); // Показываем QR-код
+  } catch (error) {
+    console.error("❌ Ошибка генерации QR-кода:", error);
+  }
+};
 
-    // Проверяем, существует ли машина с таким VIN
+  /** 📌 Функция сканирования QR-кода */
+const handleScanSuccess = async (data) => {
+  try {
+    // Очистка и проверка carId
+    const carId = data.trim();
+    if (!/^[0-9a-fA-F-]{36}$/.test(carId)) {
+      console.error("❌ Некорректный формат carId:", carId);
+      return;
+    }
+
+    // Проверяем, существует ли автомобиль с таким car_id
     const { data: existingCar, error: carCheckError } = await supabase
       .from("cars")
-      .select("id, user_id")
-      .eq("vin", fileData.car.vin)
+      .select("*")
+      .eq("id", carId)
       .maybeSingle();
 
+    console.log("Результат запроса:", { existingCar, carCheckError });
+
     if (carCheckError) {
-      console.error("❌ Ошибка при проверке VIN:", carCheckError.message);
+      console.error("❌ Ошибка при проверке автомобиля:", carCheckError.message);
       return;
     }
 
-    if (existingCar) {
-      if (existingCar.user_id === user.id) {
-        console.log("✅ Обновляем существующую машину");
-        newCarId = existingCar.id;
-      } else {
-        console.warn("⚠️ VIN уже у другого пользователя. Создаем копию.");
-        newCarId = crypto.randomUUID();
-        fileData.car.vin = `NEW-${fileData.car.vin}`;
-      }
-    } else {
-      newCarId = crypto.randomUUID();
-      console.log("🚗 Создаем новый автомобиль с ID:", newCarId);
+    if (!existingCar) {
+      console.error("❌ Автомобиль не найден");
+      return;
     }
 
-    // Создаем или обновляем машину
-    const { error: carUpsertError } = await supabase
+    // Обновляем user_id для нового владельца в таблице cars
+    const { error: carUpdateError } = await supabase
       .from("cars")
-      .upsert([{ ...fileData.car, id: newCarId, user_id: user.id }]);
+      .update({ user_id: user.id })
+      .eq("id", carId);
 
-    if (carUpsertError) {
-      console.error("❌ Ошибка при обновлении машины:", carUpsertError);
+    if (carUpdateError) {
+      console.error("❌ Ошибка при обновлении владельца автомобиля:", carUpdateError);
       return;
     }
 
-    // Обновляем ремонты
-    if (fileData.repairs) {
-      const formattedRepairs = fileData.repairs.map(repair => ({
-        ...repair,
-        user_id: user.id,
-        car_id: newCarId,
-      }));
+    // Обновляем user_id для всех ремонтов, связанных с этим автомобилем
+    const { error: repairsUpdateError } = await supabase
+      .from("repairs")
+      .update({ user_id: user.id })
+      .eq("car_id", carId);
 
-      const { error: repairsInsertError } = await supabase
-        .from("repairs")
-        .insert(formattedRepairs);
-
-      if (repairsInsertError) {
-        console.error("❌ Ошибка при добавлении ремонтов:", repairsInsertError);
-        return;
-      }
+    if (repairsUpdateError) {
+      console.error("❌ Ошибка при обновлении ремонтов:", repairsUpdateError);
+      return;
     }
 
-    console.log("✅ Данные загружены, обновляем UI...");
-    fetchCars(); // Обновляем список машин
-    fetchRepairs(newCarId); // Обновляем список ремонтов
+    // Обновляем user_id для всех записей ТО, связанных с этим автомобилем
+    const { error: maintenanceUpdateError } = await supabase
+      .from("maintenance")
+      .update({ user_id: user.id })
+      .eq("car_id", carId);
 
-    setShowQRScanner(false); // Закрываем сканер
+    if (maintenanceUpdateError) {
+      console.error("❌ Ошибка при обновлении записей ТО:", maintenanceUpdateError);
+      return;
+    }
+
+    console.log("✅ Автомобиль, ремонты и записи ТО успешно переданы новому владельцу!");
+
+    // Обновляем данные на фронтенде
+    fetchCars();
+    fetchRepairs(carId);
+    fetchMaintenance(carId); // Обновляем данные о ТО
+    setShowQRScanner(false);
+
   } catch (error) {
     console.error("❌ Ошибка при обработке данных из QR-кода:", error);
   }
 };
+
   const handleScanError = (error) => {
-    console.error("Ошибка при сканировании QR-кода:", error);
+    console.error("❌ Ошибка сканирования QR-кода:", error);
   };
 
   return (
@@ -145,7 +125,7 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
         <div className="dropdown-menu">
           <button onClick={handleLogout}>Logout</button>
           <button onClick={openEditModal}>Edit Info</button>
-          <button onClick={handleDownloadRepairs}>Generate QR Code</button>
+          <button onClick={handleGenerateQRCode}>Generate QR Code</button>
           <button onClick={() => setShowQRScanner(true)}>Scan QR Code</button>
         </div>
       )}
@@ -153,7 +133,12 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
       {showQRCode && (
         <div className="qr-modal">
           <div className="qr-content">
-            <QRCodeSVG value={qrData} />
+            <QRCodeSVG
+              value={qrData}
+              size={312}
+              level="H"
+              margin={20}
+            />
             <button onClick={() => setShowQRCode(false)}>Close</button>
           </div>
         </div>

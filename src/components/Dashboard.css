@@ -24,7 +24,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+     
 }
 
 .header h1 {
@@ -79,7 +79,8 @@ button:hover {
     padding: 20px;
     border-radius: 12px;
     margin-bottom: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+   
+    
 }
 
 .car-details h2 {
@@ -145,7 +146,7 @@ button:hover {
     border-radius: 8px;
     margin-bottom: 10px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: 2px 2px 0 rgba(255, 255, 255, 0.655);
+    border: 1px solid ;
     border-color: antiquewhite;
 }
 
@@ -265,6 +266,7 @@ button:hover {
 
     .add-button {
         width: 100%;
+        margin-bottom: 15px;
     }
 
     .modal-content {

@@ -79,8 +79,7 @@ export default function CarTracker({ user, car, supabase, setCar }) {
 
   return (
     <div>
-      <h3>🚗 GPS Tracking</h3>
-      {lastCoords ? (
+           {lastCoords ? (
         <p>📍 Отслеживание включено</p>
       ) : (
         <p>⏳ Ожидание GPS...</p>

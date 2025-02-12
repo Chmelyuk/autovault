@@ -478,6 +478,9 @@ useEffect(() => {
 
 
 const calculateRemainingMileage = (car, maintenanceRecords) => {
+  // Проверяем, что car существует
+  if (!car) return 0;
+
   const lastOilChange = maintenanceRecords
     .filter((record) => record.oil_change && record.oil_change_mileage)
     .sort((a, b) => b.oil_change_mileage - a.oil_change_mileage)[0];
@@ -490,13 +493,11 @@ const calculateRemainingMileage = (car, maintenanceRecords) => {
 
   return remainingMileage > 0 ? remainingMileage : 0;
 };
-
-const getProgressColor = (percentage) => {
-    if (percentage >= 75) return "green";  // ✅ Хорошее состояние
-    if (percentage >= 40) return "orange"; // ⚠️ Пора планировать замену
-    return "red";  // 🔴 Срочно менять!
-};
+ 
 const calculateTotalMileageInterval = (car, maintenanceRecords) => {
+  // Проверяем, что car существует
+  if (!car) return 0;
+
   const baseIntervals = {
     Petrol: 10000,
     Diesel: 8000,
@@ -505,7 +506,7 @@ const calculateTotalMileageInterval = (car, maintenanceRecords) => {
   };
 
   let interval = baseIntervals[car.fuelType] || 10000;
-  if (interval === null) return 0;
+  if (interval === null) return 0; // Для электромобилей
 
   if (car.mileage > 200000) interval *= 0.8;
   else if (car.mileage > 100000) interval *= 0.9;
@@ -615,7 +616,7 @@ const calculateTotalMileageInterval = (car, maintenanceRecords) => {
       )} 
 
      <Header fetchCars={fetchCars} fetchRepairs={fetchRepairs}
-       handleLogout={handleLogout} user={user} openEditModal={openEditModal} />
+       handleLogout={handleLogout} user={user} openEditModal={openEditModal}  fetchMaintenance={fetchMaintenance}/>
      
       <div className="dashboard">
        <div className="car-selector-wrapper">
