@@ -293,3 +293,123 @@ button {
     justify-content: center;
     padding: 0;
 }
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #1e1e1e;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    color: #ffffff;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.select-all-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.select-all-btn:hover {
+    background-color: #444;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+}
+
+.input-mileage {
+    width: 100%;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #555;
+    background-color: #222;
+    color: white;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+}
+
+.save-btn,
+.cancel-btn {
+    flex: 1;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.save-btn {
+    background-color: #008000;
+    color: white;
+    border: none;
+}
+
+.cancel-btn {
+    background-color: #800000;
+    color: white;
+    border: none;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Уменьшаем расстояние между чекбоксом и текстом */
+    color: white;
+    font-size: 16px;
+    /* Сделаем шрифт чуть крупнее для удобства */
+}
+
+.checkbox-label input {
+    width: 18px;
+    height: 18px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    /* Добавим отступ сверху */
+}

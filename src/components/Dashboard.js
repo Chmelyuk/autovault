@@ -781,78 +781,90 @@ const [showWarning, setShowWarning] = useState(true);
 
       {/* Модальное окно для ТО */}
       {isMaintenanceModalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>{t('addMaintenance')}</h3>
-            <button
-              onClick={() => {
-                setMaintenance((prevState) => {
-                  const allChecked = Object.values(prevState).every((val) => val);
-                  return {
-                    oilChange: !allChecked,
-                    filterChange: !allChecked,
-                    brakeCheck: !allChecked,
-                    tireRotation: !allChecked,
-                    coolantFlush: !allChecked,
-                  };
-                });
-              }}
-            >
-              {Object.values(maintenance).every((val) => val) ? t('deselectAll') : t('selectAll')}
-            </button>
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={maintenance.oilChange}
-                onChange={(e) => setMaintenance({ ...maintenance, oilChange: e.target.checked })}
-              />
-              {t('oilChange')}
-            </label>
-            {maintenance.oilChange && (
-              <input
-                type="number"
-                placeholder={t('mileageAtOilChange')}
-                value={maintenance.oilChangeMileage || ''}
-                onChange={(e) => setMaintenance({ ...maintenance, oilChangeMileage: e.target.value })}
-              />
-            )}
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={maintenance.filterChange}
-                onChange={(e) => setMaintenance({ ...maintenance, filterChange: e.target.checked })}
-              />
-              {t('filterChange')}
-            </label>
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={maintenance.brakeCheck}
-                onChange={(e) => setMaintenance({ ...maintenance, brakeCheck: e.target.checked })}
-              />
-              {t('brakeCheck')}
-            </label>
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={maintenance.tireRotation}
-                onChange={(e) => setMaintenance({ ...maintenance, tireRotation: e.target.checked })}
-              />
-              {t('tireRotation')}
-            </label>
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={maintenance.coolantFlush}
-                onChange={(e) => setMaintenance({ ...maintenance, coolantFlush: e.target.checked })}
-              />
-              {t('coolantFlush')}
-            </label>
-            <button onClick={addMaintenance}>{t('save')}</button>
-            <button onClick={() => setIsMaintenanceModalOpen(false)}>{t('cancel')}</button>
-          </div>
-        </div>
-      )}
+  <div className="modal">
+    <div className="modal-content">
+      <h3 className="modal-title">{t('addMaintenance')}</h3>
+
+      <div className="modal-actions">
+        <button
+          className="select-all-btn"
+          onClick={() => {
+            setMaintenance((prevState) => {
+              const allChecked = Object.values(prevState).every((val) => val);
+              return {
+                oilChange: !allChecked,
+                filterChange: !allChecked,
+                brakeCheck: !allChecked,
+                tireRotation: !allChecked,
+                coolantFlush: !allChecked,
+              };
+            });
+          }}
+        >
+          {Object.values(maintenance).every((val) => val) ? t('deselectAll') : t('selectAll')}
+        </button>
+      </div>
+
+      <div className="checkbox-group">
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={maintenance.oilChange}
+            onChange={(e) => setMaintenance({ ...maintenance, oilChange: e.target.checked })}
+          />
+          {t('oilChange')}
+        </label>
+        {maintenance.oilChange && (
+          <input
+            className="input-mileage"
+            type="number"
+            placeholder={t('mileageAtOilChange')}
+            value={maintenance.oilChangeMileage || ''}
+            onChange={(e) => setMaintenance({ ...maintenance, oilChangeMileage: e.target.value })}
+          />
+        )}
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={maintenance.filterChange}
+            onChange={(e) => setMaintenance({ ...maintenance, filterChange: e.target.checked })}
+          />
+          {t('filterChange')}
+        </label>
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={maintenance.brakeCheck}
+            onChange={(e) => setMaintenance({ ...maintenance, brakeCheck: e.target.checked })}
+          />
+          {t('brakeCheck')}
+        </label>
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={maintenance.tireRotation}
+            onChange={(e) => setMaintenance({ ...maintenance, tireRotation: e.target.checked })}
+          />
+          {t('tireRotation')}
+        </label>
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={maintenance.coolantFlush}
+            onChange={(e) => setMaintenance({ ...maintenance, coolantFlush: e.target.checked })}
+          />
+          {t('coolantFlush')}
+        </label>
+      </div>
+
+      <div className="modal-buttons">
+        <button className="save-btn" onClick={addMaintenance}>{t('save')}</button>
+        <button className="cancel-btn" onClick={() => setIsMaintenanceModalOpen(false)}>{t('cancel')}</button>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {/* Модальное окно для редактирования ТО */}
       {isEditMaintenanceModalOpen && (
