@@ -1,16 +1,17 @@
 {
   "files": {
-    "main.css": "/autovault/static/css/main.9428dbd1.css",
-    "main.js": "/autovault/static/js/main.ddd48d83.js",
+    "main.css": "/autovault/static/css/main.4de5b031.css",
+    "main.js": "/autovault/static/js/main.62df6347.js",
     "static/js/952.83142e4a.chunk.js": "/autovault/static/js/952.83142e4a.chunk.js",
+    "static/media/banner.jpg": "/autovault/static/media/banner.003f3ef068d4f0117267.jpg",
     "static/media/logo_car.png": "/autovault/static/media/logo_car.0514d9d6fd9a505de255.png",
     "index.html": "/autovault/index.html",
-    "main.9428dbd1.css.map": "/autovault/static/css/main.9428dbd1.css.map",
-    "main.ddd48d83.js.map": "/autovault/static/js/main.ddd48d83.js.map",
+    "main.4de5b031.css.map": "/autovault/static/css/main.4de5b031.css.map",
+    "main.62df6347.js.map": "/autovault/static/js/main.62df6347.js.map",
     "952.83142e4a.chunk.js.map": "/autovault/static/js/952.83142e4a.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.9428dbd1.css",
-    "static/js/main.ddd48d83.js"
+    "static/css/main.4de5b031.css",
+    "static/js/main.62df6347.js"
   ]
 }
