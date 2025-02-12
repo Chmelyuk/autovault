@@ -226,7 +226,9 @@ button {
     margin-right: 10px;
     accent-color: #4caf50;
 }
-
+.add-button{
+    margin-right: 10px;
+}
 /* Адаптив для мобильных устройств */
 @media (max-width: 768px) {
     .header {

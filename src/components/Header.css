@@ -195,6 +195,10 @@ header {
         font-size: 20px;
         padding: 15px;
     }
+        .language-buttons button {
+            margin-bottom: 10px;
+            margin-right: 0;
+        }
 }
 
 .qr-code {
@@ -208,4 +212,11 @@ header {
         max-width: 70vw;
         max-height: 50vh;
     }
+        .language-buttons {
+            text-align: center;;
+        }
+}
+
+.language-buttons button{
+    margin-right: 10px;
 }

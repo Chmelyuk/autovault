@@ -3,6 +3,7 @@ import './Header.css';
 import { supabase } from '../supabaseClient';
 import { QRCodeSVG } from 'qrcode.react';
 import QRScanner from './QRScanner';
+import { useTranslation } from 'react-i18next';
 
 export default function Header({ user, handleLogout, openEditModal, fetchCars, fetchRepairs,fetchMaintenance }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -10,6 +11,7 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
   const [qrData, setQrData] = useState(null);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const firstLetter = user?.email?.charAt(0).toUpperCase();
+  const { t, i18n } = useTranslation();
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -123,10 +125,16 @@ const handleScanSuccess = async (data) => {
 
       {isDropdownOpen && (
         <div className="dropdown-menu">
-          <button onClick={handleLogout}>Logout</button>
-          <button onClick={openEditModal}>Edit Info</button>
-          <button onClick={handleGenerateQRCode}>Generate QR Code</button>
-          <button onClick={() => setShowQRScanner(true)}>Scan QR Code</button>
+          <div className='language-buttons'>
+            <span>{t('language')}: </span>
+            <button onClick={() => i18n.changeLanguage('en')}>🇬🇧</button>
+            <button onClick={() => i18n.changeLanguage('ru')}>🇷🇺</button>
+            <button onClick={() => i18n.changeLanguage('uk')}>🇺🇦</button>
+          </div>
+          <button onClick={handleLogout}>{t('logout')}</button>
+          <button onClick={openEditModal}>{t('editInfo')}</button>
+          <button onClick={handleGenerateQRCode}>{t('generateQRCode')}</button>
+          <button onClick={() => setShowQRScanner(true)}>{t('scanQRCode')}</button>
         </div>
       )}
 

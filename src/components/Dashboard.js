@@ -5,6 +5,8 @@ import './Dashboard.css'
 import CarTracker from "./CarTracker";
 import ProgressBar from './ProgressBar';
 import banner from '../components/banner.jpg'
+import { useTranslation } from 'react-i18next';
+
 
 
 export default function Dashboard({ user, supabase, handleLogout }) {
@@ -33,6 +35,7 @@ const [editRepair, setEditRepair] = useState(null);
     tireRotation: false,
     coolantFlush: false,
   });
+  const { t } = useTranslation();
   
   const fetchCars = async () => {  // 🆕 Теперь fetchCars доступна в компоненте
     if (!user) return;
@@ -444,15 +447,7 @@ const calculateOilChangeMileage = (car, maintenanceRecords) => {
 };
 
 
-const shouldChangeOil = (currentMileage, lastOilChangeMileage, lastOilChangeDate) => {
-    const mileageThreshold = 10000; // например, менять каждые 10 тыс. км
-    const timeThreshold = 6 * 30 * 24 * 60 * 60 * 1000; // 6 месяцев в миллисекундах
-
-    const mileageExceeded = currentMileage - lastOilChangeMileage >= mileageThreshold;
-    const timeExceeded = new Date() - new Date(lastOilChangeDate) >= timeThreshold;
-
-    return mileageExceeded || timeExceeded;
-};
+ 
 
 useEffect(() => {
     if (car?.id) {
@@ -527,13 +522,12 @@ const calculateTotalMileageInterval = (car, maintenanceRecords) => {
 };
 const [showWarning, setShowWarning] = useState(true);
 
-  return (
+ return (
     <>
-    
-    {isEditModalOpen && (
+      {isEditModalOpen && (
         <div className="modal">
           <div className="modal-content">
-            <h3>Edit Car Details</h3>
+            <h3>{t('editInfo')}</h3>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -542,445 +536,418 @@ const [showWarning, setShowWarning] = useState(true);
             >
               <input
                 type="text"
-                value={editCar?.brand || ""}
+                value={editCar?.brand || ''}
                 onChange={(e) => setEditCar({ ...editCar, brand: e.target.value })}
-                placeholder="Car Brand"
+                placeholder={t('brand')}
               />
               <input
                 type="text"
-                value={editCar?.model || ""}
+                value={editCar?.model || ''}
                 onChange={(e) => setEditCar({ ...editCar, model: e.target.value })}
-                placeholder="Car Model"
+                placeholder={t('model')}
               />
               <input
                 type="number"
-                value={editCar?.year || ""}
+                value={editCar?.year || ''}
                 onChange={(e) => setEditCar({ ...editCar, year: e.target.value })}
-                placeholder="Year"
+                placeholder={t('year')}
               />
               <input
                 type="text"
-                value={editCar?.engine || ""}
+                value={editCar?.engine || ''}
                 onChange={(e) => setEditCar({ ...editCar, engine: e.target.value })}
-                placeholder="Engine"
+                placeholder={t('engine')}
               />
               <input
                 type="number"
-                value={editCar?.mileage || ""}
+                value={editCar?.mileage || ''}
                 onChange={(e) => setEditCar({ ...editCar, mileage: e.target.value })}
-                placeholder="Mileage"
+                placeholder={t('mileage')}
               />
               <input
                 type="text"
-                value={editCar?.vin || ""}
+                value={editCar?.vin || ''}
                 onChange={(e) => setEditCar({ ...editCar, vin: e.target.value })}
-                placeholder="VIN"
+                placeholder={t('vin')}
               />
               <select
-                value={editCar?.fuelType || ""}
+                value={editCar?.fuelType || ''}
                 onChange={(e) => setEditCar({ ...editCar, fuelType: e.target.value })}
               >
-                <option value="">Select Fuel Type</option>
-                <option value="Petrol">Petrol</option>
-                <option value="Diesel">Diesel</option>
-                <option value="Electric">Electric</option>
-                <option value="Hybrid">Hybrid</option>
+                <option value="">{t('selectFuelType')}</option>
+                <option value="Petrol">{t('petrol')}</option>
+                <option value="Diesel">{t('diesel')}</option>
+                <option value="Electric">{t('electric')}</option>
+                <option value="Hybrid">{t('hybrid')}</option>
               </select>
               <select
-                value={editCar?.transmissionType || ""}
+                value={editCar?.transmissionType || ''}
                 onChange={(e) => setEditCar({ ...editCar, transmissionType: e.target.value })}
               >
-                <option value="">Select Transmission</option>
-                <option value="Manual">Manual</option>
-                <option value="Automatic">Automatic</option>
-                <option value="CVT">CVT</option>
-                <option value="Dual-clutch">Dual-clutch</option>
+                <option value="">{t('selectTransmission')}</option>
+                <option value="Manual">{t('manual')}</option>
+                <option value="Automatic">{t('automatic')}</option>
+                <option value="CVT">{t('cvt')}</option>
+                <option value="Dual-clutch">{t('dualClutch')}</option>
               </select>
-               
-  <label className="checkbox-label">
-  <input
-    placeholder=""
-    type="checkbox"
-    checked={editCar?.turbocharged || false}
-    onChange={(e) => setEditCar({ ...editCar, turbocharged: e.target.checked })}
-  />
-  <span>Turbocharged</span>
-</label>
-
-              <button type="submit">Save</button>
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={editCar?.turbocharged || false}
+                  onChange={(e) => setEditCar({ ...editCar, turbocharged: e.target.checked })}
+                />
+                <span>{t('turbocharged')}</span>
+              </label>
+              <button type="submit">{t('save')}</button>
               <button type="button" onClick={closeEditModal}>
-                Cancel
+                {t('cancel')}
               </button>
             </form>
           </div>
         </div>
-      )} 
+      )}
 
-     <Header fetchCars={fetchCars} fetchRepairs={fetchRepairs}
-       handleLogout={handleLogout} user={user} openEditModal={openEditModal}  fetchMaintenance={fetchMaintenance}/>
-     
+      <Header
+        fetchCars={fetchCars}
+        fetchRepairs={fetchRepairs}
+        handleLogout={handleLogout}
+        user={user}
+        openEditModal={openEditModal}
+        fetchMaintenance={fetchMaintenance}
+      />
+
       <div className="dashboard">
-       <div className="car-selector-wrapper">
-    <select 
-        className="car-selector" 
-        value={car?.id} 
-        onChange={(e) => setCar(cars.find(c => c.id === e.target.value))}
-    >
-        {cars.map(c => (
-            <option key={c.id} value={c.id}>
+        <div className="car-selector-wrapper">
+          <select
+            className="car-selector"
+            value={car?.id}
+            onChange={(e) => setCar(cars.find((c) => c.id === e.target.value))}
+          >
+            {cars.map((c) => (
+              <option key={c.id} value={c.id}>
                 {c.brand} {c.model} ({c.year})
-            </option>
-        ))}
-    </select>
-</div>
-              <CarDetails user={user} supabase={supabase} car={car} setCar={setCar} />
-        {car && maintenanceRecords.length > 0 ? (
-  <p>{car && maintenanceRecords.length > 0 ? (
-  <div>
-    <strong> Замена масла:</strong>
-    <br/>
-    <br/>
-    <br/>
-    <ProgressBar 
-      progress={calculateRemainingMileage(car, maintenanceRecords)} 
-      total={calculateTotalMileageInterval(car, maintenanceRecords)} 
-    />
-  </div>
-) : (
-  <p>⏳ Загружаем данные...</p>
-)}</p>
-) : (
-  <p>⏳ Загружаем данные...</p>
-)}
-        {/* Кнопки для добавления ремонтов и ТО */}
-        <div className="action-buttons">
-    <button className="add-button" onClick={() => setIsRepairModalOpen(true)}>Add Repair</button>
-    <button className="add-button" onClick={() => setIsMaintenanceModalOpen(true)}>Add Maintenance</button>
-  </div>
-
-        {/* Отображение списка ремонтов */}
-        <h3>Repair History</h3>
-        <CarTracker user={user} car={car} supabase={supabase} setCar={setCar} />
-       
-   <div className='repair-history'>    <ul>
-  {repairs.length > 0 ? (
-    repairs.map((repair) => (
-      <li key={repair.id}>
-        <strong>{repair.category}</strong> 
-        {repair.subcategory && ` Subcategory: ${repair.subcategory}`} 
-        <p>{repair.description}</p>
-        {repair.mileage && <p>🛠 Пробег на момент ремонта: {repair.mileage} км</p>}
-
-        <div className="button-container">
-          <button onClick={() => {
-            setEditRepair(repair);
-            setIsEditRepairModalOpen(true);
-          }}>Edit</button>
-          <button onClick={() => deleteRepair(repair.id)}>Delete</button>
+              </option>
+            ))}
+          </select>
         </div>
-      </li>
-    ))
-  ) : (
-    <p>Нет данных о ремонтах.</p>
-  )}
-</ul></div>
+        <CarDetails user={user} supabase={supabase} car={car} setCar={setCar} />
+        {car && maintenanceRecords.length > 0 ? (
+          <p>
+            <strong>{t('oilChange')}:</strong>
+            <br />
+            <br />
+            <br />
+            <ProgressBar
+              progress={calculateRemainingMileage(car, maintenanceRecords)}
+              total={calculateTotalMileageInterval(car, maintenanceRecords)}
+            />
+          </p>
+        ) : (
+          <p>⏳ {t('loading')}</p>
+        )}
+        <div className="action-buttons">
+          <button className="add-button" onClick={() => setIsRepairModalOpen(true)}>
+            {t('addRepair')}
+          </button>
+          <button className="add-button" onClick={() => setIsMaintenanceModalOpen(true)}>
+            {t('addMaintenance')}
+          </button>
+        </div>
 
-        {/* Отображение истории ТО */}
-       
-<div className="maintenance-history">
-<ul >
-  {maintenanceRecords.map((record) => (
-    <li key={record.id}>
-      {new Date(record.date).toLocaleDateString()}<br/> 
-      {record.oil_change && `Oil Change on ${record.oil_change_date ? new Date(record.oil_change_date).toLocaleDateString() : "Unknown Date"} at ${record.oil_change_mileage || "Unknown"} km`}
-      {record.filter_change && " Filter Change,"}
-      {record.brake_check && " Brake Check,"}
-      {record.tire_rotation && " Tire Rotation,"}
-      {record.coolant_flush && " Coolant Flush"}
-
-      
-
-
-
-
+        <h3>{t('repairHistory')}</h3>
+        <CarTracker user={user} car={car} supabase={supabase} setCar={setCar} />
+        <div className="repair-history">
+          <ul>
+           {repairs.length > 0 ? (
+  repairs.map((repair) => (
+    <li key={repair.id}>
+      <strong>{t(repair.category)}</strong> {/* Используем перевод для категории */}
+      {repair.subcategory && ` ${t('subcategory')}: ${t(repair.subcategory)}`} {/* Используем перевод для подкатегории */}
+      <p>{repair.description}</p>
+      {repair.mileage && <p>🛠 {t('mileageAtRepair')}: {repair.mileage} км</p>}
       <div className="button-container">
-        <button onClick={() => openEditMaintenanceModal(record)}>Edit</button>
-        <button onClick={() => deleteMaintenance(record.id)}>Delete</button>
-        
+        <button onClick={() => { setEditRepair(repair); setIsEditRepairModalOpen(true); }}>
+          {t('edit')}
+        </button>
+        <button onClick={() => deleteRepair(repair.id)}>{t('delete')}</button>
       </div>
-      <br/>
-      {record.oil_change && ( 
-    <ProgressBar 
-      progress={calculateRemainingMileage(car, maintenanceRecords)} 
-      total={calculateTotalMileageInterval(car, maintenanceRecords)} 
-    />)}
-     
-     {record.oil_change && calculateRemainingMileage(car, maintenanceRecords) < 2000 && showWarning && (
-  <div className="oil-warning">
-    <a href="https://dok.ua" target="_blank" rel="noopener noreferrer">
-      <img src={banner} alt="Oil Change Warning" />
-    </a>
-    <button className="close-button" onClick={() => setShowWarning(false)}>
-      × {/* Символ "крестик" */}
-    </button>
-  </div>
-)}
     </li>
-  ))}
-</ul></div>
+  ))
+) : (
+  <p>{t('noRepairData')}</p>
+)}
+          </ul>
+        </div>
+
+        <div className="maintenance-history">
+          <ul>
+            {maintenanceRecords.map((record) => (
+              <li key={record.id}>
+                {new Date(record.date).toLocaleDateString()}
+                <br />
+                {record.oil_change &&
+                  `${t('oilChange')} ${record.oil_change_date ? new Date(record.oil_change_date).toLocaleDateString() : t('unknownDate')} ${t('at')} ${record.oil_change_mileage || t('unknown')} км`}
+                {record.filter_change && ` ${t('filterChange')},`}
+                {record.brake_check && ` ${t('brakeCheck')},`}
+                {record.tire_rotation && ` ${t('tireRotation')},`}
+                {record.coolant_flush && ` ${t('coolantFlush')}`}
+                <div className="button-container">
+                  <button onClick={() => openEditMaintenanceModal(record)}>{t('edit')}</button>
+                  <button onClick={() => deleteMaintenance(record.id)}>{t('delete')}</button>
+                </div>
+                <br />
+                {record.oil_change && (
+                  <ProgressBar
+                    progress={calculateRemainingMileage(car, maintenanceRecords)}
+                    total={calculateTotalMileageInterval(car, maintenanceRecords)}
+                  />
+                )}
+                {record.oil_change && calculateRemainingMileage(car, maintenanceRecords) < 2000 && showWarning && (
+                  <div className="oil-warning">
+                    <a href="https://dok.ua" target="_blank" rel="noopener noreferrer">
+                      <img src={banner} alt={t('oilChangeWarning')} />
+                    </a>
+                    <button className="close-button" onClick={() => setShowWarning(false)}>
+                      ×
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       {/* Модальное окно для ремонта */}
-     {isRepairModalOpen && (
-  <div className="modal">
-    <div className="modal-content">
-      <h3>Add Repair</h3>
-
-      {/* Категория ремонта */}
-      <select value={repairCategory} onChange={(e) => setRepairCategory(e.target.value)}>
-        <option value="">Select Category</option>
-        <option value="Engine">Engine</option>
-        <option value="Brakes">Brakes</option>
-        <option value="Suspension">Suspension</option>
-        <option value="Electronics">Electronics</option>
-        <option value="Bodywork">Bodywork</option>
-        <option value="Other">Other</option> {/* Добавляем "Другое" */}
-      </select>
-
-      {/* Подкатегория ремонта */}
-      {repairCategory && repairCategory !== "Other" && (
-        <select value={repairSubcategory} onChange={(e) => setRepairSubcategory(e.target.value)}>
-          <option value="">Select Subcategory</option>
-          {repairCategory === "Engine" && (
-            <>
-              <option value="Oil Leak">Oil Leak</option>
-              <option value="Timing Belt">Timing Belt</option>
-              <option value="Cylinder Head">Cylinder Head</option>
-              <option value="Piston Rings">Piston Rings</option>
-              <option value="Other">Other</option>
-            </>
-          )}
-          {repairCategory === "Brakes" && (
-            <>
-              <option value="Pads Replacement">Pads Replacement</option>
-              <option value="Brake Discs">Brake Discs</option>
-              <option value="Brake Fluid">Brake Fluid</option>
-              <option value="Other">Other</option>
-            </>
-          )}
-        </select>
+      {isRepairModalOpen && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>{t('addRepair')}</h3>
+            <select value={repairCategory} onChange={(e) => setRepairCategory(e.target.value)}>
+              <option value="">{t('selectCategory')}</option>
+              <option value="Engine">{t('engine')}</option>
+              <option value="Brakes">{t('brakes')}</option>
+              <option value="Suspension">{t('suspension')}</option>
+              <option value="Electronics">{t('electronics')}</option>
+              <option value="Bodywork">{t('bodywork')}</option>
+              <option value="Other">{t('other')}</option>
+            </select>
+            {repairCategory && repairCategory !== 'Other' && (
+              <select value={repairSubcategory} onChange={(e) => setRepairSubcategory(e.target.value)}>
+                <option value="">{t('selectSubcategory')}</option>
+                {repairCategory === 'Engine' && (
+                  <>
+                    <option value="Oil Leak">{t('oilLeak')}</option>
+                    <option value="Timing Belt">{t('timingBelt')}</option>
+                    <option value="Cylinder Head">{t('cylinderHead')}</option>
+                    <option value="Piston Rings">{t('pistonRings')}</option>
+                    <option value="Other">{t('other')}</option>
+                  </>
+                )}
+                {repairCategory === 'Brakes' && (
+                  <>
+                    <option value="Pads Replacement">{t('padsReplacement')}</option>
+                    <option value="Brake Discs">{t('brakeDiscs')}</option>
+                    <option value="Brake Fluid">{t('brakeFluid')}</option>
+                    <option value="Other">{t('other')}</option>
+                  </>
+                )}
+              </select>
+            )}
+            {(repairCategory === 'Other' || repairSubcategory === 'Other') && (
+              <input
+                type="text"
+                placeholder={t('enterCustomCategory')}
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+              />
+            )}
+            <textarea
+              placeholder={t('description')}
+              value={repairDescription}
+              onChange={(e) => setRepairDescription(e.target.value)}
+            />
+            <input
+              type="number"
+              placeholder={t('mileageAtRepair')}
+              value={repairMileage}
+              onChange={(e) => setRepairMileage(e.target.value)}
+            />
+            <button onClick={addRepair}>{t('save')}</button>
+            <button onClick={() => setIsRepairModalOpen(false)}>{t('cancel')}</button>
+          </div>
+        </div>
       )}
-
-      {/* Поле "Другое", если выбрана "Other" */}
-      {(repairCategory === "Other" || repairSubcategory === "Other") && (
-        <input
-          type="text"
-          placeholder="Enter custom category"
-          value={customCategory}
-          onChange={(e) => setCustomCategory(e.target.value)}
-        />
-      )}
-
-      {/* Описание ремонта */}
-      <textarea 
-        placeholder="Description" 
-        value={repairDescription} 
-        onChange={(e) => setRepairDescription(e.target.value)} 
-      />
-
-      {/* Поле пробега */}
-      <input 
-        type="number" 
-        placeholder="Mileage at Repair" 
-        value={repairMileage} 
-        onChange={(e) => setRepairMileage(e.target.value)} 
-      />
-
-      {/* Кнопки */}
-      <button onClick={addRepair}>Save</button>
-      <button onClick={() => setIsRepairModalOpen(false)}>Cancel</button>
-    </div>
-  </div>
-)}
 
       {/* Модальное окно для ТО */}
       {isMaintenanceModalOpen && (
-       <div className="modal">
-  <div className="modal-content">
-    <h3>Add Maintenance</h3>
-
-    {/* Кнопка выбора всех чекбоксов */}
-   <button
-  onClick={() => {
-    setMaintenance((prevState) => {
-      const allChecked = Object.values(prevState).every((val) => val);
-      return {
-        oilChange: !allChecked,
-        filterChange: !allChecked,
-        brakeCheck: !allChecked,
-        tireRotation: !allChecked,
-        coolantFlush: !allChecked,
-      };
-    });
-  }}
->
-  {Object.values(maintenance).every((val) => val) ? "Deselect All" : "Select All"}
-</button>
-    {/* Чекбоксы */}
-    <label className="checkbox-label">
-      <input
-        type="checkbox"
-        checked={maintenance.oilChange}
-        onChange={(e) => setMaintenance({ ...maintenance, oilChange: e.target.checked })}
-      />
-      Oil Change
-    </label>
-
-    {/* Поле пробега при замене масла (отображается только если oilChange включен) */}
-    {maintenance.oilChange && (
-      <input
-        type="number"
-        placeholder="Mileage at Oil Change"
-        value={maintenance.oilChangeMileage || ""}
-        onChange={(e) => setMaintenance({ ...maintenance, oilChangeMileage: e.target.value })}
-      />
-    )}
-
-   <label className="checkbox-label">
-      <input
-        type="checkbox"
-        checked={maintenance.filterChange}
-        onChange={(e) => setMaintenance({ ...maintenance, filterChange: e.target.checked })}
-      />
-      Filter Change
-    </label>
-    <label className="checkbox-label">
-      <input
-        type="checkbox"
-        checked={maintenance.brakeCheck}
-        onChange={(e) => setMaintenance({ ...maintenance, brakeCheck: e.target.checked })}
-      />
-      Brake Check
-    </label>
-    <label className="checkbox-label">
-      <input
-        type="checkbox"
-        checked={maintenance.tireRotation}
-        onChange={(e) => setMaintenance({ ...maintenance, tireRotation: e.target.checked })}
-      />
-      Tire Rotation
-    </label>
-    <label className="checkbox-label">
-      <input
-        type="checkbox"
-        checked={maintenance.coolantFlush}
-        onChange={(e) => setMaintenance({ ...maintenance, coolantFlush: e.target.checked })}
-      />
-      Coolant Flush
-    </label>
-
-    <button onClick={addMaintenance}>Save</button>
-    <button onClick={() => setIsMaintenanceModalOpen(false)}>Cancel</button>
-  </div>
-</div>
-
+        <div className="modal">
+          <div className="modal-content">
+            <h3>{t('addMaintenance')}</h3>
+            <button
+              onClick={() => {
+                setMaintenance((prevState) => {
+                  const allChecked = Object.values(prevState).every((val) => val);
+                  return {
+                    oilChange: !allChecked,
+                    filterChange: !allChecked,
+                    brakeCheck: !allChecked,
+                    tireRotation: !allChecked,
+                    coolantFlush: !allChecked,
+                  };
+                });
+              }}
+            >
+              {Object.values(maintenance).every((val) => val) ? t('deselectAll') : t('selectAll')}
+            </button>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={maintenance.oilChange}
+                onChange={(e) => setMaintenance({ ...maintenance, oilChange: e.target.checked })}
+              />
+              {t('oilChange')}
+            </label>
+            {maintenance.oilChange && (
+              <input
+                type="number"
+                placeholder={t('mileageAtOilChange')}
+                value={maintenance.oilChangeMileage || ''}
+                onChange={(e) => setMaintenance({ ...maintenance, oilChangeMileage: e.target.value })}
+              />
+            )}
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={maintenance.filterChange}
+                onChange={(e) => setMaintenance({ ...maintenance, filterChange: e.target.checked })}
+              />
+              {t('filterChange')}
+            </label>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={maintenance.brakeCheck}
+                onChange={(e) => setMaintenance({ ...maintenance, brakeCheck: e.target.checked })}
+              />
+              {t('brakeCheck')}
+            </label>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={maintenance.tireRotation}
+                onChange={(e) => setMaintenance({ ...maintenance, tireRotation: e.target.checked })}
+              />
+              {t('tireRotation')}
+            </label>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={maintenance.coolantFlush}
+                onChange={(e) => setMaintenance({ ...maintenance, coolantFlush: e.target.checked })}
+              />
+              {t('coolantFlush')}
+            </label>
+            <button onClick={addMaintenance}>{t('save')}</button>
+            <button onClick={() => setIsMaintenanceModalOpen(false)}>{t('cancel')}</button>
+          </div>
+        </div>
       )}
 
+      {/* Модальное окно для редактирования ТО */}
       {isEditMaintenanceModalOpen && (
-  <div className="modal">
-    <div className="modal-content">
-      <h3>Edit Maintenance</h3>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          updateMaintenance();
-        }}
-      >
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={editMaintenance?.oil_change || false}
-            onChange={(e) => setEditMaintenance({ ...editMaintenance, oil_change: e.target.checked })}
-          />
-          Oil Change
-        </label>
+        <div className="modal">
+          <div className="modal-content">
+            <h3>{t('editMaintenance')}</h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                updateMaintenance();
+              }}
+            >
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={editMaintenance?.oil_change || false}
+                  onChange={(e) => setEditMaintenance({ ...editMaintenance, oil_change: e.target.checked })}
+                />
+                {t('oilChange')}
+              </label>
+              {editMaintenance?.oil_change && (
+                <input
+                  type="number"
+                  placeholder={t('mileageAtOilChange')}
+                  value={editMaintenance?.oil_change_mileage || ''}
+                  onChange={(e) => setEditMaintenance({ ...editMaintenance, oil_change_mileage: e.target.value })}
+                />
+              )}
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={editMaintenance?.filter_change || false}
+                  onChange={(e) => setEditMaintenance({ ...editMaintenance, filter_change: e.target.checked })}
+                />
+                {t('filterChange')}
+              </label>
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={editMaintenance?.brake_check || false}
+                  onChange={(e) => setEditMaintenance({ ...editMaintenance, brake_check: e.target.checked })}
+                />
+                {t('brakeCheck')}
+              </label>
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={editMaintenance?.tire_rotation || false}
+                  onChange={(e) => setEditMaintenance({ ...editMaintenance, tire_rotation: e.target.checked })}
+                />
+                {t('tireRotation')}
+              </label>
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={editMaintenance?.coolant_flush || false}
+                  onChange={(e) => setEditMaintenance({ ...editMaintenance, coolant_flush: e.target.checked })}
+                />
+                {t('coolantFlush')}
+              </label>
+              <button type="submit">{t('save')}</button>
+              <button type="button" onClick={() => setIsEditMaintenanceModalOpen(false)}>
+                {t('cancel')}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
-        {editMaintenance?.oil_change && (
-          <input
-            type="number"
-            placeholder="Mileage at Oil Change"
-            value={editMaintenance?.oil_change_mileage || ""}
-            onChange={(e) => setEditMaintenance({ ...editMaintenance, oil_change_mileage: e.target.value })}
-          />
-        )}
-
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={editMaintenance?.filter_change || false}
-            onChange={(e) => setEditMaintenance({ ...editMaintenance, filter_change: e.target.checked })}
-          />
-          Filter Change
-        </label>
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={editMaintenance?.brake_check || false}
-            onChange={(e) => setEditMaintenance({ ...editMaintenance, brake_check: e.target.checked })}
-          />
-          Brake Check
-        </label>
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={editMaintenance?.tire_rotation || false}
-            onChange={(e) => setEditMaintenance({ ...editMaintenance, tire_rotation: e.target.checked })}
-          />
-          Tire Rotation
-        </label>
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={editMaintenance?.coolant_flush || false}
-            onChange={(e) => setEditMaintenance({ ...editMaintenance, coolant_flush: e.target.checked })}
-          />
-          Coolant Flush
-        </label>
-
-        <button type="submit">Save</button>
-        <button type="button" onClick={() => setIsEditMaintenanceModalOpen(false)}>
-          Cancel
-        </button>
-      </form>
-    </div>
-  </div>
-)} 
-{isEditRepairModalOpen && (
-  <div className="modal">
-    <div className="modal-content">
-      <h3>Edit Repair</h3>
-      <select
-        value={editRepair?.category || ""}
-        onChange={(e) => setEditRepair({ ...editRepair, category: e.target.value })}
-      >
-        <option value="">Select Category</option>
-        <option value="Engine">Engine</option>
-        <option value="Brakes">Brakes</option>
-        <option value="Suspension">Suspension</option>
-        <option value="Electronics">Electronics</option>
-        <option value="Bodywork">Bodywork</option>
-      </select>
-      <textarea
-        placeholder="Description"
-        value={editRepair?.description || ""}
-        onChange={(e) => setEditRepair({ ...editRepair, description: e.target.value })}
-      />
-      <button onClick={updateRepair}>Save</button>
-      <button onClick={() => setIsEditRepairModalOpen(false)}>Cancel</button>
-    </div>
-  </div>
-)}
-
+      {/* Модальное окно для редактирования ремонта */}
+      {isEditRepairModalOpen && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>{t('editRepair')}</h3>
+            <select
+              value={editRepair?.category || ''}
+              onChange={(e) => setEditRepair({ ...editRepair, category: e.target.value })}
+            >
+              <option value="">{t('selectCategory')}</option>
+              <option value="Engine">{t('engine')}</option>
+              <option value="Brakes">{t('brakes')}</option>
+              <option value="Suspension">{t('suspension')}</option>
+              <option value="Electronics">{t('electronics')}</option>
+              <option value="Bodywork">{t('bodywork')}</option>
+            </select>
+            <textarea
+              placeholder={t('description')}
+              value={editRepair?.description || ''}
+              onChange={(e) => setEditRepair({ ...editRepair, description: e.target.value })}
+            />
+            <button onClick={updateRepair}>{t('save')}</button>
+            <button onClick={() => setIsEditRepairModalOpen(false)}>{t('cancel')}</button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

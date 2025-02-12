@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
+import { useTranslation } from 'react-i18next';
 
 const QRScanner = ({ onScanSuccess, onScanError }) => {
+    const { t } = useTranslation();
   const [scanResult, setScanResult] = useState(null);
 
   useEffect(() => {
@@ -40,7 +42,7 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
   return (
     <div>
       <div id="qr-scanner"></div>
-      {scanResult && <p>Отсканировано: {scanResult}</p>}
+      {scanResult && <p>{t('scaned')} {scanResult}</p>}
     </div>
   );
 };

@@ -1,12 +1,11 @@
-// CarDetails.js
 import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient"; // Подключаем настроенный клиент
-import './CarDetails.css'
-import logo_car from '../components/logo_car.png'
-
-
+import { useTranslation } from "react-i18next"; // Импортируем хук для перевода
+import './CarDetails.css';
+import logo_car from '../components/logo_car.png';
 
 export default function CarDetails({ user, car, setCar }) {
+  const { t } = useTranslation(); // Используем хук для перевода
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [year, setYear] = useState("");
@@ -19,8 +18,6 @@ export default function CarDetails({ user, car, setCar }) {
   const [suggestedModels, setSuggestedModels] = useState([]);
   const [turbocharged, setTurbocharged] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-
-  
 
   // Функция для получения брендов
   const fetchBrands = async (input) => {
@@ -108,7 +105,7 @@ export default function CarDetails({ user, car, setCar }) {
       vin, 
       fuelType: fuelType,
       transmissionType: transmissionType,
-       turbocharged,
+      turbocharged,
       user_id: user.id 
     };
 
@@ -123,101 +120,100 @@ export default function CarDetails({ user, car, setCar }) {
 
   return car ? (
     <div className="car-details">
-  <img src={logo_car} alt="Car" />
-  <div className="info">
-  <h3 className="car-title">Your Car</h3>
-  <p className="car-text">{car.brand} {car.model} ({car.year})</p>
-  <p className="car-text">Mileage: {car.mileage} km</p>
-  <p className="car-text">Fuel Type: {car.fuelType}</p>
-  <p className="car-text">Transmission: {car.transmissionType}</p>
- <button className="details-button" onClick={() => setShowDetails(!showDetails)}>
-  {showDetails ? "Hide Details" : "Show Details"}
-</button>
-  {showDetails && (
-    <>
-      <p className="car-text">Engine: {car.engine} {car.turbocharged && <span className="turbo">(Turbocharged)</span>}</p>
-      <p className="car-text">VIN: {car.vin}</p>
-    </>
-  )}
-</div>
-</div>
-) : (
-<div className="add-car-form">
-  <p className="no-car-message">You have not added a car yet.</p>
+      <img src={logo_car} alt="Car" />
+      <div className="info">
+        <h3 className="car-title">{t('yourCar')}</h3>
+        <p className="car-text">{car.brand} {car.model} ({car.year})</p>
+    <p className="car-text">{t('mileage')}: {car.mileage} {t('km')}</p>
+<p className="car-text">{t('fuelType')}: {t(car.fuelType)}</p>
+<p className="car-text">{t('transmission')}: {t(car.transmissionType)}</p>
+        <button className="details-button" onClick={() => setShowDetails(!showDetails)}>
+          {showDetails ? t('hideDetails') : t('showDetails')}
+        </button>
+        {showDetails && (
+          <>
+            <p className="car-text">{t('engine')}: {car.engine} L {car.turbocharged && <span className="turbo">({t('turbocharged')})</span>}</p>
+            <p className="car-text">{t('vin')}: {car.vin}</p>
+          </>
+        )}
+      </div>
+    </div>
+  ) : (
+    <div className="add-car-form">
+      <p className="no-car-message">{t('noCarMessage')}</p>
 
-  {/* Поле ввода бренда */}
-  <input 
-    type="text" 
-    placeholder="Brand" 
-    value={brand} 
-    onChange={handleBrandChange} 
-    onBlur={handleBlur} 
-    className="input-field"
-  />
-  {suggestedBrands.length > 0 && (
-    <ul className="suggestions">
-      {suggestedBrands.map((suggestion, index) => (
-        <li key={index} className="suggestion-item" onClick={() => handleBrandSelect(suggestion)}>
-          {suggestion}
-        </li>
-      ))}
-    </ul>
-  )}
+      {/* Поле ввода бренда */}
+      <input 
+        type="text" 
+        placeholder={t('brand')} 
+        value={brand} 
+        onChange={handleBrandChange} 
+        onBlur={handleBlur} 
+        className="input-field"
+      />
+      {suggestedBrands.length > 0 && (
+        <ul className="suggestions">
+          {suggestedBrands.map((suggestion, index) => (
+            <li key={index} className="suggestion-item" onClick={() => handleBrandSelect(suggestion)}>
+              {suggestion}
+            </li>
+          ))}
+        </ul>
+      )}
 
-  {/* Поле ввода модели */}
-  <input 
-    type="text" 
-    placeholder="Model" 
-    value={model} 
-    onChange={handleModelChange} 
-    onBlur={handleBlur} 
-    className="input-field"
-  />
-  {suggestedModels.length > 0 && (
-    <ul className="suggestions">
-      {suggestedModels.map((suggestion, index) => (
-        <li key={index} className="suggestion-item" onClick={() => handleModelSelect(suggestion)}>
-          {suggestion}
-        </li>
-      ))}
-    </ul>
-  )}
+      {/* Поле ввода модели */}
+      <input 
+        type="text" 
+        placeholder={t('model')} 
+        value={model} 
+        onChange={handleModelChange} 
+        onBlur={handleBlur} 
+        className="input-field"
+      />
+      {suggestedModels.length > 0 && (
+        <ul className="suggestions">
+          {suggestedModels.map((suggestion, index) => (
+            <li key={index} className="suggestion-item" onClick={() => handleModelSelect(suggestion)}>
+              {suggestion}
+            </li>
+          ))}
+        </ul>
+      )}
 
-  <input type="number" placeholder="Year" value={year} onChange={(e) => setYear(e.target.value)} className="input-field" />
-  <input type="text" placeholder="Engine" value={engine} onChange={(e) => setEngine(e.target.value)} className="input-field" />
-  <input type="number" placeholder="Mileage" value={mileage} onChange={(e) => setMileage(e.target.value)} className="input-field" />
-  <input type="text" placeholder="VIN" value={vin} onChange={(e) => setVin(e.target.value)} className="input-field" />
+      <input type="number" placeholder={t('year')} value={year} onChange={(e) => setYear(e.target.value)} className="input-field" />
+      <input type="text" placeholder={t('engine')} value={engine} onChange={(e) => setEngine(e.target.value)} className="input-field" />
+      <input type="number" placeholder={t('mileage')} value={mileage} onChange={(e) => setMileage(e.target.value)} className="input-field" />
+      <input type="text" placeholder={t('vin')} value={vin} onChange={(e) => setVin(e.target.value)} className="input-field" />
 
-  <label className="turbo-checkbox">
-    <input
-      type="checkbox"
-      checked={turbocharged}
-      onChange={(e) => setTurbocharged(e.target.checked)}
-      className="checkbox"
-    />
-    Turbocharged
-  </label>
+      <label className="turbo-checkbox">
+        <input
+          type="checkbox"
+          checked={turbocharged}
+          onChange={(e) => setTurbocharged(e.target.checked)}
+          className="checkbox"
+        />
+        {t('turbocharged')}
+      </label>
 
-  {/* Поле выбора типа топлива */}
-  <select value={fuelType} onChange={(e) => setFuelType(e.target.value)} className="dropdown">
-    <option value="">Select Fuel Type</option>
-    <option value="Petrol">Petrol</option>
-    <option value="Diesel">Diesel</option>
-    <option value="Electric">Electric</option>
-    <option value="Hybrid">Hybrid</option>
-  </select>
+      {/* Поле выбора типа топлива */}
+      <select value={fuelType} onChange={(e) => setFuelType(e.target.value)} className="dropdown">
+        <option value="">{t('selectFuelType')}</option>
+        <option value="Petrol">{t('petrol')}</option>
+        <option value="Diesel">{t('diesel')}</option>
+        <option value="Electric">{t('electric')}</option>
+        <option value="Hybrid">{t('hybrid')}</option>
+      </select>
 
-  {/* Поле выбора коробки передач */}
-  <select value={transmissionType} onChange={(e) => setTransmissionType(e.target.value)} className="dropdown">
-    <option value="">Select Transmission</option>
-    <option value="Manual">Manual</option>
-    <option value="Automatic">Automatic</option>
-    <option value="CVT">CVT</option>
-    <option value="Dual-clutch">Dual-clutch</option>
-  </select>
+      {/* Поле выбора коробки передач */}
+      <select value={transmissionType} onChange={(e) => setTransmissionType(e.target.value)} className="dropdown">
+        <option value="">{t('selectTransmission')}</option>
+        <option value="Manual">{t('manual')}</option>
+        <option value="Automatic">{t('automatic')}</option>
+        <option value="CVT">{t('cvt')}</option>
+        <option value="Dual-clutch">{t('dualClutch')}</option>
+      </select>
 
-  <button onClick={addCar} className="submit-button">Add Car</button>
-</div>
-
+      <button onClick={addCar} className="submit-button">{t('addCar')}</button>
+    </div>
   );
 }
