@@ -21,7 +21,7 @@ header {
     align-items: center;
     width: 40px;
     height: 40px;
-    background-color: #6200ea;
+    background-color: #1E293B;
     color: white;
     font-weight: bold;
     font-size: 1.2rem;
@@ -37,7 +37,7 @@ header {
 }
 
 .user-icon:hover {
-    background-color: #3700b3;
+    background-color: #3c5275;
 }
 
 /* Выпадающее меню */
@@ -166,6 +166,8 @@ header {
     text-align: center;
     max-width: 90%;
     width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
 .qr-scanner-content button {
@@ -184,7 +186,7 @@ header {
     .qr-scanner-content {
         width: 100%;
         max-width: 100%;
-        height: 100vh;
+        max-height: 70vh;
         border-radius: 0;
         display: flex;
         flex-direction: column;
