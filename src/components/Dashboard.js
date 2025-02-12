@@ -4,6 +4,7 @@ import CarDetails from './CarDetails';
 import './Dashboard.css'
 import CarTracker from "./CarTracker";
 import ProgressBar from './ProgressBar';
+import banner from '../components/banner.jpg'
 
 
 export default function Dashboard({ user, supabase, handleLogout }) {
@@ -524,7 +525,7 @@ const calculateTotalMileageInterval = (car, maintenanceRecords) => {
 
   return Math.round(interval / 500) * 500;
 };
-
+const [showWarning, setShowWarning] = useState(true);
 
   return (
     <>
@@ -712,9 +713,17 @@ const calculateTotalMileageInterval = (car, maintenanceRecords) => {
     <ProgressBar 
       progress={calculateRemainingMileage(car, maintenanceRecords)} 
       total={calculateTotalMileageInterval(car, maintenanceRecords)} 
-    />
-  
-
+    />)}
+     
+     {record.oil_change && calculateRemainingMileage(car, maintenanceRecords) < 2000 && showWarning && (
+  <div className="oil-warning">
+    <a href="https://dok.ua" target="_blank" rel="noopener noreferrer">
+      <img src={banner} alt="Oil Change Warning" />
+    </a>
+    <button className="close-button" onClick={() => setShowWarning(false)}>
+      × {/* Символ "крестик" */}
+    </button>
+  </div>
 )}
     </li>
   ))}

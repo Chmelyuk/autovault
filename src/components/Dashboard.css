@@ -46,12 +46,7 @@ button {
     transition: all 0.3s ease-in-out;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
 }
-
-button:hover {
-    background: linear-gradient(135deg, #334155, #1E293B);
-    transform: translateY(-2px);
-}
-
+ 
 /* Стили для выбора автомобиля */
 .car-selector-wrapper {
     margin-bottom: 20px;
@@ -111,10 +106,7 @@ button:hover {
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-.button-container button:hover {
-    background: linear-gradient(135deg, #334155, #1E293B);
-    transform: translateY(-2px);
-}
+ 
 
 /* Стили для истории ремонтов и ТО */
 .repair-history,
@@ -149,12 +141,7 @@ button:hover {
     border: 1px solid ;
     border-color: antiquewhite;
 }
-
-.repair-history li:hover,
-.maintenance-history li:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
+ 
 
 .repair-history li p,
 .maintenance-history li p {
@@ -225,11 +212,7 @@ button:hover {
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-.modal-content button:hover {
-    background: linear-gradient(135deg, #334155, #1E293B);
-    transform: translateY(-2px);
-}
-
+ 
 /* Стили для чекбоксов */
 .checkbox-label {
     display: flex;
@@ -279,3 +262,32 @@ button:hover {
     }
 }
 
+.oil-warning {
+    position: relative;
+    display: inline-block;
+    margin: 10px 0;
+}
+
+.oil-warning img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.close-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
