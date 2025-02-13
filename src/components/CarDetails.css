@@ -13,7 +13,7 @@
 }
 
 .car-details img {
-    width: 50%;
+    width: 80%;
     /* Занимает половину ширины контейнера */
     height: auto;
     border-radius: 10px;
