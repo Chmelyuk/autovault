@@ -183,7 +183,9 @@ const updateRepair = async () => {
     .from("repairs")
     .update({
       category: editRepair.category,
+      subcategory: editRepair.subcategory || null,
       description: editRepair.description,
+      mileage: parseInt(editRepair.mileage, 10) || null,
     })
     .eq("id", editRepair.id)
     .select("*")
@@ -194,8 +196,15 @@ const updateRepair = async () => {
   } else {
     setRepairs(repairs.map((r) => (r.id === data.id ? data : r)));
     setIsEditRepairModalOpen(false);
+
+    // 🔹 Добавляем проверку и обновление пробега автомобиля
+    if (editRepair.mileage && parseInt(editRepair.mileage, 10) > car.mileage) {
+      updateCarMileage(parseInt(editRepair.mileage, 10));
+    }
   }
 };
+ 
+  
 const deleteRepair = async (repairId) => {
   if (!window.confirm("Вы уверены, что хотите удалить эту запись?")) return;
 
@@ -311,7 +320,10 @@ const updateCarMileage = async (newMileage) => {
     if (!car || newMileage <= car.mileage) return; // Пробег обновляется только если он выше
 
     console.log(`🔹 Обновляем пробег: ${car.mileage} → ${newMileage} км`);
-
+const handleRepairMileageUpdate = (newMileage) => {
+  setRepairMileage(newMileage);
+  updateCarMileage(newMileage); // Добавить обновление основного пробега
+};
     const { data, error } = await supabase
         .from("cars")
         .update({ mileage: newMileage })
@@ -617,6 +629,8 @@ const [showWarning, setShowWarning] = useState(true);
         user={user}
         openEditModal={openEditModal}
         fetchMaintenance={fetchMaintenance}
+         car={car}
+         setCar={setCar}
       />
 
       <div className="dashboard">
@@ -939,30 +953,67 @@ const [showWarning, setShowWarning] = useState(true);
 
       {/* Модальное окно для редактирования ремонта */}
       {isEditRepairModalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>{t('editRepair')}</h3>
-            <select
-              value={editRepair?.category || ''}
-              onChange={(e) => setEditRepair({ ...editRepair, category: e.target.value })}
-            >
-              <option value="">{t('selectCategory')}</option>
-              <option value="Engine">{t('engine')}</option>
-              <option value="Brakes">{t('brakes')}</option>
-              <option value="Suspension">{t('suspension')}</option>
-              <option value="Electronics">{t('electronics')}</option>
-              <option value="Bodywork">{t('bodywork')}</option>
-            </select>
-            <textarea
-              placeholder={t('description')}
-              value={editRepair?.description || ''}
-              onChange={(e) => setEditRepair({ ...editRepair, description: e.target.value })}
-            />
-            <button onClick={updateRepair}>{t('save')}</button>
-            <button onClick={() => setIsEditRepairModalOpen(false)}>{t('cancel')}</button>
-          </div>
-        </div>
+  <div className="modal">
+    <div className="modal-content">
+      <h3>{t('editRepair')}</h3>
+      <select
+        value={editRepair?.category || ''}
+        onChange={(e) => setEditRepair({ ...editRepair, category: e.target.value })}
+      >
+        <option value="">{t('selectCategory')}</option>
+        <option value="Engine">{t('engine')}</option>
+        <option value="Brakes">{t('brakes')}</option>
+        <option value="Suspension">{t('suspension')}</option>
+        <option value="Electronics">{t('electronics')}</option>
+        <option value="Bodywork">{t('bodywork')}</option>
+      </select>
+
+      {/* Поле для подкатегории */}
+      {editRepair?.category && editRepair.category !== 'Other' && (
+        <select
+          value={editRepair?.subcategory || ''}
+          onChange={(e) => setEditRepair({ ...editRepair, subcategory: e.target.value })}
+        >
+          <option value="">{t('selectSubcategory')}</option>
+          {editRepair.category === 'Engine' && (
+            <>
+              <option value="Oil Leak">{t('oilLeak')}</option>
+              <option value="Timing Belt">{t('timingBelt')}</option>
+              <option value="Cylinder Head">{t('cylinderHead')}</option>
+              <option value="Piston Rings">{t('pistonRings')}</option>
+              <option value="Other">{t('other')}</option>
+            </>
+          )}
+          {editRepair.category === 'Brakes' && (
+            <>
+              <option value="Pads Replacement">{t('padsReplacement')}</option>
+              <option value="Brake Discs">{t('brakeDiscs')}</option>
+              <option value="Brake Fluid">{t('brakeFluid')}</option>
+              <option value="Other">{t('other')}</option>
+            </>
+          )}
+        </select>
       )}
+
+      {/* Поле для ввода пробега */}
+      <input
+        type="number"
+        placeholder={t('mileageAtRepair')}
+        value={editRepair?.mileage || ''}
+        onChange={(e) => setEditRepair({ ...editRepair, mileage: e.target.value })}
+      />
+
+      <textarea
+        placeholder={t('description')}
+        value={editRepair?.description || ''}
+        onChange={(e) => setEditRepair({ ...editRepair, description: e.target.value })}
+      />
+
+      <button onClick={updateRepair}>{t('save')}</button>
+      <button onClick={() => setIsEditRepairModalOpen(false)}>{t('cancel')}</button>
+    </div>
+  </div>
+)}
     </>
   );
 }

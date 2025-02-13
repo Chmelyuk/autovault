@@ -18,6 +18,9 @@ export default function CarDetails({ user, car, setCar }) {
   const [suggestedModels, setSuggestedModels] = useState([]);
   const [turbocharged, setTurbocharged] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [carImage, setCarImage] = useState(
+  car ? localStorage.getItem(`carImage_${car.id}`) || logo_car : logo_car
+);
 
   // Функция для получения брендов
   const fetchBrands = async (input) => {
@@ -117,11 +120,41 @@ export default function CarDetails({ user, car, setCar }) {
       setCar(data);
     }
   };
+ const handleImageClick = () => {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        localStorage.setItem(`carImage_${car.id}`, result); // ✅ Сохраняем с ID машины
+        setCarImage(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  input.click();
+};
+
+
+useEffect(() => {
+  if (car) {
+    setCarImage(localStorage.getItem(`carImage_${car.id}`) || logo_car);
+  }
+}, [car]);
 
     return car ? (
     <div className="car-details">
       <h3 className="car-title">{t('yourCar')}</h3>
-      <img src={logo_car} alt="Car" />
+      <img
+        src={carImage}
+        alt="Car"
+        onClick={handleImageClick}
+        className="car-image"
+      />
       <div className="info">
         <p className="car-text">{car.brand} {car.model} ({car.year})</p>
         <p className="car-text">{t('mileage')}: {car.mileage} {t('km')}</p>
