@@ -120,7 +120,14 @@ export default function CarDetails({ user, car, setCar }) {
       setCar(data);
     }
   };
- const handleImageClick = () => {
+
+useEffect(() => {
+  if (car) {
+    setCarImage(localStorage.getItem(`carImage_${car.id}`) || logo_car);
+  }
+}, [car]);
+
+const handleImageClick = () => {
   const input = document.createElement("input");
   input.type = "file";
   input.accept = "image/*";
@@ -130,7 +137,7 @@ export default function CarDetails({ user, car, setCar }) {
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result;
-        localStorage.setItem(`carImage_${car.id}`, result); // ✅ Сохраняем с ID машины
+        localStorage.setItem(`carImage_${car.id}`, result); // ✅ Теперь сохраняем с ID машины
         setCarImage(result);
       };
       reader.readAsDataURL(file);
@@ -139,12 +146,6 @@ export default function CarDetails({ user, car, setCar }) {
   input.click();
 };
 
-
-useEffect(() => {
-  if (car) {
-    setCarImage(localStorage.getItem(`carImage_${car.id}`) || logo_car);
-  }
-}, [car]);
 
     return car ? (
     <div className="car-details">
