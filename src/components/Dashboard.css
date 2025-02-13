@@ -413,3 +413,22 @@ button {
     margin-top: 15px;
     /* Добавим отступ сверху */
 }
+.car-details-container {
+    background-color: #0b1723;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    margin-bottom: 20px;
+}
+
+.oil-change-section {
+    color: #cfd8dc;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.oil-change {
+    font-weight: bold;
+    text-shadow: 0px 0px 5px rgba(0, 255, 0, 0.3);
+}

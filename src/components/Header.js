@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient';
 import { QRCodeSVG } from 'qrcode.react';
 import QRScanner from './QRScanner';
 import { useTranslation } from 'react-i18next';
+import CarTracker from './CarTracker';
 
 export default function Header({ user, handleLogout, openEditModal, fetchCars, fetchRepairs,fetchMaintenance }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -12,6 +13,7 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
   const [showQRScanner, setShowQRScanner] = useState(false);
   const firstLetter = user?.email?.charAt(0).toUpperCase();
   const { t, i18n } = useTranslation();
+  const [car, setCar] = useState(null);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -125,6 +127,7 @@ const handleScanSuccess = async (data) => {
 
       {isDropdownOpen && (
         <div className="dropdown-menu">
+           <CarTracker user={user} car={car} supabase={supabase} setCar={setCar} />
           <div className='language-buttons'>
             <span>{t('language')}: </span>
             <button onClick={() => i18n.changeLanguage('en')}>🇬🇧</button>

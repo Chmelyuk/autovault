@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import CarDetails from './CarDetails';
 import './Dashboard.css'
-import CarTracker from "./CarTracker";
+ 
 import ProgressBar from './ProgressBar';
 import banner from '../components/banner.jpg'
 import { useTranslation } from 'react-i18next';
+ 
 
 
 
@@ -523,7 +524,9 @@ const calculateTotalMileageInterval = (car, maintenanceRecords) => {
 const [showWarning, setShowWarning] = useState(true);
 
  return (
+
     <>
+    
       {isEditModalOpen && (
         <div className="modal">
           <div className="modal-content">
@@ -631,20 +634,20 @@ const [showWarning, setShowWarning] = useState(true);
           </select>
         </div>
         <CarDetails user={user} supabase={supabase} car={car} setCar={setCar} />
-        {car && maintenanceRecords.length > 0 ? (
-          <p>
-            <strong>{t('oilChange')}:</strong>
-            <br />
-            <br />
-            <br />
-            <ProgressBar
-              progress={calculateRemainingMileage(car, maintenanceRecords)}
-              total={calculateTotalMileageInterval(car, maintenanceRecords)}
-            />
-          </p>
-        ) : (
-          <p>⏳ {t('loading')}</p>
-        )}
+        
+         <div className="car-details-container">
+      {car && maintenanceRecords.length > 0 ? (
+        <div className="oil-change-section">
+          <strong className="oil-change">{t('oilChange')}:</strong>
+          <ProgressBar
+            progress={calculateRemainingMileage(car, maintenanceRecords)}
+            total={calculateTotalMileageInterval(car, maintenanceRecords)}
+          />
+        </div>
+      ) : (
+        <p>⏳ {t('loading')}</p>
+      )}
+    </div>
         <div className="action-buttons">
           <button className="add-button" onClick={() => setIsRepairModalOpen(true)}>
             {t('addRepair')}
@@ -655,13 +658,13 @@ const [showWarning, setShowWarning] = useState(true);
         </div>
 
         <h3>{t('repairHistory')}</h3>
-        <CarTracker user={user} car={car} supabase={supabase} setCar={setCar} />
+       
         <div className="repair-history">
           <ul>
            {repairs.length > 0 ? (
   repairs.map((repair) => (
     <li key={repair.id}>
-      <strong>{t(repair.category)}</strong> {/* Используем перевод для категории */}
+      <strong>{t(repair.category)}</strong><br/><br/> {/* Используем перевод для категории */}
       {repair.subcategory && ` ${t('subcategory')}: ${t(repair.subcategory)}`} {/* Используем перевод для подкатегории */}
       <p>{repair.description}</p>
       {repair.mileage && <p>🛠 {t('mileageAtRepair')}: {repair.mileage} км</p>}
@@ -683,7 +686,7 @@ const [showWarning, setShowWarning] = useState(true);
           <ul>
             {maintenanceRecords.map((record) => (
               <li key={record.id}>
-                {new Date(record.date).toLocaleDateString()}
+                
                 <br />
                 {record.oil_change &&
                   `${t('oilChange')} ${record.oil_change_date ? new Date(record.oil_change_date).toLocaleDateString() : t('unknownDate')} ${t('at')} ${record.oil_change_mileage || t('unknown')} км`}

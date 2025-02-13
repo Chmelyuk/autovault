@@ -118,15 +118,15 @@ export default function CarDetails({ user, car, setCar }) {
     }
   };
 
-  return car ? (
+    return car ? (
     <div className="car-details">
+      <h3 className="car-title">{t('yourCar')}</h3>
       <img src={logo_car} alt="Car" />
       <div className="info">
-        <h3 className="car-title">{t('yourCar')}</h3>
         <p className="car-text">{car.brand} {car.model} ({car.year})</p>
-    <p className="car-text">{t('mileage')}: {car.mileage} {t('km')}</p>
-<p className="car-text">{t('fuelType')}: {t(car.fuelType)}</p>
-<p className="car-text">{t('transmission')}: {t(car.transmissionType)}</p>
+        <p className="car-text">{t('mileage')}: {car.mileage} {t('km')}</p>
+        <p className="car-text">{t('fuelType')}: {t(car.fuelType)}</p>
+        <p className="car-text">{t('transmission')}: {t(car.transmissionType)}</p>
         <button className="details-button" onClick={() => setShowDetails(!showDetails)}>
           {showDetails ? t('hideDetails') : t('showDetails')}
         </button>
@@ -141,8 +141,6 @@ export default function CarDetails({ user, car, setCar }) {
   ) : (
     <div className="add-car-form">
       <p className="no-car-message">{t('noCarMessage')}</p>
-
-      {/* Поле ввода бренда */}
       <input 
         type="text" 
         placeholder={t('brand')} 
@@ -160,8 +158,6 @@ export default function CarDetails({ user, car, setCar }) {
           ))}
         </ul>
       )}
-
-      {/* Поле ввода модели */}
       <input 
         type="text" 
         placeholder={t('model')} 
@@ -179,12 +175,10 @@ export default function CarDetails({ user, car, setCar }) {
           ))}
         </ul>
       )}
-
       <input type="number" placeholder={t('year')} value={year} onChange={(e) => setYear(e.target.value)} className="input-field" />
       <input type="text" placeholder={t('engine')} value={engine} onChange={(e) => setEngine(e.target.value)} className="input-field" />
       <input type="number" placeholder={t('mileage')} value={mileage} onChange={(e) => setMileage(e.target.value)} className="input-field" />
       <input type="text" placeholder={t('vin')} value={vin} onChange={(e) => setVin(e.target.value)} className="input-field" />
-
       <label className="turbo-checkbox">
         <input
           type="checkbox"
@@ -194,8 +188,6 @@ export default function CarDetails({ user, car, setCar }) {
         />
         {t('turbocharged')}
       </label>
-
-      {/* Поле выбора типа топлива */}
       <select value={fuelType} onChange={(e) => setFuelType(e.target.value)} className="dropdown">
         <option value="">{t('selectFuelType')}</option>
         <option value="Petrol">{t('petrol')}</option>
@@ -203,8 +195,6 @@ export default function CarDetails({ user, car, setCar }) {
         <option value="Electric">{t('electric')}</option>
         <option value="Hybrid">{t('hybrid')}</option>
       </select>
-
-      {/* Поле выбора коробки передач */}
       <select value={transmissionType} onChange={(e) => setTransmissionType(e.target.value)} className="dropdown">
         <option value="">{t('selectTransmission')}</option>
         <option value="Manual">{t('manual')}</option>
@@ -212,7 +202,6 @@ export default function CarDetails({ user, car, setCar }) {
         <option value="CVT">{t('cvt')}</option>
         <option value="Dual-clutch">{t('dualClutch')}</option>
       </select>
-
       <button onClick={addCar} className="submit-button">{t('addCar')}</button>
     </div>
   );
