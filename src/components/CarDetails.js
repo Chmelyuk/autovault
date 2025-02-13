@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"; // Импортируем хук
 import './CarDetails.css';
 import logo_car from '../components/logo_car.png';
 
-export default function CarDetails({ user, car, setCar }) {
+export default function CarDetails({ user, car, setCar, cars }) {
   const { t } = useTranslation(); // Используем хук для перевода
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
@@ -127,7 +127,7 @@ useEffect(() => {
   }
 }, [car]);
 
-const handleImageClick = () => {
+ const handleImageClick = () => {
   const input = document.createElement("input");
   input.type = "file";
   input.accept = "image/*";
@@ -137,7 +137,7 @@ const handleImageClick = () => {
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result;
-        localStorage.setItem(`carImage_${car.id}`, result); // ✅ Теперь сохраняем с ID машины
+        localStorage.setItem(`carImage_${car.id}`, result); // ✅ Сохраняем с ID машины
         setCarImage(result);
       };
       reader.readAsDataURL(file);
@@ -147,8 +147,26 @@ const handleImageClick = () => {
 };
 
 
+
     return car ? (
     <div className="car-details">
+
+      {cars && cars.length > 0 ? (
+  <select
+    className="car-selector"
+    value={car?.id}
+    onChange={(e) => setCar(cars.find((c) => c.id === e.target.value))}
+  >
+    {cars.map((c) => (
+      <option key={c.id} value={c.id}>
+        {c.brand} {c.model} ({c.year})
+      </option>
+    ))}
+  </select>
+) : (
+  <p>{t('noCarsAvailable')}</p>
+)}
+
       <h3 className="car-title">{t('yourCar')}</h3>
       <img
         src={carImage}

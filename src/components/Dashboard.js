@@ -182,8 +182,8 @@ const updateRepair = async () => {
   const { data, error } = await supabase
     .from("repairs")
     .update({
-      category: editRepair.category,
-      subcategory: editRepair.subcategory || null,
+       category: editRepair.category,
+      subcategory: editRepair.subcategory || null, // Добавляем подкатегорию
       description: editRepair.description,
       mileage: parseInt(editRepair.mileage, 10) || null,
     })
@@ -196,12 +196,10 @@ const updateRepair = async () => {
   } else {
     setRepairs(repairs.map((r) => (r.id === data.id ? data : r)));
     setIsEditRepairModalOpen(false);
-
-    // 🔹 Добавляем проверку и обновление пробега автомобиля
-    if (editRepair.mileage && parseInt(editRepair.mileage, 10) > car.mileage) {
-      updateCarMileage(parseInt(editRepair.mileage, 10));
-    }
   }
+   if (repairMileage && parseInt(repairMileage, 10) > car.mileage) {
+            updateCarMileage(parseInt(repairMileage, 10));
+        }
 };
  
   
@@ -629,25 +627,11 @@ const [showWarning, setShowWarning] = useState(true);
         user={user}
         openEditModal={openEditModal}
         fetchMaintenance={fetchMaintenance}
-         car={car}
-         setCar={setCar}
       />
 
       <div className="dashboard">
-        <div className="car-selector-wrapper">
-          <select
-            className="car-selector"
-            value={car?.id}
-            onChange={(e) => setCar(cars.find((c) => c.id === e.target.value))}
-          >
-            {cars.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.brand} {c.model} ({c.year})
-              </option>
-            ))}
-          </select>
-        </div>
-        <CarDetails user={user} supabase={supabase} car={car} setCar={setCar} />
+        
+        <CarDetails user={user} supabase={supabase} car={car} setCar={setCar} cars={cars}  />
         
          <div className="car-details-container">
       {car && maintenanceRecords.length > 0 ? (

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './Header.css';
 import { supabase } from '../supabaseClient';
 import { QRCodeSVG } from 'qrcode.react';
@@ -27,9 +27,7 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
   const { t, i18n } = useTranslation();
   
 
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-  };
+   
 
   // Функция для открытия модального окна добавления автомобиля
   const openAddCarModal = () => {
@@ -159,7 +157,31 @@ const handleScanSuccess = async (data) => {
   const handleScanError = (error) => {
     console.error("❌ Ошибка сканирования QR-кода:", error);
   };
+const dropdownRef = useRef(null);
 
+useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false); // Закрываем меню, если клик был вне его области
+      }
+    };
+
+    // Добавляем обработчик, если меню открыто
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    // Убираем обработчик при размонтировании компонента
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]); // Зависимость от состояния isDropdownOpen
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  
   return (
     <header className="header">
       <div className="user-icon" onClick={toggleDropdown}>
@@ -167,7 +189,7 @@ const handleScanSuccess = async (data) => {
       </div>
 
       {isDropdownOpen && (
-        <div className="dropdown-menu">
+        <div className="dropdown-menu" ref={dropdownRef}>
           <CarTracker user={user} car={car} supabase={supabase} setCar={setCar} />
           <div className='language-buttons'>
             <span>{t('language')}: </span>
