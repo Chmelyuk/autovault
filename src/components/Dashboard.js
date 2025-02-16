@@ -630,8 +630,20 @@ const [showWarning, setShowWarning] = useState(true);
       />
 
       <div className="dashboard">
-        
-        <CarDetails user={user} supabase={supabase} car={car} setCar={setCar} cars={cars}  />
+        <div className="car-selector-wrapper">
+          <select
+            className="car-selector"
+            value={car?.id}
+            onChange={(e) => setCar(cars.find((c) => c.id === e.target.value))}
+          >
+            {cars.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.brand} {c.model} ({c.year})
+              </option>
+            ))}
+          </select>
+        </div>
+        <CarDetails user={user} supabase={supabase} car={car} setCar={setCar} />
         
          <div className="car-details-container">
       {car && maintenanceRecords.length > 0 ? (
@@ -1001,3 +1013,4 @@ const [showWarning, setShowWarning] = useState(true);
     </>
   );
 }
+

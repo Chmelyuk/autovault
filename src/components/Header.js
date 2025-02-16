@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import './Header.css';
 import { supabase } from '../supabaseClient';
 import { QRCodeSVG } from 'qrcode.react';
@@ -6,7 +6,7 @@ import QRScanner from './QRScanner';
 import { useTranslation } from 'react-i18next';
 import CarTracker from './CarTracker';
 
-export default function Header({ user, handleLogout, openEditModal, fetchCars, fetchRepairs, fetchMaintenance,car,setCar  }) {
+export default function Header({ user, handleLogout, openEditModal, fetchCars, fetchRepairs, fetchMaintenance }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
   const [qrData, setQrData] = useState(null);
@@ -25,9 +25,11 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
   });
   const firstLetter = user?.email?.charAt(0).toUpperCase();
   const { t, i18n } = useTranslation();
-  
+  const [car, setCar] = useState(null);
 
-   
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
 
   // Функция для открытия модального окна добавления автомобиля
   const openAddCarModal = () => {
@@ -68,16 +70,25 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
       console.error('Ошибка при добавлении автомобиля:', err);
     }
   };
-  const handleGenerateQRCode = () => {
-  if (!car) {
-    console.error("❌ Ошибка: автомобиль не выбран!");
-    return;
+  const handleGenerateQRCode = async () => {
+  try {
+    const { data: cars, error: carError } = await supabase
+      .from("cars")
+      .select("*")
+      .eq("user_id", user.id);
+
+    if (carError || !cars.length) {
+      console.error("❌ Ошибка загрузки машины:", carError || "Машины не найдены");
+      return;
+    }
+
+    const car = cars[0]; // Берем первую машину пользователя
+    setQrData(car.id); // Передаем только car_id
+    setShowQRCode(true); // Показываем QR-код
+  } catch (error) {
+    console.error("❌ Ошибка генерации QR-кода:", error);
   }
-
-  setQrData(car.id); // ✅ Используем ID выбранного автомобиля
-  setShowQRCode(true); // ✅ Показываем QR-код
 };
-
 
   /** 📌 Функция сканирования QR-кода */
 const handleScanSuccess = async (data) => {
@@ -157,31 +168,7 @@ const handleScanSuccess = async (data) => {
   const handleScanError = (error) => {
     console.error("❌ Ошибка сканирования QR-кода:", error);
   };
-const dropdownRef = useRef(null);
 
-useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false); // Закрываем меню, если клик был вне его области
-      }
-    };
-
-    // Добавляем обработчик, если меню открыто
-    if (isDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    // Убираем обработчик при размонтировании компонента
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isDropdownOpen]); // Зависимость от состояния isDropdownOpen
-
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-  };
-
-  
   return (
     <header className="header">
       <div className="user-icon" onClick={toggleDropdown}>
@@ -189,7 +176,7 @@ useEffect(() => {
       </div>
 
       {isDropdownOpen && (
-        <div className="dropdown-menu" ref={dropdownRef}>
+        <div className="dropdown-menu">
           <CarTracker user={user} car={car} supabase={supabase} setCar={setCar} />
           <div className='language-buttons'>
             <span>{t('language')}: </span>
