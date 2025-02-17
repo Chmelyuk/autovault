@@ -11,6 +11,10 @@ import { useTranslation } from 'react-i18next';
 
 
 export default function Dashboard({ user, supabase, handleLogout }) {
+  const [repairDate, setRepairDate] = useState("");
+const [maintenanceDate, setMaintenanceDate] = useState("");
+  const [repairCategories, setRepairCategories] = useState([]);
+const [repairSubcategories, setRepairSubcategories] = useState([]);
     const [cars, setCars] = useState([]);
 const [repairSubcategory, setRepairSubcategory] = useState(""); // 🔹 Для подкатегории
 const [customCategory, setCustomCategory] = useState(""); // 🔹 Для "Другое"
@@ -182,10 +186,11 @@ const updateRepair = async () => {
   const { data, error } = await supabase
     .from("repairs")
     .update({
-       category: editRepair.category,
-      subcategory: editRepair.subcategory || null, // Добавляем подкатегорию
+      category: editRepair.category,
+      subcategory: editRepair.subcategory || null,
       description: editRepair.description,
       mileage: parseInt(editRepair.mileage, 10) || null,
+      date: editRepair.date || new Date().toISOString().split('T')[0], // Обновляем дату
     })
     .eq("id", editRepair.id)
     .select("*")
@@ -197,9 +202,10 @@ const updateRepair = async () => {
     setRepairs(repairs.map((r) => (r.id === data.id ? data : r)));
     setIsEditRepairModalOpen(false);
   }
-   if (repairMileage && parseInt(repairMileage, 10) > car.mileage) {
-            updateCarMileage(parseInt(repairMileage, 10));
-        }
+
+  if (editRepair.mileage && parseInt(editRepair.mileage, 10) > car.mileage) {
+    updateCarMileage(parseInt(editRepair.mileage, 10));
+  }
 };
  
   
@@ -216,104 +222,156 @@ const deleteRepair = async (repairId) => {
 };
 
   // Добавление ремонта
- const addRepair = async () => {
-    if (!car) {
-        console.error("Ошибка: Машина не выбрана!");
-        return;
-    }
+const addRepair = async () => {
+  if (!car) {
+    console.error("Ошибка: Машина не выбрана!");
+    return;
+  }
 
-    console.log("Добавляем ремонт:", {
+  // Проверка обязательных полей
+  if (!repairCategory || !repairDescription || !repairMileage) {
+    alert("Пожалуйста, заполните все обязательные поля: категория, описание и пробег.");
+    return;
+  }
+
+  // Определяем категорию
+  let categoryName;
+  if (repairCategory === "other") {
+    categoryName = customCategory || "Other";
+  } else {
+    const selectedCategory = repairCategories.find(
+      (cat) => cat.id === repairCategory
+    );
+    categoryName = selectedCategory ? selectedCategory.name : "Other";
+  }
+
+  // Определяем подкатегорию
+  let subcategoryName;
+  if (repairSubcategory === "other") {
+    subcategoryName = customCategory || "Other";
+  } else {
+    subcategoryName = repairSubcategory || null;
+  }
+
+  // Устанавливаем текущую дату, если поле даты пустое
+  const repairDateValue = repairDate || new Date().toISOString().split('T')[0];
+
+  console.log("Добавляем ремонт:", {
+    user_id: user.id,
+    car_id: car.id,
+    category: categoryName,
+    subcategory: subcategoryName,
+    description: repairDescription,
+    mileage: parseInt(repairMileage, 10),
+    date: repairDateValue,
+  });
+
+  try {
+    const { data, error } = await supabase.from("repairs").insert([
+      {
         user_id: user.id,
         car_id: car.id,
-        category: repairCategory,
-        subcategory: repairSubcategory,
+        category: categoryName,
+        subcategory: subcategoryName,
         description: repairDescription,
-        mileage: parseInt(repairMileage, 10),
-        date: new Date().toISOString(),
-    });
+        mileage: parseInt(repairMileage, 10) || null,
+        date: repairDateValue,
+      },
+    ]).select("*");
 
-    try {
-        const { data, error } = await supabase.from("repairs").insert([
-            {
-                user_id: user.id,
-                car_id: car.id,
-                category: repairCategory,
-                subcategory: repairSubcategory || null,
-                description: repairDescription,
-                mileage: parseInt(repairMileage, 10) || null,
-                date: new Date().toISOString(),
-            },
-        ]).select("*");
-
-        if (error) {
-            console.error("Ошибка при добавлении ремонта:", error.message);
-            return;
-        }
-
-        console.log("✅ Ремонт добавлен:", data);
-        setRepairs(prev => [...prev, ...data]); // ✅ Теперь состояние обновляется правильно
-        setIsRepairModalOpen(false);
-        setRepairCategory("");
-        setRepairSubcategory("");
-        setRepairDescription("");
-        setRepairMileage("");
-
-        // 🔹 Если введён пробег больше текущего, обновляем `car.mileage`
-        if (repairMileage && parseInt(repairMileage, 10) > car.mileage) {
-            updateCarMileage(parseInt(repairMileage, 10));
-        }
-    } catch (err) {
-        console.error("❌ Ошибка при добавлении ремонта:", err);
+    if (error) {
+      console.error("Ошибка при добавлении ремонта:", error.message);
+      return;
     }
-};
 
+    console.log("✅ Ремонт добавлен:", data);
+    setRepairs((prev) => [...prev, ...data]);
+    setIsRepairModalOpen(false);
+    setRepairCategory("");
+    setRepairSubcategory("");
+    setCustomCategory("");
+    setRepairDescription("");
+    setRepairMileage("");
+    setRepairDate("");
+
+    if (repairMileage && parseInt(repairMileage, 10) > car.mileage) {
+      updateCarMileage(parseInt(repairMileage, 10));
+    }
+  } catch (err) {
+    console.error("❌ Ошибка при добавлении ремонта:", err);
+  }
+};
 
 {updateStatus && <div className="update-status">{updateStatus}</div>}
   // Добавление планового ТО
+ 
  const addMaintenance = async () => {
-    console.log("Attempting to insert maintenance:", {
+  // Проверка, что если выбран чекбокс "Замена масла", то пробег должен быть заполнен
+  if (maintenance.oilChange && !maintenance.oilChangeMileage) {
+    alert("Пожалуйста, укажите пробег при замене масла.");
+    return;
+  }
+
+  // Проверка, что хотя бы одно поле выбрано
+  if (
+    !maintenance.oilChange &&
+    !maintenance.filterChange &&
+    !maintenance.brakeCheck &&
+    !maintenance.tireRotation &&
+    !maintenance.coolantFlush
+  ) {
+    alert("Пожалуйста, выберите хотя бы один пункт для добавления ТО.");
+    return;
+  }
+
+  // Устанавливаем текущую дату, если поле даты пустое
+  const maintenanceDateValue = maintenanceDate || new Date().toISOString().split('T')[0];
+
+  console.log("Attempting to insert maintenance:", {
+    user_id: user.id,
+    car_id: car.id,
+    oil_change: maintenance.oilChange,
+    oil_change_mileage: maintenance.oilChange ? maintenance.oilChangeMileage : null,
+    oil_change_date: maintenance.oilChange ? maintenanceDateValue : null,
+    filter_change: maintenance.filterChange,
+    brake_check: maintenance.brakeCheck,
+    tire_rotation: maintenance.tireRotation,
+    coolant_flush: maintenance.coolantFlush,
+  });
+
+  try {
+    const { data, error } = await supabase.from("maintenance").insert([
+      {
         user_id: user.id,
         car_id: car.id,
         oil_change: maintenance.oilChange,
         oil_change_mileage: maintenance.oilChange ? maintenance.oilChangeMileage : null,
+        oil_change_date: maintenance.oilChange ? maintenanceDateValue : null,
         filter_change: maintenance.filterChange,
         brake_check: maintenance.brakeCheck,
         tire_rotation: maintenance.tireRotation,
         coolant_flush: maintenance.coolantFlush,
-    });
+      },
+    ]).select("*");
 
-    try {
-        const { data, error } = await supabase.from("maintenance").insert([
-            {
-                user_id: user.id,
-                car_id: car.id,
-                oil_change: maintenance.oilChange,
-                oil_change_mileage: maintenance.oilChange ? maintenance.oilChangeMileage : null,
-                oil_change_date: maintenance.oilChange ? new Date().toISOString() : null,
-                filter_change: maintenance.filterChange,
-                brake_check: maintenance.brakeCheck,
-                tire_rotation: maintenance.tireRotation,
-                coolant_flush: maintenance.coolantFlush,
-            },
-        ]).select("*");
-
-        if (error) {
-            console.error("Error adding maintenance:", error.message);
-            return;
-        }
-
-        console.log("Maintenance added:", data);
-        setMaintenanceRecords([...maintenanceRecords, ...data]);
-        setIsMaintenanceModalOpen(false);
-
-        // 🔹 Если введён пробег больше текущего, обновляем `car.mileage`
-        if (maintenance.oilChange && maintenance.oilChangeMileage > car.mileage) {
-            updateCarMileage(maintenance.oilChangeMileage);
-        }
-    } catch (err) {
-        console.error("Unexpected error:", err);
+    if (error) {
+      console.error("Error adding maintenance:", error.message);
+      return;
     }
+
+    console.log("Maintenance added:", data);
+    setMaintenanceRecords([...maintenanceRecords, ...data]);
+    setIsMaintenanceModalOpen(false);
+
+    // 🔹 Если введён пробег больше текущего, обновляем `car.mileage`
+    if (maintenance.oilChange && maintenance.oilChangeMileage > car.mileage) {
+      updateCarMileage(maintenance.oilChangeMileage);
+    }
+  } catch (err) {
+    console.error("Unexpected error:", err);
+  }
 };
+
 const updateCarMileage = async (newMileage) => {
     if (!car || newMileage <= car.mileage) return; // Пробег обновляется только если он выше
 
@@ -533,6 +591,35 @@ const calculateTotalMileageInterval = (car, maintenanceRecords) => {
 };
 const [showWarning, setShowWarning] = useState(true);
 
+
+useEffect(() => {
+  const fetchRepairCategories = async () => {
+    const { data, error } = await supabase
+      .from('repair_categories')
+      .select('*');
+
+    if (error) {
+      console.error('Ошибка при загрузке категорий:', error.message);
+    } else {
+      setRepairCategories(data);
+    }
+  };
+
+  const fetchRepairSubcategories = async () => {
+    const { data, error } = await supabase
+      .from('repair_subcategories')
+      .select('*');
+
+    if (error) {
+      console.error('Ошибка при загрузке подкатегорий:', error.message);
+    } else {
+      setRepairSubcategories(data);
+    }
+  };
+
+  fetchRepairCategories();
+  fetchRepairSubcategories();
+}, [supabase]);
  return (
 
     <>
@@ -671,25 +758,26 @@ const [showWarning, setShowWarning] = useState(true);
        
         <div className="repair-history">
           <ul>
-           {repairs.length > 0 ? (
-  repairs.map((repair) => (
-    <li key={repair.id}>
-      <strong>{t(repair.category)}</strong><br/><br/> {/* Используем перевод для категории */}
-      {repair.subcategory && ` ${t('subcategory')}: ${t(repair.subcategory)}`} {/* Используем перевод для подкатегории */}
-      <p>{repair.description}</p>
-      {repair.mileage && <p>🛠 {t('mileageAtRepair')}: {repair.mileage} км</p>}
-      <div className="button-container">
-        <button onClick={() => { setEditRepair(repair); setIsEditRepairModalOpen(true); }}>
-          {t('edit')}
-        </button>
-        <button onClick={() => deleteRepair(repair.id)}>{t('delete')}</button>
-      </div>
-    </li>
-  ))
-) : (
-  <p>{t('noRepairData')}</p>
-)}
-          </ul>
+    {repairs.length > 0 ? (
+      repairs.map((repair) => (
+        <li key={repair.id}>
+          <strong>🛠 {t(repair.category)}</strong><br/><br/>
+          {repair.subcategory && ` ${t('subcategory')}: ${t(repair.subcategory)}`}
+          <p>{repair.description}</p>
+          {repair.mileage && <p> {t('mileageAtRepair')}: {repair.mileage} км</p>}
+          {repair.date && <p>📅 {t('date')}: {new Date(repair.date).toLocaleDateString()}</p>} {/* Добавлено отображение даты */}
+          <div className="button-container">
+            <button onClick={() => { setEditRepair(repair); setIsEditRepairModalOpen(true); }}>
+              {t('edit')}
+            </button>
+            <button onClick={() => deleteRepair(repair.id)}>{t('delete')}</button>
+          </div>
+        </li>
+      ))
+    ) : (
+      <p>{t('noRepairData')}</p>
+    )}
+  </ul>
         </div>
 
         <div className="maintenance-history">
@@ -733,64 +821,88 @@ const [showWarning, setShowWarning] = useState(true);
 
       {/* Модальное окно для ремонта */}
       {isRepairModalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>{t('addRepair')}</h3>
-            <select value={repairCategory} onChange={(e) => setRepairCategory(e.target.value)}>
-              <option value="">{t('selectCategory')}</option>
-              <option value="Engine">{t('engine')}</option>
-              <option value="Brakes">{t('brakes')}</option>
-              <option value="Suspension">{t('suspension')}</option>
-              <option value="Electronics">{t('electronics')}</option>
-              <option value="Bodywork">{t('bodywork')}</option>
-              <option value="Other">{t('other')}</option>
-            </select>
-            {repairCategory && repairCategory !== 'Other' && (
-              <select value={repairSubcategory} onChange={(e) => setRepairSubcategory(e.target.value)}>
-                <option value="">{t('selectSubcategory')}</option>
-                {repairCategory === 'Engine' && (
-                  <>
-                    <option value="Oil Leak">{t('oilLeak')}</option>
-                    <option value="Timing Belt">{t('timingBelt')}</option>
-                    <option value="Cylinder Head">{t('cylinderHead')}</option>
-                    <option value="Piston Rings">{t('pistonRings')}</option>
-                    <option value="Other">{t('other')}</option>
-                  </>
-                )}
-                {repairCategory === 'Brakes' && (
-                  <>
-                    <option value="Pads Replacement">{t('padsReplacement')}</option>
-                    <option value="Brake Discs">{t('brakeDiscs')}</option>
-                    <option value="Brake Fluid">{t('brakeFluid')}</option>
-                    <option value="Other">{t('other')}</option>
-                  </>
-                )}
-              </select>
-            )}
-            {(repairCategory === 'Other' || repairSubcategory === 'Other') && (
-              <input
-                type="text"
-                placeholder={t('enterCustomCategory')}
-                value={customCategory}
-                onChange={(e) => setCustomCategory(e.target.value)}
-              />
-            )}
-            <textarea
-              placeholder={t('description')}
-              value={repairDescription}
-              onChange={(e) => setRepairDescription(e.target.value)}
-            />
-            <input
-              type="number"
-              placeholder={t('mileageAtRepair')}
-              value={repairMileage}
-              onChange={(e) => setRepairMileage(e.target.value)}
-            />
-            <button onClick={addRepair}>{t('save')}</button>
-            <button onClick={() => setIsRepairModalOpen(false)}>{t('cancel')}</button>
-          </div>
-        </div>
+  <div className="modal">
+    <div className="modal-content">
+      <h3>{t('addRepair')}</h3>
+
+      {/* Выбор категории */}
+      <select
+  value={repairCategory}
+  onChange={(e) => {
+    const selectedValue = e.target.value;
+    setRepairCategory(selectedValue); // Устанавливаем значение "other" или id категории
+    setCustomCategory(""); // Сбрасываем кастомную категорию
+  }}
+>
+  <option value="">{t('selectCategory')}</option>
+  {repairCategories.map((category) => (
+    <option key={category.id} value={category.id}>
+      {category.name}
+    </option>
+  ))}
+  <option value="other">{t('other')}</option> {/* Опция "Other" */}
+</select>
+
+      {/* Выбор подкатегории (если выбрана категория и это не "Other") */}
+      {repairCategory && repairCategory !== "other" && (
+        <select
+          value={repairSubcategory}
+          onChange={(e) => {
+            setRepairSubcategory(e.target.value);
+            setCustomCategory(""); // Сбрасываем кастомную категорию при изменении подкатегории
+          }}
+        >
+          <option value="">{t('selectSubcategory')}</option>
+          {repairSubcategories
+            .filter((subcategory) => subcategory.category_id === repairCategory)
+            .map((subcategory) => (
+              <option key={subcategory.id} value={subcategory.name}>
+                {subcategory.name}
+              </option>
+            ))}
+          <option value="other">{t('other')}</option> {/* Добавляем опцию "Other" */}
+        </select>
       )}
+
+      {/* Поле для ввода кастомной категории или подкатегории */}
+      {(repairCategory === "other" || repairSubcategory === "other") && (
+  <input
+    type="text"
+    placeholder={
+      repairCategory === "other"
+        ? t('enterCustomCategory')
+        : t('enterCustomSubcategory')
+    }
+    value={customCategory}
+    onChange={(e) => setCustomCategory(e.target.value)}
+  />
+)}
+
+      {/* Описание ремонта */}
+      <textarea
+        placeholder={t('description')}
+        value={repairDescription}
+        onChange={(e) => setRepairDescription(e.target.value)}
+      />
+
+      {/* Пробег */}
+      <input
+        type="number"
+        placeholder={t('mileageAtRepair')}
+        value={repairMileage}
+        onChange={(e) => setRepairMileage(e.target.value)}
+      />
+<input
+        type="date"
+        value={repairDate || ""}
+        onChange={(e) => setRepairDate(e.target.value)}
+      />
+      {/* Кнопки */}
+      <button onClick={addRepair}>{t('save')}</button>
+      <button onClick={() => setIsRepairModalOpen(false)}>{t('cancel')}</button>
+    </div>
+  </div>
+)}
 
       {/* Модальное окно для ТО */}
       {isMaintenanceModalOpen && (
@@ -828,13 +940,20 @@ const [showWarning, setShowWarning] = useState(true);
           {t('oilChange')}
         </label>
         {maintenance.oilChange && (
-          <input
-            className="input-mileage"
-            type="number"
-            placeholder={t('mileageAtOilChange')}
-            value={maintenance.oilChangeMileage || ''}
-            onChange={(e) => setMaintenance({ ...maintenance, oilChangeMileage: e.target.value })}
-          />
+          <>
+            <input
+              className="input-mileage"
+              type="number"
+              placeholder={t('mileageAtOilChange')}
+              value={maintenance.oilChangeMileage || ''}
+              onChange={(e) => setMaintenance({ ...maintenance, oilChangeMileage: e.target.value })}
+              required // Добавлено обязательное поле
+            />
+            {/* Уведомление, если поле с пробегом пустое */}
+            {maintenance.oilChange && !maintenance.oilChangeMileage && (
+              <p className="error-message">Пожалуйста, укажите пробег при замене масла.</p>
+            )}
+          </>
         )}
         <label className="checkbox-label">
           <input
@@ -870,9 +989,24 @@ const [showWarning, setShowWarning] = useState(true);
         </label>
       </div>
 
+      {/* Поле для ввода даты */}
+      <input
+        type="date"
+        value={maintenanceDate || ""}
+        onChange={(e) => setMaintenanceDate(e.target.value)}
+      />
+
       <div className="modal-buttons">
-        <button className="save-btn" onClick={addMaintenance}>{t('save')}</button>
-        <button className="cancel-btn" onClick={() => setIsMaintenanceModalOpen(false)}>{t('cancel')}</button>
+        <button
+          className="save-btn"
+          onClick={addMaintenance}
+          disabled={maintenance.oilChange && !maintenance.oilChangeMileage} // Отключаем кнопку, если пробег не указан
+        >
+          {t('save')}
+        </button>
+        <button className="cancel-btn" onClick={() => setIsMaintenanceModalOpen(false)}>
+          {t('cancel')}
+        </button>
       </div>
     </div>
   </div>
@@ -881,71 +1015,88 @@ const [showWarning, setShowWarning] = useState(true);
 
       {/* Модальное окно для редактирования ТО */}
       {isEditMaintenanceModalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>{t('editMaintenance')}</h3>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                updateMaintenance();
-              }}
-            >
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={editMaintenance?.oil_change || false}
-                  onChange={(e) => setEditMaintenance({ ...editMaintenance, oil_change: e.target.checked })}
-                />
-                {t('oilChange')}
-              </label>
-              {editMaintenance?.oil_change && (
-                <input
-                  type="number"
-                  placeholder={t('mileageAtOilChange')}
-                  value={editMaintenance?.oil_change_mileage || ''}
-                  onChange={(e) => setEditMaintenance({ ...editMaintenance, oil_change_mileage: e.target.value })}
-                />
-              )}
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={editMaintenance?.filter_change || false}
-                  onChange={(e) => setEditMaintenance({ ...editMaintenance, filter_change: e.target.checked })}
-                />
-                {t('filterChange')}
-              </label>
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={editMaintenance?.brake_check || false}
-                  onChange={(e) => setEditMaintenance({ ...editMaintenance, brake_check: e.target.checked })}
-                />
-                {t('brakeCheck')}
-              </label>
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={editMaintenance?.tire_rotation || false}
-                  onChange={(e) => setEditMaintenance({ ...editMaintenance, tire_rotation: e.target.checked })}
-                />
-                {t('tireRotation')}
-              </label>
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={editMaintenance?.coolant_flush || false}
-                  onChange={(e) => setEditMaintenance({ ...editMaintenance, coolant_flush: e.target.checked })}
-                />
-                {t('coolantFlush')}
-              </label>
-              <button type="submit">{t('save')}</button>
-              <button type="button" onClick={() => setIsEditMaintenanceModalOpen(false)}>
-                {t('cancel')}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+  <div className="modal">
+    <div className="modal-content">
+      <h3>{t('editMaintenance')}</h3>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          updateMaintenance();
+        }}
+      >
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={editMaintenance?.oil_change || false}
+            onChange={(e) => setEditMaintenance({ ...editMaintenance, oil_change: e.target.checked })}
+          />
+          {t('oilChange')}
+        </label>
+        {editMaintenance?.oil_change && (
+          <>
+            <input
+              type="number"
+              placeholder={t('mileageAtOilChange')}
+              value={editMaintenance?.oil_change_mileage || ''}
+              onChange={(e) => setEditMaintenance({ ...editMaintenance, oil_change_mileage: e.target.value })}
+              required // Добавлено обязательное поле
+            />
+            {/* Уведомление, если поле с пробегом пустое */}
+            {editMaintenance?.oil_change && !editMaintenance?.oil_change_mileage && (
+              <p className="error-message">Пожалуйста, укажите пробег при замене масла.</p>
+            )}
+            <input
+              type="date"
+              value={editMaintenance?.oil_change_date || ''}
+              onChange={(e) => setEditMaintenance({ ...editMaintenance, oil_change_date: e.target.value })}
+            />
+          </>
+        )}
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={editMaintenance?.filter_change || false}
+            onChange={(e) => setEditMaintenance({ ...editMaintenance, filter_change: e.target.checked })}
+          />
+          {t('filterChange')}
+        </label>
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={editMaintenance?.brake_check || false}
+            onChange={(e) => setEditMaintenance({ ...editMaintenance, brake_check: e.target.checked })}
+          />
+          {t('brakeCheck')}
+        </label>
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={editMaintenance?.tire_rotation || false}
+            onChange={(e) => setEditMaintenance({ ...editMaintenance, tire_rotation: e.target.checked })}
+          />
+          {t('tireRotation')}
+        </label>
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={editMaintenance?.coolant_flush || false}
+            onChange={(e) => setEditMaintenance({ ...editMaintenance, coolant_flush: e.target.checked })}
+          />
+          {t('coolantFlush')}
+        </label>
+        <button
+          type="submit"
+          disabled={editMaintenance?.oil_change && !editMaintenance?.oil_change_mileage} // Отключаем кнопку, если пробег не указан
+        >
+          {t('save')}
+        </button>
+        <button type="button" onClick={() => setIsEditMaintenanceModalOpen(false)}>
+          {t('cancel')}
+        </button>
+      </form>
+    </div>
+  </div>
+)}
 
       {/* Модальное окно для редактирования ремонта */}
       {isEditRepairModalOpen && (
@@ -997,6 +1148,13 @@ const [showWarning, setShowWarning] = useState(true);
         placeholder={t('mileageAtRepair')}
         value={editRepair?.mileage || ''}
         onChange={(e) => setEditRepair({ ...editRepair, mileage: e.target.value })}
+      />
+
+      {/* Поле для ввода даты */}
+      <input
+        type="date"
+        value={editRepair?.date || ''}
+        onChange={(e) => setEditRepair({ ...editRepair, date: e.target.value })}
       />
 
       <textarea

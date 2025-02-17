@@ -8,5 +8,7 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <BrowserRouter basename="/autovault"> {/* Добавляем basename */}
     <App />
+    
   </BrowserRouter>
+  
 );

@@ -168,8 +168,8 @@ button {
     padding: 24px;
     border-radius: 12px;
     width: 90%;
-    max-width: 500px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    overflow-x: hidden;
 }
 
 .modal-content h3 {
@@ -431,4 +431,10 @@ button {
 .oil-change {
     font-weight: bold;
     text-shadow: 0px 0px 5px rgba(0, 255, 0, 0.3);
+}
+
+.error-message {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 5px;
 }
