@@ -155,31 +155,79 @@ const updateMaintenance = async () => {
 
   // Получение списка ремонтов
   const fetchRepairs = async (carId) => {
-    console.log("📡 Загружаем ремонты для car_id:", carId, "и user_id:", user.id);
+  console.log("📡 Загружаем ремонты для car_id:", carId, "и user_id:", user.id);
 
-    const { data, error } = await supabase
-        .from("repairs")
-        .select("*")
-        .eq("car_id", carId)
-        .eq("user_id", user.id); // 👈 Фильтр по `user_id`
+  const { data, error } = await supabase
+    .from("repairs")
+    .select("*, service_id")
+    .eq("car_id", carId)
+    .eq("user_id", user.id); // 👈 Фильтр по `user_id`
 
-    if (error) {
-        console.error("❌ Ошибка при загрузке ремонтов:", error.message);
-    } else {
-        console.log("✅ Полученные ремонты:", data);
-        setRepairs(data);
-    }
+  if (error) {
+    console.error("❌ Ошибка при загрузке ремонтов:", error.message);
+  } else {
+    // Добавляем название сервиса к каждому ремонту
+    const repairsWithServiceNames = await Promise.all(
+      data.map(async (repair) => {
+        if (repair.service_id) {
+          const { data: serviceProfile, error: serviceError } = await supabase
+            .from("profiles")
+            .select("service_name")
+            .eq("id", repair.service_id)
+            .single();
+
+          if (serviceError) {
+            console.error("Ошибка при загрузке профиля сервиса:", serviceError.message);
+            return repair; // Возвращаем ремонт без изменений
+          }
+
+          return { ...repair, serviceName: serviceProfile?.service_name || "" };
+        }
+        return repair;
+      })
+    );
+
+    console.log("✅ Полученные ремонты:", repairsWithServiceNames);
+    setRepairs(repairsWithServiceNames);
+  }
 };
-useEffect(() => {
-    console.log("🔹 Текущий user.id:", user?.id);
-}, [user]);
 
   // Получение истории ТО
   const fetchMaintenance = async (carId) => {
-    const { data, error } = await supabase.from("maintenance").select("*").eq("car_id", carId);
-    if (error) console.error("Error fetching maintenance:", error.message);
-    else setMaintenanceRecords(data);
-  };
+  const { data, error } = await supabase
+    .from("maintenance")
+    .select("*, service_id") // Добавляем service_id
+    .eq("car_id", carId);
+
+  if (error) {
+    console.error("Error fetching maintenance:", error.message);
+  } else {
+    // Добавляем название сервиса к каждой записи ТО
+    const maintenanceWithServiceNames = await Promise.all(
+      data.map(async (maintenance) => {
+        if (maintenance.service_id) {
+          const { data: serviceProfile, error: serviceError } = await supabase
+            .from("profiles")
+            .select("service_name")
+            .eq("id", maintenance.service_id)
+            .single();
+
+          if (serviceError) {
+            console.error("Ошибка при загрузке профиля сервиса:", serviceError.message);
+            return maintenance; // Возвращаем запись ТО без изменений
+          }
+
+          return { ...maintenance, serviceName: serviceProfile?.service_name || "" };
+        }
+        return maintenance;
+      })
+    );
+
+    console.log("✅ Полученные записи ТО:", maintenanceWithServiceNames);
+    setMaintenanceRecords(maintenanceWithServiceNames);
+  }
+};
+
 const updateRepair = async () => {
   if (!editRepair || !editRepair.id) return;
 
@@ -756,8 +804,8 @@ useEffect(() => {
 
         <h3>{t('repairHistory')}</h3>
        
-        <div className="repair-history">
-          <ul>
+       <div className="repair-history">
+  <ul>
     {repairs.length > 0 ? (
       repairs.map((repair) => (
         <li key={repair.id}>
@@ -765,7 +813,15 @@ useEffect(() => {
           {repair.subcategory && ` ${t('subcategory')}: ${t(repair.subcategory)}`}
           <p>{repair.description}</p>
           {repair.mileage && <p> {t('mileageAtRepair')}: {repair.mileage} км</p>}
-          {repair.date && <p>📅 {t('date')}: {new Date(repair.date).toLocaleDateString()}</p>} {/* Добавлено отображение даты */}
+          {repair.date && <p>📅 {t('date')}: {new Date(repair.date).toLocaleDateString()}</p>}
+          
+          {/* Отображаем, если ремонт добавлен сервисом */}
+          {repair.addbyservice && (
+            <p className="added-by-service">
+              {t('addedByService')} {repair.serviceName && `(${repair.serviceName})`}
+            </p>
+          )}
+
           <div className="button-container">
             <button onClick={() => { setEditRepair(repair); setIsEditRepairModalOpen(true); }}>
               {t('edit')}
@@ -778,45 +834,52 @@ useEffect(() => {
       <p>{t('noRepairData')}</p>
     )}
   </ul>
-        </div>
+</div>
 
         <div className="maintenance-history">
-          <ul>
-            {maintenanceRecords.map((record) => (
-              <li key={record.id}>
-                
-                <br />
-                {record.oil_change &&
-                  `${t('oilChange')} ${record.oil_change_date ? new Date(record.oil_change_date).toLocaleDateString() : t('unknownDate')} ${t('at')} ${record.oil_change_mileage || t('unknown')} км`}
-                {record.filter_change && ` ${t('filterChange')},`}
-                {record.brake_check && ` ${t('brakeCheck')},`}
-                {record.tire_rotation && ` ${t('tireRotation')},`}
-                {record.coolant_flush && ` ${t('coolantFlush')}`}
-                <div className="button-container">
-                  <button onClick={() => openEditMaintenanceModal(record)}>{t('edit')}</button>
-                  <button onClick={() => deleteMaintenance(record.id)}>{t('delete')}</button>
-                </div>
-                <br />
-                {record.oil_change && (
-                  <ProgressBar
-                    progress={calculateRemainingMileage(car, maintenanceRecords)}
-                    total={calculateTotalMileageInterval(car, maintenanceRecords)}
-                  />
-                )}
-                {record.oil_change && calculateRemainingMileage(car, maintenanceRecords) < 2000 && showWarning && (
-                  <div className="oil-warning">
-                    <a href="https://dok.ua" target="_blank" rel="noopener noreferrer">
-                      <img src={banner} alt={t('oilChangeWarning')} />
-                    </a>
-                    <button className="close-button" onClick={() => setShowWarning(false)}>
-                      ×
-                    </button>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
+  <ul>
+    {maintenanceRecords.map((record) => (
+      <li key={record.id}>
+        <br />
+        {record.oil_change &&
+          `${t('oilChange')} ${record.oil_change_date ? new Date(record.oil_change_date).toLocaleDateString() : t('unknownDate')} ${t('at')} ${record.oil_change_mileage || t('unknown')} км`}
+        {record.filter_change && ` ${t('filterChange')},`}
+        {record.brake_check && ` ${t('brakeCheck')},`}
+        {record.tire_rotation && ` ${t('tireRotation')},`}
+        {record.coolant_flush && ` ${t('coolantFlush')}`}
+
+        {/* Отображаем, если ТО добавлено сервисом */}
+        {record.addbyservice && (
+          <p className="added-by-service">
+            {t('addedByService')} {record.serviceName && `(${record.serviceName})`}
+          </p>
+        )}
+
+        <div className="button-container">
+          <button onClick={() => openEditMaintenanceModal(record)}>{t('edit')}</button>
+          <button onClick={() => deleteMaintenance(record.id)}>{t('delete')}</button>
         </div>
+        <br />
+        {record.oil_change && (
+          <ProgressBar
+            progress={calculateRemainingMileage(car, maintenanceRecords)}
+            total={calculateTotalMileageInterval(car, maintenanceRecords)}
+          />
+        )}
+        {record.oil_change && calculateRemainingMileage(car, maintenanceRecords) < 2000 && showWarning && (
+          <div className="oil-warning">
+            <a href="https://dok.ua" target="_blank" rel="noopener noreferrer">
+              <img src={banner} alt={t('oilChangeWarning')} />
+            </a>
+            <button className="close-button" onClick={() => setShowWarning(false)}>
+              ×
+            </button>
+          </div>
+        )}
+      </li>
+    ))}
+  </ul>
+</div>
       </div>
 
       {/* Модальное окно для ремонта */}

@@ -206,3 +206,7 @@
 .language-buttons button:hover {
     background-color: #666;
 }
+
+.auth-toggle-button{
+    margin-top: 20px;
+}

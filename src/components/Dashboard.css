@@ -438,3 +438,7 @@ button {
     font-size: 0.9em;
     margin-top: 5px;
 }
+.added-by-service {
+    color: rgba(89, 255, 0, 0.362) !important;
+    font-weight: bold;
+}

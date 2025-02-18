@@ -125,7 +125,24 @@
   "disputeResolution2": "The arbitration will be conducted in the jurisdiction of the company's legal address.",
   "contact": "Contact Us",
   "contactText": "For any questions or concerns regarding the Terms of Service, please contact us at support@autovault.com.",
-  "acceptance": "By using the Application, you agree to these Terms of Service."
+  "acceptance": "By using the Application, you agree to these Terms of Service.",
+  "addedByService": "✅",
+    "serviceDashboard": "Service Dashboard",
+   "oilChangeDate": "Oil Change Date",
+  "noMaintenanceData": "No maintenance data available",
+  "noCarsLinked": "No cars linked to this service",
+  "confirmDeleteCar": "Are you sure you want to delete this car?",
+    "deleteCar": "Delete Car",
+   "loginError": "Error during login. Please try again.",
+   "serviceRegistration": "Service Registration",
+  "login": "Login",
+  "registerService": "Register Service",
+  "alreadyHaveAccount": "Already have an account?",
+  "registerNewService": "Register a new service",
+  "serviceName": "Service Name",
+  "address": "Address",
+  "phone": "Phone"
+
 }
    
 

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next'; // Импортируем хук для перевода
+import { useTranslation } from 'react-i18next';
 import './AuthForm.css';
 import TermsAndConditions from './TermsAndConditions';
+import { useNavigate } from 'react-router-dom';
 
 export default function AuthForm({ setUser, supabase }) {
   const [email, setEmail] = useState('');
@@ -12,11 +13,11 @@ export default function AuthForm({ setUser, supabase }) {
   const [error, setError] = useState('');
   const [isChecked, setIsChecked] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const { t, i18n } = useTranslation(); // Используем хук для перевода
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
 
-  // Функция для смены языка
   const changeLanguage = (language) => {
-    i18n.changeLanguage(language); // Меняем язык
+    i18n.changeLanguage(language);
   };
 
   const handleLogin = async () => {
@@ -40,7 +41,7 @@ export default function AuthForm({ setUser, supabase }) {
         setError('');
       }, 60000);
     } catch (error) {
-      setError(error.message || t('registrationError')); // Используем перевод для ошибки
+      setError(error.message || t('registrationError'));
     }
   };
 
@@ -51,7 +52,7 @@ export default function AuthForm({ setUser, supabase }) {
       if (error) throw error;
       setUser(data.user);
     } catch (error) {
-      setError(error.message || t('invalidOTP')); // Используем перевод для ошибки
+      setError(error.message || t('invalidOTP'));
     }
   };
 
@@ -63,10 +64,13 @@ export default function AuthForm({ setUser, supabase }) {
     setShowModal(false);
   };
 
+  const navigateToServiceRegistration = () => {
+    navigate('/autovault/service-registration');
+  };
+
   return (
     <div className="auth-container">
       <div className="auth-box">
-        {/* Кнопки для смены языка */}
         <div className="language-buttons">
           <button onClick={() => changeLanguage('en')}>English</button>
           <button onClick={() => changeLanguage('ru')}>Русский</button>
@@ -95,6 +99,9 @@ export default function AuthForm({ setUser, supabase }) {
           disabled={!isChecked}
         >
           {t('registerWithOTP')}
+        </button>
+        <button onClick={navigateToServiceRegistration} className="auth-button secondary">
+          {t('registerService')}
         </button>
         {showOtpInput && (
           <div className="otp-container">
