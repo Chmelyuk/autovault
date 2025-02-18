@@ -4,7 +4,7 @@ import AuthForm from "./components/AuthForm";
 import Dashboard from "./components/Dashboard";
 import ServiceDashboard from "./components/ServiceDashboard";
 import ServiceRegistrationForm from "./components/ServiceRegistrationForm";
-import { useNavigate, Routes, Route } from "react-router-dom";
+import { useNavigate, Routes, Route,Navigate  } from "react-router-dom";
 import './i18n';
 
 const supabase = createClient('https://uowtueztcqvaeqzhovqb.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvd3R1ZXp0Y3F2YWVxemhvdnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1MDYyNDYsImV4cCI6MjA1NDA4MjI0Nn0.R-pev2rQ3YqkO0SDoyYIK7a1ZfcyUa2ezpL3WTaddx8');
@@ -64,6 +64,10 @@ export default function App() {
   return (
     <div className="container">
       <Routes>
+        <Route
+  path="/"
+  element={<Navigate to="/autovault/" replace />}
+/>
         <Route
           path="/autovault/"
           element={
