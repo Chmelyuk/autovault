@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import './AuthForm.css';
 import { useNavigate } from "react-router-dom";
+import TermsAndConditions from './TermsAndConditions';
 
 export default function AuthForm({ supabase }) {
   const [email, setEmail] = useState('');
@@ -11,15 +12,21 @@ export default function AuthForm({ supabase }) {
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [showOtpInput, setShowOtpInput] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(true); // Для выбора между входом и регистрацией
+  const [isRegistering, setIsRegistering] = useState(true);
   const [error, setError] = useState('');
   const { t, i18n } = useTranslation();
   const navigate = useNavigate(); 
+  const [showModal, setShowModal] = useState(false);
+  const [isChecked, setIsChecked] = useState(false); // Состояние чекбокса
 
-  // Обработчик для регистрации сервиса
+  const handleModalClose = () => {
+    setShowModal(false);
+  };
+
   const handleServiceSignUp = async () => {
+    if (!isChecked) return; // Блокируем регистрацию, если чекбокс не отмечен
     setError('');
-    setShowOtpInput(true); // Показываем поле OTP сразу после нажатия
+    setShowOtpInput(true);
     try {
       const { error: authError } = await supabase.auth.signUp({ email, password });
       if (authError) throw authError;
@@ -31,7 +38,6 @@ export default function AuthForm({ supabase }) {
     }
   };
 
-  // Обработчик для подтверждения OTP
   const handleVerifyOtp = async () => {
     try {
       const { data, error: otpError } = await supabase.auth.verifyOtp({
@@ -59,7 +65,6 @@ export default function AuthForm({ supabase }) {
     }
   };
 
-  // Обработчик для входа пользователя
   const handleLogin = async () => {
     setError('');
     try {
@@ -72,10 +77,11 @@ export default function AuthForm({ supabase }) {
     }
   };
 
-   const handleAlreadyHaveAccount = () => {
-    navigate('/autovault/'); // Редирект на главную страницу (компонент AuthForm)
+  const handleAlreadyHaveAccount = () => {
+    navigate('/autovault/');
   };
- const changeLanguage = (language) => {
+
+  const changeLanguage = (language) => {
     i18n.changeLanguage(language);
   };
 
@@ -126,16 +132,41 @@ export default function AuthForm({ supabase }) {
               onChange={(e) => setPhone(e.target.value)}
               className="auth-input"
             />
+
+            <label className="terms-checkbox">
+              <input 
+                type="checkbox" 
+                checked={isChecked} 
+                onChange={() => setIsChecked(!isChecked)} 
+              />
+              {t('agreeWithTerms')}{' '}
+              <span 
+                className="terms-link" 
+                onClick={() => setShowModal(true)} // Открываем модальное окно
+              >
+                {t('termsAndConditions')}
+              </span>
+            </label>
+
+            {showModal && (
+              <div className="modal-overlay">
+                <div className="modal-content">
+                  <TermsAndConditions />
+                  <button onClick={handleModalClose} className="modal-close-button">{t('close')}</button>
+                </div>
+              </div>
+            )}
           </>
         )}
 
         {!showOtpInput ? (
           <button
-            onClick={isRegistering ? handleServiceSignUp : handleLogin}
-            className="auth-button"
-          >
-            {isRegistering ? t('registerService') : t('login')}
-          </button>
+  className={`auth-button secondary ${!isChecked ? 'disabled' : ''}`}
+  disabled={!isChecked} // Отключаем кнопку, если чекбокс не отмечен
+  onClick={handleServiceSignUp}
+>
+  {t('registerService')}
+</button>
         ) : (
           <>
             <input
@@ -153,7 +184,6 @@ export default function AuthForm({ supabase }) {
 
         {error && <p className="auth-error">{error}</p>}
 
-        {/* Кнопка для переключения между входом и регистрацией */}
         <div className="auth-toggle">
           <button onClick={handleAlreadyHaveAccount} className="auth-toggle-button">
             {t('alreadyHaveAccount')}

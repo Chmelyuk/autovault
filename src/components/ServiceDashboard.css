@@ -6,6 +6,8 @@ body {
     font-family: 'Inter', sans-serif;
     margin: 0;
     padding: 0;
+    overflow: auto;
+    
 }
 
 .dashboard {
@@ -67,8 +69,7 @@ body {
     border-radius: 12px;
     margin-bottom: 20px;
     padding: 15px;
-    border: 1px solid antiquewhite;
-    margin-top: 20px;
+     margin-top: 20px;
 }
 
 .repair-history h4,
@@ -86,7 +87,7 @@ body {
     margin-bottom: 10px;
 }
 
-.modal {
+.modal1 {
     position: fixed;
     top: 20;
     left: 20;
@@ -98,22 +99,22 @@ body {
     align-items: center;
 }
 
-.modal-content {
+.modal1-content {
     background-color: #1a1a1a;
     padding: 24px;
     border-radius: 12px;
     width: 90%;
 }
 
-.modal-content h3 {
+.modal1-content h3 {
     color: #ffffff;
     font-size: 20px;
     font-weight: 600;
 }
 
-.modal-content input,
-.modal-content select,
-.modal-content textarea {
+.modal1-content input,
+.modal1-content select,
+.modal1-content textarea {
     width: 100%;
     padding: 12px;
     margin-bottom: 16px;

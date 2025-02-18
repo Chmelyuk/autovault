@@ -342,8 +342,8 @@ export default function ServiceDashboard({ user, handleLogout }) {
 
         {/* Модальное окно добавления ТО */}
         {isMaintenanceModalOpen && (
-          <div className="modal">
-            <div className="modal-content">
+          <div className="modal1">
+            <div className="modal1-content">
               <h3>{t('addMaintenance')}</h3>
               <form onSubmit={(e) => {
                 e.preventDefault();

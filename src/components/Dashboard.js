@@ -271,84 +271,66 @@ const deleteRepair = async (repairId) => {
 
   // Добавление ремонта
 const addRepair = async () => {
-  if (!car) {
-    console.error("Ошибка: Машина не выбрана!");
-    return;
-  }
-
-  // Проверка обязательных полей
-  if (!repairCategory || !repairDescription || !repairMileage) {
-    alert("Пожалуйста, заполните все обязательные поля: категория, описание и пробег.");
-    return;
-  }
-
-  // Определяем категорию
-  let categoryName;
-  if (repairCategory === "other") {
-    categoryName = customCategory || "Other";
-  } else {
-    const selectedCategory = repairCategories.find(
-      (cat) => cat.id === repairCategory
-    );
-    categoryName = selectedCategory ? selectedCategory.name : "Other";
-  }
-
-  // Определяем подкатегорию
-  let subcategoryName;
-  if (repairSubcategory === "other") {
-    subcategoryName = customCategory || "Other";
-  } else {
-    subcategoryName = repairSubcategory || null;
-  }
-
-  // Устанавливаем текущую дату, если поле даты пустое
-  const repairDateValue = repairDate || new Date().toISOString().split('T')[0];
-
-  console.log("Добавляем ремонт:", {
-    user_id: user.id,
-    car_id: car.id,
-    category: categoryName,
-    subcategory: subcategoryName,
-    description: repairDescription,
-    mileage: parseInt(repairMileage, 10),
-    date: repairDateValue,
-  });
-
-  try {
-    const { data, error } = await supabase.from("repairs").insert([
-      {
-        user_id: user.id,
-        car_id: car.id,
-        category: categoryName,
-        subcategory: subcategoryName,
-        description: repairDescription,
-        mileage: parseInt(repairMileage, 10) || null,
-        date: repairDateValue,
-      },
-    ]).select("*");
-
-    if (error) {
-      console.error("Ошибка при добавлении ремонта:", error.message);
+    if (!car) {
+      console.error("Ошибка: Машина не выбрана!");
       return;
     }
 
-    console.log("✅ Ремонт добавлен:", data);
-    setRepairs((prev) => [...prev, ...data]);
-    setIsRepairModalOpen(false);
-    setRepairCategory("");
-    setRepairSubcategory("");
-    setCustomCategory("");
-    setRepairDescription("");
-    setRepairMileage("");
-    setRepairDate("");
-
-    if (repairMileage && parseInt(repairMileage, 10) > car.mileage) {
-      updateCarMileage(parseInt(repairMileage, 10));
+    if (!repairCategory || !repairDescription || !repairMileage) {
+      alert("Пожалуйста, заполните все обязательные поля: категория, описание и пробег.");
+      return;
     }
-  } catch (err) {
-    console.error("❌ Ошибка при добавлении ремонта:", err);
-  }
-};
+
+    let categoryName;
+    if (repairCategory === "other") {
+      categoryName = customCategory || "Other";
+    } else {
+      const selectedCategory = repairCategories.find((cat) => cat.id === repairCategory);
+      categoryName = selectedCategory ? t(selectedCategory.name) : "Other"; // Используем t() для перевода
+    }
+
+    let subcategoryName;
+    if (repairSubcategory === "other") {
+      subcategoryName = customCategory || "Other";
+    } else {
+      subcategoryName = repairSubcategory || null;
+    }
+
+    const repairDateValue = repairDate || new Date().toISOString().split('T')[0];
+
+    try {
+      const { data, error } = await supabase.from("repairs").insert([
+        {
+          user_id: user.id,
+          car_id: car.id,
+          category: categoryName,
+          subcategory: subcategoryName,
+          description: repairDescription,
+          mileage: parseInt(repairMileage, 10),
+          date: repairDateValue,
+        },
+      ]).select("*");
+
+      if (error) {
+        console.error("Ошибка при добавлении ремонта:", error.message);
+      } else {
+        setRepairs((prev) => [...prev, ...data]);
+        setIsRepairModalOpen(false);
+        setRepairCategory("");
+        setRepairSubcategory("");
+        setCustomCategory("");
+        setRepairDescription("");
+        setRepairMileage("");
+        setRepairDate("");
+
+        if (repairMileage && parseInt(repairMileage, 10) > car.mileage) {
+          updateCarMileage(parseInt(repairMileage, 10));
+        }
+      }
+    } catch (err) {
+      console.error("Ошибка при добавлении ремонта:", err);
+    }
+  };
 
 {updateStatus && <div className="update-status">{updateStatus}</div>}
   // Добавление планового ТО
@@ -640,34 +622,47 @@ const calculateTotalMileageInterval = (car, maintenanceRecords) => {
 const [showWarning, setShowWarning] = useState(true);
 
 
+const fetchRepairCategories = async () => {
+  const { data, error } = await supabase
+    .from('repair_categories')
+    .select('*');
+
+  if (error) {
+    console.error('Ошибка при загрузке категорий:', error.message);
+  } else {
+    // Преобразуем категории в формат, который можно перевести
+    const translatedCategories = data.map((cat) => ({
+      ...cat,
+      name: t(cat.name), // Используем t() для перевода
+    }));
+    setRepairCategories(translatedCategories);
+  }
+};
+
+  const fetchRepairSubcategories = async (categoryId) => {
+  const { data, error } = await supabase
+    .from('repair_subcategories')
+    .select('*')
+    .eq('category_id', categoryId); // Фильтруем по category_id
+
+  if (error) {
+    console.error('Ошибка при загрузке подкатегорий:', error.message);
+  } else {
+    // Преобразуем подкатегории в формат, который можно перевести
+    const translatedSubcategories = data.map((subcat) => ({
+      ...subcat,
+      name: t(subcat.name), // Используем t() для перевода
+    }));
+    setRepairSubcategories(translatedSubcategories);
+  }
+};
+
 useEffect(() => {
-  const fetchRepairCategories = async () => {
-    const { data, error } = await supabase
-      .from('repair_categories')
-      .select('*');
-
-    if (error) {
-      console.error('Ошибка при загрузке категорий:', error.message);
-    } else {
-      setRepairCategories(data);
-    }
-  };
-
-  const fetchRepairSubcategories = async () => {
-    const { data, error } = await supabase
-      .from('repair_subcategories')
-      .select('*');
-
-    if (error) {
-      console.error('Ошибка при загрузке подкатегорий:', error.message);
-    } else {
-      setRepairSubcategories(data);
-    }
-  };
-
-  fetchRepairCategories();
-  fetchRepairSubcategories();
-}, [supabase]);
+  if (isRepairModalOpen) {
+    fetchRepairCategories();
+  }
+}, [isRepairModalOpen]);
+ 
  return (
 
     <>
@@ -809,8 +804,8 @@ useEffect(() => {
     {repairs.length > 0 ? (
       repairs.map((repair) => (
         <li key={repair.id}>
-          <strong>🛠 {t(repair.category)}</strong><br/><br/>
-          {repair.subcategory && ` ${t('subcategory')}: ${t(repair.subcategory)}`}
+          <strong>🛠 {t(repair.category)}</strong>
+{repair.subcategory && ` ${t('subcategory')}: ${t(repair.subcategory)}`}
           <p>{repair.description}</p>
           {repair.mileage && <p> {t('mileageAtRepair')}: {repair.mileage} км</p>}
           {repair.date && <p>📅 {t('date')}: {new Date(repair.date).toLocaleDateString()}</p>}
@@ -834,9 +829,9 @@ useEffect(() => {
       <p>{t('noRepairData')}</p>
     )}
   </ul>
-</div>
 
-        <div className="maintenance-history">
+
+        
   <ul>
     {maintenanceRecords.map((record) => (
       <li key={record.id}>
@@ -884,88 +879,78 @@ useEffect(() => {
 
       {/* Модальное окно для ремонта */}
       {isRepairModalOpen && (
-  <div className="modal">
-    <div className="modal-content">
-      <h3>{t('addRepair')}</h3>
+        <div className="modal">
+          <div className="modal-content">
+            <h3>{t('addRepair')}</h3>
+            <select
+              value={repairCategory}
+              onChange={(e) => {
+                const selectedValue = e.target.value;
+                setRepairCategory(selectedValue);
+                fetchRepairSubcategories(selectedValue); // Загружаем подкатегории
+              }}
+            >
+              <option value="">{t('selectCategory')}</option>
+              {repairCategories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {t(category.name)} {/* Используем t() для перевода */}
+                </option>
+              ))}
+              <option value="other">{t('other')}</option>
+            </select>
 
-      {/* Выбор категории */}
-      <select
-  value={repairCategory}
-  onChange={(e) => {
-    const selectedValue = e.target.value;
-    setRepairCategory(selectedValue); // Устанавливаем значение "other" или id категории
-    setCustomCategory(""); // Сбрасываем кастомную категорию
-  }}
->
-  <option value="">{t('selectCategory')}</option>
-  {repairCategories.map((category) => (
-    <option key={category.id} value={category.id}>
-      {category.name}
-    </option>
-  ))}
-  <option value="other">{t('other')}</option> {/* Опция "Other" */}
-</select>
+            {repairCategory && repairCategory !== "other" && (
+              <select
+                value={repairSubcategory}
+                onChange={(e) => setRepairSubcategory(e.target.value)}
+              >
+                <option value="">{t('selectSubcategory')}</option>
+                {repairSubcategories.map((subcategory) => (
+                  <option key={subcategory.id} value={subcategory.name}>
+                    {t(subcategory.name)} {/* Используем t() для перевода */}
+                  </option>
+                ))}
+                <option value="other">{t('other')}</option>
+              </select>
+            )}
 
-      {/* Выбор подкатегории (если выбрана категория и это не "Other") */}
-      {repairCategory && repairCategory !== "other" && (
-        <select
-          value={repairSubcategory}
-          onChange={(e) => {
-            setRepairSubcategory(e.target.value);
-            setCustomCategory(""); // Сбрасываем кастомную категорию при изменении подкатегории
-          }}
-        >
-          <option value="">{t('selectSubcategory')}</option>
-          {repairSubcategories
-            .filter((subcategory) => subcategory.category_id === repairCategory)
-            .map((subcategory) => (
-              <option key={subcategory.id} value={subcategory.name}>
-                {subcategory.name}
-              </option>
-            ))}
-          <option value="other">{t('other')}</option> {/* Добавляем опцию "Other" */}
-        </select>
+            {(repairCategory === "other" || repairSubcategory === "other") && (
+              <input
+                type="text"
+                placeholder={
+                  repairCategory === "other"
+                    ? t('enterCustomCategory')
+                    : t('enterCustomSubcategory')
+                }
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+              />
+            )}
+
+            <textarea
+              placeholder={t('description')}
+              value={repairDescription}
+              onChange={(e) => setRepairDescription(e.target.value)}
+            />
+
+            <input
+              type="number"
+              placeholder={t('mileageAtRepair')}
+              value={repairMileage}
+              onChange={(e) => setRepairMileage(e.target.value)}
+            />
+
+            <input
+              type="date"
+              value={repairDate || ""}
+              onChange={(e) => setRepairDate(e.target.value)}
+            />
+
+            <button onClick={addRepair}>{t('save')}</button>
+            <button onClick={() => setIsRepairModalOpen(false)}>{t('cancel')}</button>
+          </div>
+        </div>
       )}
-
-      {/* Поле для ввода кастомной категории или подкатегории */}
-      {(repairCategory === "other" || repairSubcategory === "other") && (
-  <input
-    type="text"
-    placeholder={
-      repairCategory === "other"
-        ? t('enterCustomCategory')
-        : t('enterCustomSubcategory')
-    }
-    value={customCategory}
-    onChange={(e) => setCustomCategory(e.target.value)}
-  />
-)}
-
-      {/* Описание ремонта */}
-      <textarea
-        placeholder={t('description')}
-        value={repairDescription}
-        onChange={(e) => setRepairDescription(e.target.value)}
-      />
-
-      {/* Пробег */}
-      <input
-        type="number"
-        placeholder={t('mileageAtRepair')}
-        value={repairMileage}
-        onChange={(e) => setRepairMileage(e.target.value)}
-      />
-<input
-        type="date"
-        value={repairDate || ""}
-        onChange={(e) => setRepairDate(e.target.value)}
-      />
-      {/* Кнопки */}
-      <button onClick={addRepair}>{t('save')}</button>
-      <button onClick={() => setIsRepairModalOpen(false)}>{t('cancel')}</button>
-    </div>
-  </div>
-)}
 
       {/* Модальное окно для ТО */}
       {isMaintenanceModalOpen && (

@@ -1,4 +1,8 @@
 /* Тёмный стиль с адаптивностью */
+body{
+    overflow: hidden;
+}
+
 .auth-container {
     display: flex;
     justify-content: center;

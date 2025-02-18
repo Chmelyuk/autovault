@@ -5,6 +5,8 @@
     border-radius: 10px;
     overflow: hidden;
     position: relative;
+    text-align: center;
+    white-space: nowrap;
 }
 
 .progress-bar {

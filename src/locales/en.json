@@ -141,7 +141,8 @@
   "registerNewService": "Register a new service",
   "serviceName": "Service Name",
   "address": "Address",
-  "phone": "Phone"
+  "phone": "Phone",
+  "enterCustomSubcategory":"Enter custom Subcategory"
 
 }
    
