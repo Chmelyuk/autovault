@@ -12,6 +12,48 @@ export default function ServiceDashboard({ user, handleLogout }) {
   const [repairCategories, setRepairCategories] = useState([]);
   const [repairSubcategories, setRepairSubcategories] = useState([]);
   const { t } = useTranslation();
+  const [maintenance, setMaintenance] = useState({
+  oilChange: false,
+  oilChangeMileage: "",
+  oilChangeDate: "",
+  filterChange: false,
+  brakeCheck: false,
+  tireRotation: false,
+  coolantFlush: false,
+});
+const [errorMessage, setErrorMessage] = useState("");
+
+const handleMaintenanceChange = (e) => {
+  const { name, type, checked, value } = e.target;
+  setMaintenance((prev) => ({
+    ...prev,
+    [name]: type === "checkbox" ? checked : value,
+  }));
+};
+
+const handleSubmit = (e) => {
+  e.preventDefault();
+
+  // Проверяем, что введена дата, если выбрана "Замена масла"
+  if (maintenance.oilChange && !maintenance.oilChangeDate) {
+    setErrorMessage("Введите дату замены масла.");
+    return;
+  }
+
+  const maintenanceData = {
+    oil_change: maintenance.oilChange,
+    oil_change_mileage: maintenance.oilChange ? maintenance.oilChangeMileage || null : null,
+    oil_change_date: maintenance.oilChange ? maintenance.oilChangeDate || null : null,
+    filter_change: maintenance.filterChange,
+    brake_check: maintenance.brakeCheck,
+    tire_rotation: maintenance.tireRotation,
+    coolant_flush: maintenance.coolantFlush,
+  };
+
+  addMaintenance(selectedCar.id, maintenanceData, true);
+  setIsMaintenanceModalOpen(false);
+  setErrorMessage("");
+};
 
   // Получение ID владельца автомобиля
   const getCarOwnerId = async (carId) => {
@@ -48,6 +90,7 @@ export default function ServiceDashboard({ user, handleLogout }) {
     .from('cars')
     .select(`
       id, brand, model, year, mileage, vin,
+      fuelType, transmissionType, engine, turbocharged,
       repairs (id, category, subcategory, description, mileage, date, addbyservice, service_id),
       maintenance (id, oil_change, oil_change_mileage, oil_change_date, filter_change, brake_check, tire_rotation, coolant_flush, addbyservice, service_id)
     `)
@@ -115,17 +158,24 @@ export default function ServiceDashboard({ user, handleLogout }) {
   };
 
   // Загрузка подкатегорий ремонта
-  const fetchRepairSubcategories = async () => {
-    const { data, error } = await supabase
-      .from('repair_subcategories')
-      .select('*');
+  const fetchRepairSubcategories = async (categoryId) => {
+  if (!categoryId) {
+    setRepairSubcategories([]);
+    return;
+  }
 
-    if (error) {
-      console.error('Ошибка при загрузке подкатегорий:', error.message);
-    } else {
-      setRepairSubcategories(data);
-    }
-  };
+  const { data, error } = await supabase
+    .from('repair_subcategories')
+    .select('*')
+    .eq('category_id', categoryId); // 🔹 Теперь фильтруем подкатегории
+
+  if (error) {
+    console.error('Ошибка при загрузке подкатегорий:', error.message);
+  } else {
+    setRepairSubcategories(data);
+  }
+};
+
 
   // Загрузка данных при монтировании компонента
   useEffect(() => {
@@ -202,6 +252,10 @@ export default function ServiceDashboard({ user, handleLogout }) {
     }
   };
 
+  const openRepairModal = () => {
+  fetchRepairCategories(); 
+  setIsRepairModalOpen(true);
+};
   return (
     <>
       <ServiceHeader user={user} handleLogout={handleLogout} fetchCars={fetchCars} />
@@ -227,9 +281,13 @@ export default function ServiceDashboard({ user, handleLogout }) {
         {cars.length > 0 ? (
           cars.map((car) => (
             <div key={car.id} className="car-item">
-              <h3>{car.brand} {car.model} ({car.year})</h3>
-              <p>{t('mileage')}: {car.mileage} км</p>
-              <p>{t('vin')}: {car.vin}</p>
+              <p>{car.brand} {car.model} ({car.year})</p>
+<p>{t('mileage')}: {car.mileage} {t('km')}</p>
+<p>{t('fuelType')}: {t(car.fuelType)}</p>
+<p>{t('transmission')}: {t(car.transmissionType)}</p>
+<p>{t('engine')}: {car.engine} L {car.turbocharged && <span className="turbo">({t('turbocharged')})</span>}</p>
+<p>{t('vin')}: {car.vin}</p>
+
 
               {/* Кнопки действий */}
               <div className="action-buttons">
@@ -312,23 +370,30 @@ export default function ServiceDashboard({ user, handleLogout }) {
                 addRepair(selectedCar.id, repairData, true);
                 setIsRepairModalOpen(false);
               }}>
-                <select name="category" required>
-                  <option value="">{t('selectCategory')}</option>
-                  {repairCategories.map((category) => (
-                    <option key={category.id} value={category.name}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
+                <select
+  name="category"
+  required
+  onChange={(e) => {
+    const selectedCategory = e.target.value;
+    fetchRepairSubcategories(selectedCategory);
+  }}
+>
+  <option value="">{t('selectCategory')}</option>
+  {repairCategories.map((category) => (
+    <option key={category.id} value={category.id}>
+      {t(category.name)}
+    </option>
+  ))}
+</select>
 
-                <select name="subcategory">
-                  <option value="">{t('selectSubcategory')}</option>
-                  {repairSubcategories.map((subcategory) => (
-                    <option key={subcategory.id} value={subcategory.name}>
-                      {subcategory.name}
-                    </option>
-                  ))}
-                </select>
+<select name="subcategory">
+  <option value="">{t('selectSubcategory')}</option>
+  {repairSubcategories.map((subcategory) => (
+    <option key={subcategory.id} value={subcategory.id}>
+      {t(subcategory.name)}
+    </option>
+  ))}
+</select>
 
                 <textarea name="description" placeholder={t('description')} required />
                 <input type="number" name="mileage" placeholder={t('mileage')} required />
@@ -342,37 +407,48 @@ export default function ServiceDashboard({ user, handleLogout }) {
 
         {/* Модальное окно добавления ТО */}
         {isMaintenanceModalOpen && (
-          <div className="modal1">
-            <div className="modal1-content">
-              <h3>{t('addMaintenance')}</h3>
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const maintenanceData = {
-                  oil_change: formData.get('oil_change') === 'on',
-                  oil_change_mileage: formData.get('oil_change_mileage'),
-                  oil_change_date: formData.get('oil_change_date'),
-                  filter_change: formData.get('filter_change') === 'on',
-                  brake_check: formData.get('brake_check') === 'on',
-                  tire_rotation: formData.get('tire_rotation') === 'on',
-                  coolant_flush: formData.get('coolant_flush') === 'on',
-                };
-                addMaintenance(selectedCar.id, maintenanceData, true);
-                setIsMaintenanceModalOpen(false);
-              }}>
-                <label><input type="checkbox" name="oil_change" /> {t('oilChange')}</label>
-                <input type="number" name="oil_change_mileage" placeholder={t('mileageAtOilChange')} />
-                <input type="date" name="oil_change_date" />
-                <label><input type="checkbox" name="filter_change" /> {t('filterChange')}</label>
-                <label><input type="checkbox" name="brake_check" /> {t('brakeCheck')}</label>
-                <label><input type="checkbox" name="tire_rotation" /> {t('tireRotation')}</label>
-                <label><input type="checkbox" name="coolant_flush" /> {t('coolantFlush')}</label>
-                <button type="submit">{t('save')}</button>
-                <button type="button" onClick={() => setIsMaintenanceModalOpen(false)}>{t('cancel')}</button>
-              </form>
-            </div>
-          </div>
+  <div className="modal-overlay">
+    <div className="modal-content">
+      <h3>{t("addMaintenance")}</h3>
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
+      <form onSubmit={handleSubmit}>
+        <label className="checkbox-label">
+          <input type="checkbox" name="oilChange" checked={maintenance.oilChange} onChange={handleMaintenanceChange} /> 
+          {t("oilChange")}
+        </label>
+
+        {maintenance.oilChange && (
+          <>
+            <input type="number" name="oilChangeMileage" value={maintenance.oilChangeMileage} onChange={handleMaintenanceChange} placeholder={t("mileageAtOilChange")} className="form-input" />
+            <input type="date" name="oilChangeDate" value={maintenance.oilChangeDate} onChange={handleMaintenanceChange} className="form-input" required />
+          </>
         )}
+
+        <label className="checkbox-label">
+          <input type="checkbox" name="filterChange" checked={maintenance.filterChange} onChange={handleMaintenanceChange} /> 
+          {t("filterChange")}
+        </label>
+        <label className="checkbox-label">
+          <input type="checkbox" name="brakeCheck" checked={maintenance.brakeCheck} onChange={handleMaintenanceChange} /> 
+          {t("brakeCheck")}
+        </label>
+        <label className="checkbox-label">
+          <input type="checkbox" name="tireRotation" checked={maintenance.tireRotation} onChange={handleMaintenanceChange} /> 
+          {t("tireRotation")}
+        </label>
+        <label className="checkbox-label">
+          <input type="checkbox" name="coolantFlush" checked={maintenance.coolantFlush} onChange={handleMaintenanceChange} /> 
+          {t("coolantFlush")}
+        </label>
+
+        <div className="form-buttons">
+          <button type="submit" className="form-button submit-button">{t("save")}</button>
+          <button type="button" onClick={() => setIsMaintenanceModalOpen(false)} className="form-button cancel-button">{t("cancel")}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
       </div>
     </>
   );

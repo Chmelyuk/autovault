@@ -56,10 +56,23 @@ export default function App() {
   }, [navigate]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+  try {
+    // Обновляем токен перед выходом
+    await supabase.auth.refreshSession();
+
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("❌ Ошибка выхода:", error.message);
+      return;
+    }
+
     setUser(null);
-    navigate('/autovault/');
-  };
+    navigate("/autovault/");
+  } catch (err) {
+    console.error("❌ Ошибка при выходе:", err);
+  }
+};
+
 
   return (
     <div className="container">

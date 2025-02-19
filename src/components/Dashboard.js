@@ -196,7 +196,7 @@ const updateMaintenance = async () => {
   const fetchMaintenance = async (carId) => {
   const { data, error } = await supabase
     .from("maintenance")
-    .select("*, service_id") // Добавляем service_id
+    .select("id, oil_change, oil_change_mileage, oil_change_date, filter_change, brake_check, tire_rotation, coolant_flush, addbyservice, service_id, user_id") // Добавляем service_id
     .eq("car_id", carId);
 
   if (error) {
@@ -342,7 +342,7 @@ const addRepair = async () => {
     return;
   }
 
-  // Проверка, что хотя бы одно поле выбрано
+  // Проверка, что хотя бы один пункт выбран
   if (
     !maintenance.oilChange &&
     !maintenance.filterChange &&
@@ -357,12 +357,12 @@ const addRepair = async () => {
   // Устанавливаем текущую дату, если поле даты пустое
   const maintenanceDateValue = maintenanceDate || new Date().toISOString().split('T')[0];
 
-  console.log("Attempting to insert maintenance:", {
+  console.log("Добавление ТО с параметрами:", {
     user_id: user.id,
     car_id: car.id,
     oil_change: maintenance.oilChange,
     oil_change_mileage: maintenance.oilChange ? maintenance.oilChangeMileage : null,
-    oil_change_date: maintenance.oilChange ? maintenanceDateValue : null,
+    oil_change_date: maintenanceDateValue,  // Дата устанавливается всегда
     filter_change: maintenance.filterChange,
     brake_check: maintenance.brakeCheck,
     tire_rotation: maintenance.tireRotation,
@@ -376,7 +376,7 @@ const addRepair = async () => {
         car_id: car.id,
         oil_change: maintenance.oilChange,
         oil_change_mileage: maintenance.oilChange ? maintenance.oilChangeMileage : null,
-        oil_change_date: maintenance.oilChange ? maintenanceDateValue : null,
+        oil_change_date: maintenanceDateValue,  // Дата заполняется, даже если не замена масла
         filter_change: maintenance.filterChange,
         brake_check: maintenance.brakeCheck,
         tire_rotation: maintenance.tireRotation,
@@ -385,22 +385,23 @@ const addRepair = async () => {
     ]).select("*");
 
     if (error) {
-      console.error("Error adding maintenance:", error.message);
+      console.error("Ошибка при добавлении ТО:", error.message);
       return;
     }
 
-    console.log("Maintenance added:", data);
+    console.log("ТО успешно добавлено:", data);
     setMaintenanceRecords([...maintenanceRecords, ...data]);
     setIsMaintenanceModalOpen(false);
 
-    // 🔹 Если введён пробег больше текущего, обновляем `car.mileage`
+    // Если введён пробег больше текущего, обновляем `car.mileage`
     if (maintenance.oilChange && maintenance.oilChangeMileage > car.mileage) {
       updateCarMileage(maintenance.oilChangeMileage);
     }
   } catch (err) {
-    console.error("Unexpected error:", err);
+    console.error("Непредвиденная ошибка при добавлении ТО:", err);
   }
 };
+
 
 const updateCarMileage = async (newMileage) => {
     if (!car || newMileage <= car.mileage) return; // Пробег обновляется только если он выше
@@ -663,6 +664,15 @@ useEffect(() => {
   }
 }, [isRepairModalOpen]);
  
+
+
+
+const sortedRecords = [...repairs, ...maintenanceRecords].sort((a, b) => {
+  const dateA = a.date || a.oil_change_date; // Используем date для ремонтов, oil_change_date для ТО
+  const dateB = b.date || b.oil_change_date;
+
+  return new Date(dateB) - new Date(dateA); // Сортировка от новых к старым
+});
  return (
 
     <>
@@ -801,80 +811,88 @@ useEffect(() => {
        
        <div className="repair-history">
   <ul>
-    {repairs.length > 0 ? (
-      repairs.map((repair) => (
-        <li key={repair.id}>
-          <strong>🛠 {t(repair.category)}</strong>
-{repair.subcategory && ` ${t('subcategory')}: ${t(repair.subcategory)}`}
-          <p>{repair.description}</p>
-          {repair.mileage && <p> {t('mileageAtRepair')}: {repair.mileage} км</p>}
-          {repair.date && <p>📅 {t('date')}: {new Date(repair.date).toLocaleDateString()}</p>}
-          
-          {/* Отображаем, если ремонт добавлен сервисом */}
-          {repair.addbyservice && (
-            <p className="added-by-service">
-              {t('addedByService')} {repair.serviceName && `(${repair.serviceName})`}
-            </p>
-          )}
+    {sortedRecords.length > 0 ? (
+      sortedRecords.map((record) => (
+        <li key={record.category ? `repair-${record.id}` : `maintenance-${record.id}`}>
+          {record.category ? ( // Это ремонт
+            <>
+              <strong>🛠 {t(record.category)}</strong>
+              {record.subcategory && ` ${t('subcategory')}: ${t(record.subcategory)}`}
+              <p>{record.description}</p>
+              {record.mileage && <p>{t('mileageAtRepair')}: {record.mileage} км</p>}
+              {record.date && <p>📅 {t('date')}: {new Date(record.date).toLocaleDateString()}</p>}
 
-          <div className="button-container">
-            <button onClick={() => { setEditRepair(repair); setIsEditRepairModalOpen(true); }}>
-              {t('edit')}
-            </button>
-            <button onClick={() => deleteRepair(repair.id)}>{t('delete')}</button>
-          </div>
+              {/* Отображаем, если ремонт добавлен сервисом */}
+              {record.addbyservice && (
+                <p className="added-by-service">
+                  {t('addedByService')} {record.serviceName && `(${record.serviceName})`}
+                </p>
+              )}
+
+              <div className="button-container">
+                <button onClick={() => { setEditRepair(record); setIsEditRepairModalOpen(true); }}>
+                  {t('edit')}
+                </button>
+                <button onClick={() => deleteRepair(record.id)}>{t('delete')}</button>
+              </div>
+            </>
+          ) : ( // Это ТО
+            <>
+              <strong>🔧</strong>
+              {record.oil_change ? (
+                <>
+                  {t('oilChange')}
+                  {record.oil_change_date
+                    ? ` ${new Date(record.oil_change_date).toLocaleDateString()} ${t('at')} ${record.oil_change_mileage || t('unknown')} км`
+                    : ` (${t('unknownDate')})`}
+                </>
+              ) : (
+                record.oil_change_date && `📅 ${new Date(record.oil_change_date).toLocaleDateString()}`
+              )}
+              <p>{record.filter_change && ` ${t('filterChange')}`}</p>
+              <p>{record.brake_check && ` ${t('brakeCheck')}`}</p>
+              <p>{record.tire_rotation && ` ${t('tireRotation')}`}</p>
+              <p>{record.coolant_flush && ` ${t('coolantFlush')}`}</p>
+
+              {/* Отображаем, если ТО добавлено сервисом */}
+              {record.addbyservice && (
+                <p className="added-by-service">
+                  {t('addedByService')} {record.serviceName && `(${record.serviceName})`}
+                </p>
+              )}
+
+              <div className="button-container">
+                <button onClick={() => openEditMaintenanceModal(record)}>{t('edit')}</button>
+                <button onClick={() => deleteMaintenance(record.id)}>{t('delete')}</button>
+              </div>
+
+              <br />
+              {record.oil_change && (
+                <ProgressBar
+                  progress={calculateRemainingMileage(car, maintenanceRecords)}
+                  total={calculateTotalMileageInterval(car, maintenanceRecords)}
+                />
+              )}
+              {record.oil_change && calculateRemainingMileage(car, maintenanceRecords) < 2000 && showWarning && (
+                <div className="oil-warning">
+                  <a href="https://dok.ua" target="_blank" rel="noopener noreferrer">
+                    <img src={banner} alt={t('oilChangeWarning')} />
+                  </a>
+                  <button className="close-button" onClick={() => setShowWarning(false)}>
+                    ×
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </li>
       ))
     ) : (
       <p>{t('noRepairData')}</p>
     )}
   </ul>
-
-
-        
-  <ul>
-    {maintenanceRecords.map((record) => (
-      <li key={record.id}>
-        <br />
-        {record.oil_change &&
-          `${t('oilChange')} ${record.oil_change_date ? new Date(record.oil_change_date).toLocaleDateString() : t('unknownDate')} ${t('at')} ${record.oil_change_mileage || t('unknown')} км`}
-        {record.filter_change && ` ${t('filterChange')},`}
-        {record.brake_check && ` ${t('brakeCheck')},`}
-        {record.tire_rotation && ` ${t('tireRotation')},`}
-        {record.coolant_flush && ` ${t('coolantFlush')}`}
-
-        {/* Отображаем, если ТО добавлено сервисом */}
-        {record.addbyservice && (
-          <p className="added-by-service">
-            {t('addedByService')} {record.serviceName && `(${record.serviceName})`}
-          </p>
-        )}
-
-        <div className="button-container">
-          <button onClick={() => openEditMaintenanceModal(record)}>{t('edit')}</button>
-          <button onClick={() => deleteMaintenance(record.id)}>{t('delete')}</button>
-        </div>
-        <br />
-        {record.oil_change && (
-          <ProgressBar
-            progress={calculateRemainingMileage(car, maintenanceRecords)}
-            total={calculateTotalMileageInterval(car, maintenanceRecords)}
-          />
-        )}
-        {record.oil_change && calculateRemainingMileage(car, maintenanceRecords) < 2000 && showWarning && (
-          <div className="oil-warning">
-            <a href="https://dok.ua" target="_blank" rel="noopener noreferrer">
-              <img src={banner} alt={t('oilChangeWarning')} />
-            </a>
-            <button className="close-button" onClick={() => setShowWarning(false)}>
-              ×
-            </button>
-          </div>
-        )}
-      </li>
-    ))}
-  </ul>
 </div>
+
       </div>
 
       {/* Модальное окно для ремонта */}
