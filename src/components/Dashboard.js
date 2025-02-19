@@ -817,7 +817,7 @@ const sortedRecords = [...repairs, ...maintenanceRecords].sort((a, b) => {
           {record.category ? ( // Это ремонт
             <>
               <strong>🛠 {t(record.category)}</strong>
-              {record.subcategory && ` ${t('subcategory')}: ${t(record.subcategory)}`}
+              <p>{record.subcategory && ` ${t('subcategory')}: ${t(record.subcategory)}`}</p>
               <p>{record.description}</p>
               {record.mileage && <p>{t('mileageAtRepair')}: {record.mileage} км</p>}
               {record.date && <p>📅 {t('date')}: {new Date(record.date).toLocaleDateString()}</p>}
@@ -843,11 +843,14 @@ const sortedRecords = [...repairs, ...maintenanceRecords].sort((a, b) => {
                 <>
                   {t('oilChange')}
                   {record.oil_change_date
-                    ? ` ${new Date(record.oil_change_date).toLocaleDateString()} ${t('at')} ${record.oil_change_mileage || t('unknown')} км`
+                    ? `  ${t('at')} 
+                    ${record.oil_change_mileage || t('unknown')} км 
+                    ${new Date(record.oil_change_date).toLocaleDateString()}`
+                    
                     : ` (${t('unknownDate')})`}
                 </>
               ) : (
-                record.oil_change_date && `📅 ${new Date(record.oil_change_date).toLocaleDateString()}`
+                record.oil_change_date && `  📅   ${new Date(record.oil_change_date).toLocaleDateString()}`
               )}
               <p>{record.filter_change && ` ${t('filterChange')}`}</p>
               <p>{record.brake_check && ` ${t('brakeCheck')}`}</p>
