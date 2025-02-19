@@ -4,8 +4,9 @@ import AuthForm from "./components/AuthForm";
 import Dashboard from "./components/Dashboard";
 import ServiceDashboard from "./components/ServiceDashboard";
 import ServiceRegistrationForm from "./components/ServiceRegistrationForm";
-import { useNavigate, Routes, Route,Navigate  } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import './i18n';
+
 
 const supabase = createClient('https://uowtueztcqvaeqzhovqb.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvd3R1ZXp0Y3F2YWVxemhvdnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1MDYyNDYsImV4cCI6MjA1NDA4MjI0Nn0.R-pev2rQ3YqkO0SDoyYIK7a1ZfcyUa2ezpL3WTaddx8');
 
@@ -56,31 +57,28 @@ export default function App() {
   }, [navigate]);
 
   const handleLogout = async () => {
-  try {
-    // Обновляем токен перед выходом
-    await supabase.auth.refreshSession();
+    try {
+      await supabase.auth.refreshSession();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("❌ Ошибка выхода:", error.message);
+        return;
+      }
 
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("❌ Ошибка выхода:", error.message);
-      return;
+      setUser(null);
+      navigate("/autovault/");
+    } catch (err) {
+      console.error("❌ Ошибка при выходе:", err);
     }
-
-    setUser(null);
-    navigate("/autovault/");
-  } catch (err) {
-    console.error("❌ Ошибка при выходе:", err);
-  }
-};
-
+  };
 
   return (
     <div className="container">
       <Routes>
-        <Route
-  path="/"
-  element={<Navigate to="/autovault/" replace />}
-/>
+        {/* Редирект с главной страницы на autovault */}
+        <Route path="/" element={<Navigate to="/autovault/" replace />} />
+        
+        {/* Авторизация или Дашборд (если пользователь залогинен) */}
         <Route
           path="/autovault/"
           element={
@@ -91,13 +89,23 @@ export default function App() {
             )
           }
         />
+
+        {/* Регистрация сервиса */}
         <Route
           path="/autovault/service-registration"
           element={<ServiceRegistrationForm supabase={supabase} />}
         />
+
+        {/* Дашборд сервиса */}
         <Route
           path="/autovault/service-dashboard"
-          element={<ServiceDashboard user={user} supabase={supabase} handleLogout={handleLogout} />}
+          element={
+            user ? (
+              <ServiceDashboard user={user} supabase={supabase} handleLogout={handleLogout} />
+            ) : (
+              <Navigate to="/autovault/" replace />
+            )
+          }
         />
       </Routes>
     </div>
