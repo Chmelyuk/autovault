@@ -82,13 +82,14 @@ if (!email || !password) {
 
   return (
     <div className="auth-container">
+      <img src={logo} alt="Car" className="logo-image" />
       <div className="auth-box">
         <div className="language-buttons">
           <button onClick={() => changeLanguage('en')}>English</button>
           <button onClick={() => changeLanguage('ru')}>Русский</button>
           <button onClick={() => changeLanguage('uk')}>Українська</button>
         </div>
-<img src={logo} alt="Car" className="logo-image" />
+
         <h2 className="auth-title">{t('signInSignUp')}</h2>
         <input
           type="email"
@@ -128,7 +129,7 @@ if (!email || !password) {
           </div>
         )}
         {error && <p className="auth-error">{error}</p>}
-        <br/>
+        
         <div className="terms-checkbox-container">
           <input
             type="checkbox"
