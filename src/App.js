@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import AuthForm from "./components/AuthForm";
 import Dashboard from "./components/Dashboard";
 import ServiceDashboard from "./components/ServiceDashboard";
@@ -13,7 +13,7 @@ const supabase = createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvd3R1ZXp0Y3F2YWVxemhvdnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1MDYyNDYsImV4cCI6MjA1NDA4MjI0Nn0.R-pev2rQ3YqkO0SDoyYIK7a1ZfcyUa2ezpL3WTaddx8"
 );
 
-function AppContent() {
+export default function App() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
@@ -90,8 +90,20 @@ function AppContent() {
   return (
     <div className="container">
       <Routes>
-        <Route path="/" element={!user ? <AuthForm setUser={setUser} supabase={supabase} /> : <Dashboard user={user} supabase={supabase} handleLogout={handleLogout} />} />
-        <Route path="/service-registration" element={<ServiceRegistrationForm supabase={supabase} />} />
+        <Route
+          path="/"
+          element={
+            !user ? (
+              <AuthForm setUser={setUser} supabase={supabase} />
+            ) : (
+              <Dashboard user={user} supabase={supabase} handleLogout={handleLogout} />
+            )
+          }
+        />
+        <Route
+          path="/service-registration"
+          element={<ServiceRegistrationForm supabase={supabase} />}
+        />
         <Route
           path="/service-dashboard"
           element={
@@ -102,17 +114,8 @@ function AppContent() {
             )
           }
         />
-        {/* Перенаправление с неизвестных маршрутов на главную страницу */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
-  );
-}
-
-export default function App() {
-  return (
-    <BrowserRouter basename="/autovault">
-      <AppContent />
-    </BrowserRouter>
   );
 }
