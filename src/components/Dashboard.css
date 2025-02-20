@@ -448,15 +448,38 @@ button {
     font-weight: bold;
 }
 
-
+/* Стили для селектора сортировки */
 .sort-selector {
-    margin-bottom: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .sort-selector label {
-    margin-right: 5px;
+    color: #f5f5f5;
+    font-weight: 500;
+    font-size: 16px;
 }
 
 .sort-selector select {
-    padding: 5px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    font-size: 14px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.sort-selector select:hover {
+    border-color: #4caf50;
+}
+
+.sort-selector select:focus {
+    border-color: #4caf50;
+    outline: none;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
 }

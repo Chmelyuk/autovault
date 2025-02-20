@@ -5,6 +5,7 @@ import QRScanner from './QRScanner';
 import { useTranslation } from 'react-i18next';
 import CarTracker from './CarTracker';
 import { supabase } from "../supabaseClient";
+import logo from '../components/logo.png';
 
 export default function Header({ user, handleLogout, openEditModal, fetchCars, fetchRepairs, fetchMaintenance, selectedCar }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -261,12 +262,19 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
   };
 
   return (
+
+    
     <header className="header">
       <div className={`burger-menu ${isDropdownOpen ? 'open' : ''}`} onClick={toggleDropdown}>
         <span className="burger-line"></span>
         <span className="burger-line"></span>
         <span className="burger-line"></span>
       </div>
+      <img
+        src={logo}
+        alt="Car"
+        className="logo-image"
+      />
 
       {isDropdownOpen && (
         <div className="dropdown-menu" ref={dropdownRef}>

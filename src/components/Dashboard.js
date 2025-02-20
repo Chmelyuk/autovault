@@ -531,14 +531,15 @@ export default function Dashboard({ user, supabase, handleLogout }) {
 
         <h3>{t('repairHistory')}</h3>
         <div className="sort-selector">
-          <label>{t("sortBy")}:</label>
-          <select value={sortMode} onChange={(e) => setSortMode(e.target.value)}>
-            <option value="dateAsc">{t("dateOldToNew")}</option>
-            <option value="dateDesc">{t("dateNewToOld")}</option>
-            <option value="repairsFirst">{t("repairsThenMaintenance")}</option>
-            <option value="maintenanceFirst">{t("maintenanceThenRepairs")}</option>
-          </select>
-        </div>
+  <label>{t("sortBy")}:</label>
+  <select value={sortMode} onChange={(e) => setSortMode(e.target.value)}>
+    <option value="dateAsc">{t("dateOldToNew")}</option>
+    <option value="dateDesc">{t("dateNewToOld")}</option>
+    <option value="repairsFirst">{t("repairsThenMaintenance")}</option>
+    <option value="maintenanceFirst">{t("maintenanceThenRepairs")}</option>
+  </select>
+</div>
+
 
         <div className="repair-history">
           <ul>

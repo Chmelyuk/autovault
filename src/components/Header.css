@@ -231,8 +231,30 @@ header {
     .language-buttons {
         text-align: center;
     }
+
+    
 }
 
 .language-buttons button {
     margin-right: 10px;
+}
+
+
+.logo-image{
+    position: absolute;
+    width: 20%;
+    padding-top: 2%;
+}
+
+
+@media (max-width: 700px) {
+    .logo-image {
+            position: absolute;
+            width: 60%;
+            height: auto;
+            top: -50%;
+            left: 0;
+            
+        }
+
 }

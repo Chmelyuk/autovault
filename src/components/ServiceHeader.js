@@ -3,6 +3,7 @@ import './Header.css';
 import { supabase } from '../supabaseClient';
 import QRScanner from './QRScanner';
 import { useTranslation } from 'react-i18next';
+import logo from '../components/logo.png';
 
 export default function ServiceHeader({ user, handleLogout, fetchCars }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -93,6 +94,12 @@ export default function ServiceHeader({ user, handleLogout, fetchCars }) {
       <div className="user-icon" onClick={toggleDropdown}>
         {user?.email?.charAt(0).toUpperCase()}
       </div>
+
+<img
+        src={logo}
+        alt="Car"
+        className="logo-image"
+      />
 
       {isDropdownOpen && (
         <div className="dropdown-menu">
