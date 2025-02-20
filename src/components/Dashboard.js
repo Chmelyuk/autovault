@@ -562,16 +562,12 @@ export default function Dashboard({ user, supabase, handleLogout }) {
                   ) : (
                     <>
                       <strong>
-                        {record.oil_change && '🛢️ '}
-                        {record.coolant_flush && '❄️ '}
-                        {record.tire_rotation && '🛞 '}
-                        {record.filter_change && '🌀 '}
-                        {record.brake_check && '🛑 '}
+                        
                         {!record.oil_change && !record.coolant_flush && !record.tire_rotation && !record.filter_change && !record.brake_check && '🔧'}
                       </strong>
                       {record.oil_change ? (
                         <>
-                          {t('oilChange')}
+                          🛢️{t('oilChange')}
                           {record.oil_change_date
                             ? ` ${t('at')} ${record.oil_change_mileage || t('unknown')} км ${new Date(record.oil_change_date).toLocaleDateString()}`
                             : ` (${t('unknownDate')})`}
@@ -579,10 +575,10 @@ export default function Dashboard({ user, supabase, handleLogout }) {
                       ) : (
                         record.oil_change_date && ` 📅 ${new Date(record.oil_change_date).toLocaleDateString()}`
                       )}
-                      <p>{record.filter_change && ` ${t('filterChange')}`}</p>
-                      <p>{record.brake_check && ` ${t('brakeCheck')}`}</p>
-                      <p>{record.tire_rotation && ` ${t('tireRotation')}`}</p>
-                      <p>{record.coolant_flush && ` ${t('coolantFlush')}`}</p>
+                      <p>{record.filter_change && `🌀${t('filterChange')}`}</p>
+                      <p>{record.brake_check && ` 🛑${t('brakeCheck')}`}</p>
+                      <p>{record.tire_rotation && ` 🛞${t('tireRotation')}`}</p>
+                      <p>{record.coolant_flush && ` ❄️${t('coolantFlush')}`}</p>
                       {record.addbyservice && <p className="added-by-service">{t('addedByService')} {record.serviceName && `(${record.serviceName})`}</p>}
                       <div className="button-container">
                         <button onClick={() => { setEditMaintenance(record); setIsEditMaintenanceModalOpen(true); }}>{t('edit')}</button>
@@ -590,6 +586,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
                       </div>
                       {record.oil_change && (
                         <>
+                        <br/>
                           <ProgressBar progress={calculateRemainingMileage(car, maintenanceRecords)} total={calculateTotalMileageInterval(car)} />
                           {calculateRemainingMileage(car, maintenanceRecords) < 2000 && showWarning && (
                             <div className="oil-warning">

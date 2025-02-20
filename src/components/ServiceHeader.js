@@ -91,8 +91,10 @@ export default function ServiceHeader({ user, handleLogout, fetchCars }) {
 };
   return (
     <header className="header">
-      <div className="user-icon" onClick={toggleDropdown}>
-        {user?.email?.charAt(0).toUpperCase()}
+      <div className={`burger-menu ${isDropdownOpen ? 'open' : ''}`} onClick={toggleDropdown}>
+        <span className="burger-line"></span>
+        <span className="burger-line"></span>
+        <span className="burger-line"></span>
       </div>
 
 <img
