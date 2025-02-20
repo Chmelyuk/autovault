@@ -21,13 +21,6 @@ export default function Dashboard({ user, supabase, handleLogout }) {
   const [isEditMaintenanceModalOpen, setIsEditMaintenanceModalOpen] = useState(false);
   const [isEditRepairModalOpen, setIsEditRepairModalOpen] = useState(false);
   const [editRepair, setEditRepair] = useState(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editCar, setEditCar] = useState(null);
-  const [updateStatus, setUpdateStatus] = useState("");
-  const [car, setCar] = useState(() => {
-    const savedCarId = localStorage.getItem('selectedCarId');
-    return savedCarId ? null : null;
-  });
   const [repairs, setRepairs] = useState([]);
   const [maintenanceRecords, setMaintenanceRecords] = useState([]);
   const [isRepairModalOpen, setIsRepairModalOpen] = useState(false);
@@ -44,8 +37,11 @@ export default function Dashboard({ user, supabase, handleLogout }) {
   });
   const [showWarning, setShowWarning] = useState(true);
   const [sortMode, setSortMode] = useState("dateDesc");
+  const [car, setCar] = useState(() => {
+    const savedCarId = localStorage.getItem('selectedCarId');
+    return savedCarId ? null : null;
+  });
 
-  // Загрузка начальных данных
   useEffect(() => {
     const fetchInitialData = async () => {
       if (!user) return;
@@ -61,9 +57,8 @@ export default function Dashboard({ user, supabase, handleLogout }) {
         return;
       }
 
-      setCars(carsData);
+      setCars(carsData || []);
 
-      // Восстановление выбранного автомобиля из localStorage
       const savedCarId = localStorage.getItem('selectedCarId');
       const selectedCar = savedCarId
         ? carsData.find(c => c.id === savedCarId) || (carsData.length > 0 ? carsData[0] : null)
@@ -75,7 +70,6 @@ export default function Dashboard({ user, supabase, handleLogout }) {
     fetchInitialData();
   }, [user, supabase]);
 
-  // Обновление ремонтов и ТО при смене автомобиля
   useEffect(() => {
     if (car?.id) {
       Promise.all([fetchRepairs(car.id), fetchMaintenance(car.id)])
@@ -84,9 +78,8 @@ export default function Dashboard({ user, supabase, handleLogout }) {
       setRepairs([]);
       setMaintenanceRecords([]);
     }
-  }, [car, supabase]);
+  }, [car]);
 
-  // Сохранение выбранного автомобиля в localStorage
   useEffect(() => {
     if (car) {
       localStorage.setItem('selectedCarId', car.id);
@@ -95,12 +88,11 @@ export default function Dashboard({ user, supabase, handleLogout }) {
     }
   }, [car]);
 
-  // Загрузка категорий ремонта
   useEffect(() => {
     if (isRepairModalOpen) {
       fetchRepairCategories();
     }
-  }, [isRepairModalOpen, supabase]);
+  }, [isRepairModalOpen]);
 
   const fetchCars = async () => {
     if (!user) return;
@@ -113,7 +105,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
     if (error) {
       console.error("❌ Ошибка при загрузке машин:", error.message);
     } else {
-      setCars(data);
+      setCars(data || []);
       const savedCarId = localStorage.getItem('selectedCarId');
       const selectedCar = savedCarId
         ? data.find(c => c.id === savedCarId) || (data.length > 0 ? data[0] : null)
@@ -213,7 +205,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
   };
 
   const updateCarMileage = async (newMileage) => {
-    if (!car || newMileage <= car.mileage) return;
+    if (!car || !newMileage || newMileage <= car.mileage) return;
     const { data, error } = await supabase
       .from("cars")
       .update({ mileage: newMileage })
@@ -225,28 +217,12 @@ export default function Dashboard({ user, supabase, handleLogout }) {
       console.error("❌ Ошибка обновления пробега:", error.message);
     } else {
       setCar(data);
-    }
-  };
-
-  const updateCar = async () => {
-    if (!editCar || !editCar.id) return;
-    const { data, error } = await supabase
-      .from("cars")
-      .update(editCar)
-      .eq("id", editCar.id)
-      .select("*")
-      .single();
-
-    if (error) {
-      console.error("❌ Ошибка при обновлении машины:", error.message);
-    } else {
-      setCar(data);
-      setIsEditModalOpen(false);
+      setCars(prev => prev.map(c => c.id === data.id ? data : c));
     }
   };
 
   const addRepair = async () => {
-    if (!car || !repairCategory || !repairDescription || !repairMileage) {
+    if (!car || !repairCategory) {
       alert(t("fillRequiredFields"));
       return;
     }
@@ -254,15 +230,15 @@ export default function Dashboard({ user, supabase, handleLogout }) {
       ? customCategory || "Other"
       : repairCategories.find(cat => cat.id === repairCategory)?.name || "Other";
     const subcategoryName = repairSubcategory === "other" ? customCategory : repairSubcategory;
-    const formattedDate = repairDate || new Date().toISOString().split("T")[0];
+    const formattedDate = repairDate || null; // Дата необязательна
 
     const { data, error } = await supabase.from("repairs").insert([{
       user_id: user.id,
       car_id: car.id,
       category: categoryName,
-      subcategory: subcategoryName,
-      description: repairDescription,
-      mileage: parseInt(repairMileage),
+      subcategory: subcategoryName || null,
+      description: repairDescription || null, // Описание необязательно
+      mileage: repairMileage ? parseInt(repairMileage) : null, // Пробег необязателен
       date: formattedDate,
     }]).select("*");
 
@@ -277,7 +253,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
       setRepairDescription("");
       setRepairMileage("");
       setRepairDate("");
-      if (parseInt(repairMileage) > car.mileage) updateCarMileage(parseInt(repairMileage));
+      if (repairMileage && parseInt(repairMileage) > car.mileage) updateCarMileage(parseInt(repairMileage));
     }
   };
 
@@ -287,12 +263,12 @@ export default function Dashboard({ user, supabase, handleLogout }) {
       alert(t("fillOilChangeMileage"));
       return;
     }
-    const formattedDate = maintenanceDate || new Date().toISOString().split("T")[0];
+    const formattedDate = maintenanceDate || null; // Дата необязательна
     const { data, error } = await supabase.from("maintenance").insert([{
       user_id: user.id,
       car_id: car.id,
       oil_change: maintenance.oilChange,
-      oil_change_mileage: maintenance.oilChange ? maintenance.oilChangeMileage : null,
+      oil_change_mileage: maintenance.oilChange ? (maintenance.oilChangeMileage || null) : null,
       oil_change_date: formattedDate,
       filter_change: maintenance.filterChange,
       brake_check: maintenance.brakeCheck,
@@ -314,7 +290,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
         oilChangeMileage: "",
       });
       setMaintenanceDate("");
-      if (maintenance.oilChange && maintenance.oilChangeMileage > car.mileage) {
+      if (maintenance.oilChange && maintenance.oilChangeMileage && maintenance.oilChangeMileage > car.mileage) {
         updateCarMileage(maintenance.oilChangeMileage);
       }
     }
@@ -322,7 +298,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
 
   const updateMaintenance = async () => {
     if (!editMaintenance || !editMaintenance.id) return;
-    const formattedDate = editMaintenance.oil_change_date || new Date().toISOString().split("T")[0];
+    const formattedDate = editMaintenance.oil_change_date || null; // Дата необязательна
     const { data, error } = await supabase
       .from("maintenance")
       .update({
@@ -331,7 +307,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
         brake_check: editMaintenance.brake_check,
         tire_rotation: editMaintenance.tire_rotation,
         coolant_flush: editMaintenance.coolant_flush,
-        oil_change_mileage: editMaintenance.oil_change ? editMaintenance.oil_change_mileage : null,
+        oil_change_mileage: editMaintenance.oil_change ? (editMaintenance.oil_change_mileage || null) : null,
         oil_change_date: formattedDate,
       })
       .eq("id", editMaintenance.id)
@@ -347,15 +323,18 @@ export default function Dashboard({ user, supabase, handleLogout }) {
   };
 
   const updateRepair = async () => {
-    if (!editRepair || !editRepair.id) return;
-    const formattedDate = editRepair.date || new Date().toISOString().split("T")[0];
+    if (!editRepair || !editRepair.id || !editRepair.category) {
+      alert(t("fillRequiredFields"));
+      return;
+    }
+    const formattedDate = editRepair.date || null; // Дата необязательна
     const { data, error } = await supabase
       .from("repairs")
       .update({
         category: editRepair.category,
         subcategory: editRepair.subcategory || null,
-        description: editRepair.description,
-        mileage: parseInt(editRepair.mileage) || null,
+        description: editRepair.description || null, // Описание необязательно
+        mileage: editRepair.mileage ? parseInt(editRepair.mileage) : null, // Пробег необязателен
         date: formattedDate,
       })
       .eq("id", editRepair.id)
@@ -367,7 +346,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
     } else {
       setRepairs(prev => prev.map(r => r.id === data.id ? data : r));
       setIsEditRepairModalOpen(false);
-      if (parseInt(editRepair.mileage) > car.mileage) updateCarMileage(parseInt(editRepair.mileage));
+      if (editRepair.mileage && parseInt(editRepair.mileage) > car.mileage) updateCarMileage(parseInt(editRepair.mileage));
     }
   };
 
@@ -420,81 +399,36 @@ export default function Dashboard({ user, supabase, handleLogout }) {
     const combinedRecords = [...repairs, ...maintenanceRecords];
     switch (sortMode) {
       case "dateAsc":
-        return combinedRecords.sort((a, b) => new Date(a.date || a.oil_change_date) - new Date(b.date || b.oil_change_date));
+        return combinedRecords.sort((a, b) => new Date(a.date || a.oil_change_date || 0) - new Date(b.date || b.oil_change_date || 0));
       case "dateDesc":
-        return combinedRecords.sort((a, b) => new Date(b.date || b.oil_change_date) - new Date(a.date || a.oil_change_date));
+        return combinedRecords.sort((a, b) => new Date(b.date || b.oil_change_date || 0) - new Date(a.date || a.oil_change_date || 0));
       case "repairsFirst":
         return combinedRecords.sort((a, b) => {
           if (a.category && !b.category) return -1;
           if (!a.category && b.category) return 1;
-          return new Date(b.date || b.oil_change_date) - new Date(a.date || a.oil_change_date);
+          return new Date(b.date || b.oil_change_date || 0) - new Date(a.date || a.oil_change_date || 0);
         });
       case "maintenanceFirst":
         return combinedRecords.sort((a, b) => {
           if (!a.category && b.category) return -1;
           if (a.category && !b.category) return 1;
-          return new Date(b.date || b.oil_change_date) - new Date(a.date || a.oil_change_date);
+          return new Date(b.date || b.oil_change_date || 0) - new Date(a.date || a.oil_change_date || 0);
         });
       default:
         return combinedRecords;
     }
   };
 
-  const openEditModal = () => {
-    setEditCar({ ...car });
-    setIsEditModalOpen(true);
-  };
-
-  const closeEditModal = () => {
-    setIsEditModalOpen(false);
-  };
-
   return (
     <>
-      {isEditModalOpen && (
-        <div className="modal" onClick={() => setIsEditModalOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>{t('editInfo')}</h3>
-            <form onSubmit={(e) => { e.preventDefault(); updateCar(); }}>
-              <input type="text" value={editCar?.brand || ""} onChange={(e) => setEditCar({ ...editCar, brand: e.target.value })} placeholder={t('brand')} />
-              <input type="text" value={editCar?.model || ""} onChange={(e) => setEditCar({ ...editCar, model: e.target.value })} placeholder={t('model')} />
-              <input type="number" value={editCar?.year || ""} onChange={(e) => setEditCar({ ...editCar, year: e.target.value })} placeholder={t('year')} />
-              <input type="text" value={editCar?.engine || ""} onChange={(e) => setEditCar({ ...editCar, engine: e.target.value })} placeholder={t('engine')} />
-              <input type="number" value={editCar?.mileage || ""} onChange={(e) => setEditCar({ ...editCar, mileage: e.target.value })} placeholder={t('mileage')} />
-              <input type="text" value={editCar?.vin || ""} onChange={(e) => setEditCar({ ...editCar, vin: e.target.value })} placeholder={t('vin')} />
-              <select value={editCar?.fuelType || ""} onChange={(e) => setEditCar({ ...editCar, fuelType: e.target.value })}>
-                <option value="">{t('selectFuelType')}</option>
-                <option value="Petrol">{t('petrol')}</option>
-                <option value="Diesel">{t('diesel')}</option>
-                <option value="Electric">{t('electric')}</option>
-                <option value="Hybrid">{t('hybrid')}</option>
-              </select>
-              <select value={editCar?.transmissionType || ""} onChange={(e) => setEditCar({ ...editCar, transmissionType: e.target.value })}>
-                <option value="">{t('selectTransmission')}</option>
-                <option value="Manual">{t('manual')}</option>
-                <option value="Automatic">{t('automatic')}</option>
-                <option value="CVT">{t('cvt')}</option>
-                <option value="Dual-clutch">{t('dualClutch')}</option>
-              </select>
-              <label className="checkbox-label">
-                <input type="checkbox" checked={editCar?.turbocharged || false} onChange={(e) => setEditCar({ ...editCar, turbocharged: e.target.checked })} />
-                <span>{t('turbocharged')}</span>
-              </label>
-              <button type="submit">{t('save')}</button>
-              <button type="button" onClick={closeEditModal}>{t('cancel')}</button>
-            </form>
-          </div>
-        </div>
-      )}
-
       <Header
         fetchCars={fetchCars}
         handleLogout={handleLogout}
         user={user}
-        openEditModal={openEditModal}
         fetchRepairs={fetchRepairs}
         fetchMaintenance={fetchMaintenance}
         selectedCar={car}
+        cars={cars}
       />
 
       <div className="dashboard">
@@ -504,6 +438,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
             value={car?.id || ""}
             onChange={(e) => setCar(cars.find(c => c.id === e.target.value) || null)}
           >
+            <option value="">{t('selectCar')}</option>
             {cars.map(c => (
               <option key={c.id} value={c.id}>
                 {c.brand} {c.model} ({c.year})
@@ -520,7 +455,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
               <ProgressBar progress={calculateRemainingMileage(car, maintenanceRecords)} total={calculateTotalMileageInterval(car)} />
             </div>
           ) : (
-            <p>⏳ {t('loading')}</p>
+            car && <p>{t('noMaintenanceData')}</p>
           )}
         </div>
 
@@ -531,15 +466,14 @@ export default function Dashboard({ user, supabase, handleLogout }) {
 
         <h3>{t('repairHistory')}</h3>
         <div className="sort-selector">
-  <label>{t("sortBy")}:</label>
-  <select value={sortMode} onChange={(e) => setSortMode(e.target.value)}>
-    <option value="dateAsc">{t("dateOldToNew")}</option>
-    <option value="dateDesc">{t("dateNewToOld")}</option>
-    <option value="repairsFirst">{t("repairsThenMaintenance")}</option>
-    <option value="maintenanceFirst">{t("maintenanceThenRepairs")}</option>
-  </select>
-</div>
-
+          <label>{t("sortBy")}:</label>
+          <select value={sortMode} onChange={(e) => setSortMode(e.target.value)}>
+            <option value="dateAsc">{t("dateOldToNew")}</option>
+            <option value="dateDesc">{t("dateNewToOld")}</option>
+            <option value="repairsFirst">{t("repairsThenMaintenance")}</option>
+            <option value="maintenanceFirst">{t("maintenanceThenRepairs")}</option>
+          </select>
+        </div>
 
         <div className="repair-history">
           <ul>
@@ -562,7 +496,6 @@ export default function Dashboard({ user, supabase, handleLogout }) {
                   ) : (
                     <>
                       <strong>
-                        
                         {!record.oil_change && !record.coolant_flush && !record.tire_rotation && !record.filter_change && !record.brake_check && '🔧'}
                       </strong>
                       {record.oil_change ? (
@@ -570,7 +503,9 @@ export default function Dashboard({ user, supabase, handleLogout }) {
                           🛢️{t('oilChange')}
                           {record.oil_change_date
                             ? ` ${t('at')} ${record.oil_change_mileage || t('unknown')} км ${new Date(record.oil_change_date).toLocaleDateString()}`
-                            : ` (${t('unknownDate')})`}
+                            : record.oil_change_mileage
+                              ? ` ${t('at')} ${record.oil_change_mileage} км (${t('unknownDate')})`
+                              : ` (${t('unknownDate')})`}
                         </>
                       ) : (
                         record.oil_change_date && ` 📅 ${new Date(record.oil_change_date).toLocaleDateString()}`
@@ -584,9 +519,9 @@ export default function Dashboard({ user, supabase, handleLogout }) {
                         <button onClick={() => { setEditMaintenance(record); setIsEditMaintenanceModalOpen(true); }}>{t('edit')}</button>
                         <button onClick={() => deleteMaintenance(record.id)}>{t('delete')}</button>
                       </div>
-                      {record.oil_change && (
+                      {record.oil_change && record.oil_change_mileage && (
                         <>
-                        <br/>
+                          <br/>
                           <ProgressBar progress={calculateRemainingMileage(car, maintenanceRecords)} total={calculateTotalMileageInterval(car)} />
                           {calculateRemainingMileage(car, maintenanceRecords) < 2000 && showWarning && (
                             <div className="oil-warning">

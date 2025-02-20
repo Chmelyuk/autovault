@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import './AuthForm.css';
 import TermsAndConditions from './TermsAndConditions';
 import { useNavigate } from 'react-router-dom';
+import logo from '../components/logo.png';
 
 export default function AuthForm({ setUser, supabase }) {
   const [email, setEmail] = useState('');
@@ -87,7 +88,7 @@ if (!email || !password) {
           <button onClick={() => changeLanguage('ru')}>Русский</button>
           <button onClick={() => changeLanguage('uk')}>Українська</button>
         </div>
-
+<img src={logo} alt="Car" className="logo-image" />
         <h2 className="auth-title">{t('signInSignUp')}</h2>
         <input
           type="email"
@@ -127,7 +128,7 @@ if (!email || !password) {
           </div>
         )}
         {error && <p className="auth-error">{error}</p>}
-
+        <br/>
         <div className="terms-checkbox-container">
           <input
             type="checkbox"

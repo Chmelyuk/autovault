@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import './AuthForm.css';
 import { useNavigate } from "react-router-dom";
 import TermsAndConditions from './TermsAndConditions';
+import logo from '../components/logo.png';
+
 
 export default function AuthForm({ supabase }) {
   const [email, setEmail] = useState('');
@@ -85,6 +87,18 @@ export default function AuthForm({ supabase }) {
     i18n.changeLanguage(language);
   };
 
+  // Функция для проверки заполненности всех полей
+  const areAllFieldsFilled = () => {
+    return (
+      email.trim() !== '' && // Проверка на пустой email
+      password.trim() !== '' && // Проверка на пустой пароль
+      serviceName.trim() !== '' && // Проверка на пустое название сервиса
+      address.trim() !== '' && // Проверка на пустой адрес
+      phone.trim() !== '' && // Проверка на пустой телефон
+      isChecked // Проверка на отметку чекбокса
+    );
+  };
+
   return (
     <div className="auth-container">
       <div className="auth-box">
@@ -132,7 +146,7 @@ export default function AuthForm({ supabase }) {
               onChange={(e) => setPhone(e.target.value)}
               className="auth-input"
             />
-
+<br/>
             <label className="terms-checkbox">
               <input 
                 type="checkbox" 
@@ -161,12 +175,12 @@ export default function AuthForm({ supabase }) {
 
         {!showOtpInput ? (
           <button
-  className={`auth-button secondary ${!isChecked ? 'disabled' : ''}`}
-  disabled={!isChecked} // Отключаем кнопку, если чекбокс не отмечен
-  onClick={handleServiceSignUp}
->
-  {t('registerService')}
-</button>
+            className={`auth-button secondary ${!areAllFieldsFilled() ? 'disabled' : ''}`}
+            disabled={!areAllFieldsFilled()} // Отключаем, если не все поля заполнены
+            onClick={handleServiceSignUp}
+          >
+            {t('registerService')}
+          </button>
         ) : (
           <>
             <input
@@ -181,7 +195,7 @@ export default function AuthForm({ supabase }) {
             </button>
           </>
         )}
-
+<img src={logo} alt="Car" className="logo-image" />
         {error && <p className="auth-error">{error}</p>}
 
         <div className="auth-toggle">

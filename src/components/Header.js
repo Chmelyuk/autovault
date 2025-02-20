@@ -7,12 +7,14 @@ import CarTracker from './CarTracker';
 import { supabase } from "../supabaseClient";
 import logo from '../components/logo.png';
 
-export default function Header({ user, handleLogout, openEditModal, fetchCars, fetchRepairs, fetchMaintenance, selectedCar }) {
+export default function Header({ user, handleLogout, openEditModal, fetchCars, fetchRepairs, fetchMaintenance, selectedCar, cars = [] }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
   const [qrData, setQrData] = useState(null);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [showAddCarModal, setShowAddCarModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showEditCarModal, setShowEditCarModal] = useState(false);
   const [newCar, setNewCar] = useState({
     brand: '',
     model: '',
@@ -24,13 +26,13 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
     transmissionType: '',
     turbocharged: false,
   });
+  const [editCar, setEditCar] = useState(null);
   const [suggestedBrands, setSuggestedBrands] = useState([]);
   const [suggestedModels, setSuggestedModels] = useState([]);
   const { t, i18n } = useTranslation();
   const [car, setCar] = useState(null);
   const dropdownRef = useRef(null);
 
-  // Закрытие меню при клике вне области
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -47,7 +49,6 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
     };
   }, [isDropdownOpen]);
 
-  // Функция для получения брендов
   const fetchBrands = async (input) => {
     const trimmedInput = input.trim();
     if (trimmedInput.length < 2) {
@@ -75,10 +76,9 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
     }
   };
 
-  // Функция для получения моделей с фильтром по бренду
-  const fetchModels = async (input) => {
+  const fetchModels = async (input, brand) => {
     const trimmedInput = input.trim();
-    if (trimmedInput.length < 2 || !newCar.brand) {
+    if (trimmedInput.length < 2 || !brand) {
       setSuggestedModels([]);
       return;
     }
@@ -87,7 +87,7 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
       const { data, error } = await supabase
         .from("car_list")
         .select("model")
-        .eq("brand", newCar.brand)
+        .eq("brand", brand)
         .ilike("model", `%${trimmedInput}%`);
 
       if (error) throw error;
@@ -104,14 +104,22 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
     }
   };
 
-  const handleBrandSelect = (selectedBrand) => {
-    setNewCar({ ...newCar, brand: selectedBrand, model: '' });
+  const handleBrandSelect = (selectedBrand, isEdit = false) => {
+    if (isEdit) {
+      setEditCar({ ...editCar, brand: selectedBrand, model: '' });
+    } else {
+      setNewCar({ ...newCar, brand: selectedBrand, model: '' });
+    }
     setSuggestedBrands([]);
     setSuggestedModels([]);
   };
 
-  const handleModelSelect = (selectedModel) => {
-    setNewCar({ ...newCar, model: selectedModel });
+  const handleModelSelect = (selectedModel, isEdit = false) => {
+    if (isEdit) {
+      setEditCar({ ...editCar, model: selectedModel });
+    } else {
+      setNewCar({ ...newCar, model: selectedModel });
+    }
     setSuggestedModels([]);
   };
 
@@ -130,7 +138,18 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
     }));
 
     if (name === 'brand') fetchBrands(value);
-    if (name === 'model' && newCar.brand) fetchModels(value);
+    if (name === 'model' && newCar.brand) fetchModels(value, newCar.brand);
+  };
+
+  const handleEditCarChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEditCar((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+
+    if (name === 'brand') fetchBrands(value);
+    if (name === 'model' && editCar.brand) fetchModels(value, editCar.brand);
   };
 
   const toggleDropdown = () => {
@@ -144,6 +163,25 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
 
   const closeAddCarModal = () => {
     setShowAddCarModal(false);
+  };
+
+  const openSettingsModal = () => {
+    setShowSettingsModal(true);
+    setIsDropdownOpen(false);
+  };
+
+  const closeSettingsModal = () => {
+    setShowSettingsModal(false);
+  };
+
+  const handleEditModalOpen = () => {
+    setShowEditCarModal(true);
+    setShowSettingsModal(false);
+  };
+
+  const closeEditCarModal = () => {
+    setShowEditCarModal(false);
+    setEditCar(null);
   };
 
   const addNewCar = async () => {
@@ -178,14 +216,14 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
   };
 
   const handleGenerateQRCode = () => {
-  if (!selectedCar) {
-    console.error("❌ Нет выбранного автомобиля для генерации QR-кода");
-    return;
-  }
-  setQrData(selectedCar.id);
-  setShowQRCode(true);
-  setIsDropdownOpen(false);
-};
+    if (!selectedCar) {
+      console.error("❌ Нет выбранного автомобиля для генерации QR-кода");
+      return;
+    }
+    setQrData(selectedCar.id);
+    setShowQRCode(true);
+    setIsDropdownOpen(false);
+  };
 
   const handleScanSuccess = async (data) => {
     try {
@@ -256,40 +294,116 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
     console.error("❌ Ошибка сканирования QR-кода:", error);
   };
 
-  const handleEditModalOpen = () => {
-    openEditModal();
-    setIsDropdownOpen(false);
+  const handleCarSelect = (carId) => {
+    const selected = cars.find(c => c.id === carId);
+    setEditCar(selected ? { ...selected } : null);
+  };
+
+  const updateCar = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cars')
+        .update({ ...editCar })
+        .eq('id', editCar.id)
+        .select('*')
+        .single();
+
+      if (error) {
+        console.error('Ошибка при обновлении автомобиля:', error.message);
+      } else {
+        console.log('Автомобиль успешно обновлен:', data);
+        fetchCars();
+        closeEditCarModal();
+      }
+    } catch (err) {
+      console.error('Ошибка при обновлении автомобиля:', err);
+    }
+  };
+
+  const deleteCar = async () => {
+    if (!window.confirm(t('confirmDeleteCar'))) return;
+
+    try {
+      await supabase
+        .from('maintenance')
+        .delete()
+        .eq('car_id', editCar.id);
+
+      await supabase
+        .from('repairs')
+        .delete()
+        .eq('car_id', editCar.id);
+
+      const { error } = await supabase
+        .from('cars')
+        .delete()
+        .eq('id', editCar.id);
+
+      if (error) {
+        console.error('Ошибка при удалении автомобиля:', error.message);
+      } else {
+        console.log('Автомобиль и связанные записи успешно удалены');
+        fetchCars();
+        closeEditCarModal();
+      }
+    } catch (err) {
+      console.error('Ошибка при удалении автомобиля:', err);
+    }
   };
 
   return (
-
-    
     <header className="header">
       <div className={`burger-menu ${isDropdownOpen ? 'open' : ''}`} onClick={toggleDropdown}>
         <span className="burger-line"></span>
         <span className="burger-line"></span>
         <span className="burger-line"></span>
       </div>
-      <img
-        src={logo}
-        alt="Car"
-        className="logo-image"
-      />
+      
+      <img src={logo} alt="Car" className="logo-image" />
 
       {isDropdownOpen && (
         <div className="dropdown-menu" ref={dropdownRef}>
           <CarTracker user={user} car={car} supabase={supabase} setCar={setCar} />
-          <div className="language-buttons">
-            <span>{t('language')}: </span>
-            <button onClick={() => i18n.changeLanguage('en')}>🇬🇧</button>
-            <button onClick={() => i18n.changeLanguage('ru')}>🇷🇺</button>
-            <button onClick={() => i18n.changeLanguage('uk')}>🇺🇦</button>
-          </div>
-          <button onClick={handleLogout}>{t('logout')}</button>
-          <button onClick={handleEditModalOpen}>{t('editInfo')}</button>
+         <button onClick={openSettingsModal}>{t('settings')}</button>
           <button onClick={handleGenerateQRCode}>{t('generateQRCode')}</button>
           <button onClick={() => { setShowQRScanner(true); setIsDropdownOpen(false); }}>{t('scanQRCode')}</button>
-          <button onClick={openAddCarModal}>{t('addCar')}</button>
+          <button onClick={handleLogout}>{t('logout')}</button>
+        </div>
+      )}
+
+      {showSettingsModal && (
+        <div className="modal" onClick={closeSettingsModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>{t('settings')}</h3>
+            <div className="settings-content">
+              <div className="language-buttons">
+                <span>{t('language')}: </span>
+                <button 
+                  className={i18n.language === 'en' ? 'active' : ''} 
+                  onClick={() => i18n.changeLanguage('en')}
+                >
+                  🇬🇧
+                </button>
+                <button 
+                  className={i18n.language === 'ru' ? 'active' : ''} 
+                  onClick={() => i18n.changeLanguage('ru')}
+                >
+                  🇷🇺
+                </button>
+                <button 
+                  className={i18n.language === 'uk' ? 'active' : ''} 
+                  onClick={() => i18n.changeLanguage('uk')}
+                >
+                  🇺🇦
+                </button>
+              </div>
+              <div className='settings-edit-btns'>
+              <button onClick={handleEditModalOpen}>{t('editInfo')}</button>
+              <button onClick={openAddCarModal}>{t('addCar')}</button>
+              </div>
+            </div>
+            <button onClick={closeSettingsModal}>{t('close')}</button>
+          </div>
         </div>
       )}
 
@@ -407,6 +521,155 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
               <button type="submit">{t('save')}</button>
               <button type="button" onClick={closeAddCarModal}>{t('cancel')}</button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showEditCarModal && (
+        <div className="modal" onClick={closeEditCarModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>{t('editCar')}</h3>
+            <select
+              onChange={(e) => handleCarSelect(e.target.value)}
+              value={editCar?.id || ''}
+              className="dropdown"
+            >
+              <option value="">{t('selectCar')}</option>
+              {cars && cars.length > 0 ? (
+                cars.map((car) => (
+                  <option key={car.id} value={car.id}>
+                    {car.brand} {car.model} ({car.year})
+                  </option>
+                ))
+              ) : (
+                <option value="" disabled>{t('noCarsAvailable')}</option>
+              )}
+            </select>
+
+            {editCar && (
+              <form onSubmit={(e) => { e.preventDefault(); updateCar(); }}>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    name="brand"
+                    placeholder={t('brand')}
+                    value={editCar.brand}
+                    onChange={handleEditCarChange}
+                    onBlur={handleBlur}
+                    className="input-field"
+                  />
+                  {suggestedBrands.length > 0 && (
+                    <ul className="suggestions">
+                      {suggestedBrands.map((suggestion, index) => (
+                        <li 
+                          key={index} 
+                          className="suggestion-item" 
+                          onClick={() => handleBrandSelect(suggestion, true)}
+                        >
+                          {suggestion}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    name="model"
+                    placeholder={t('model')}
+                    value={editCar.model}
+                    onChange={handleEditCarChange}
+                    onBlur={handleBlur}
+                    className="input-field"
+                  />
+                  {suggestedModels.length > 0 && (
+                    <ul className="suggestions">
+                      {suggestedModels.map((suggestion, index) => (
+                        <li 
+                          key={index} 
+                          className="suggestion-item" 
+                          onClick={() => handleModelSelect(suggestion, true)}
+                        >
+                          {suggestion}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <input
+                  type="number"
+                  name="year"
+                  placeholder={t('year')}
+                  value={editCar.year}
+                  onChange={handleEditCarChange}
+                  className="input-field"
+                />
+                <input
+                  type="text"
+                  name="engine"
+                  placeholder={t('engine')}
+                  value={editCar.engine}
+                  onChange={handleEditCarChange}
+                  className="input-field"
+                />
+                <input
+                  type="number"
+                  name="mileage"
+                  placeholder={t('mileage')}
+                  value={editCar.mileage}
+                  onChange={handleEditCarChange}
+                  className="input-field"
+                />
+                <input
+                  type="text"
+                  name="vin"
+                  placeholder={t('vin')}
+                  value={editCar.vin}
+                  onChange={handleEditCarChange}
+                  className="input-field"
+                />
+                <select
+                  name="fuelType"
+                  value={editCar.fuelType}
+                  onChange={handleEditCarChange}
+                  className="dropdown"
+                >
+                  <option value="">{t('selectFuelType')}</option>
+                  <option value="Petrol">{t('petrol')}</option>
+                  <option value="Diesel">{t('diesel')}</option>
+                  <option value="Electric">{t('electric')}</option>
+                  <option value="Hybrid">{t('hybrid')}</option>
+                </select>
+                <select
+                  name="transmissionType"
+                  value={editCar.transmissionType}
+                  onChange={handleEditCarChange}
+                  className="dropdown"
+                >
+                  <option value="">{t('selectTransmission')}</option>
+                  <option value="Manual">{t('manual')}</option>
+                  <option value="Automatic">{t('automatic')}</option>
+                  <option value="CVT">{t('cvt')}</option>
+                  <option value="Dual-clutch">{t('dualClutch')}</option>
+                </select>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="turbocharged"
+                    checked={editCar.turbocharged}
+                    onChange={handleEditCarChange}
+                  />
+                  {t('turbocharged')}
+                </label>
+                <div className="button-group">
+                  <button type="submit">{t('save')}</button>
+                  <button type="button" onClick={deleteCar} className="delete-button">
+                    {t('delete')}
+                  </button>
+                  <button type="button" onClick={closeEditCarModal}>{t('cancel')}</button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

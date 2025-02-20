@@ -177,7 +177,13 @@
   "dateOldToNew": "Датою: від старіших до новіших",
   "dateNewToOld": "Датою: від новіших до старіших",
   "repairsThenMaintenance": "Ремонти, потім ТО",
-  "maintenanceThenRepairs": "ТО, потім ремонти"
+  "maintenanceThenRepairs": "ТО, потім ремонти",
+  "selectCar": "Виберіть автомобіль",
+  "settings": "Налаштування",
+  "editCar": "Редагувати інформацію про автомобіль",
+  "addCarFromHeader": "Додайте автомобіль через меню налаштувань",
+  "noMaintenanceData": "Ще немає записів про технічне обслуговування",
+  "addCar": "Додати авто"
 
   
 

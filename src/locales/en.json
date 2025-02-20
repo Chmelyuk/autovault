@@ -148,7 +148,10 @@
   "dateOldToNew": "Date: oldest to newest",
   "dateNewToOld": "Date: newest to oldest",
   "repairsThenMaintenance": "Repairs, then maintenance",
-  "maintenanceThenRepairs": "Maintenance, then repairs"
+  "maintenanceThenRepairs": "Maintenance, then repairs",
+  "selectCar": "Select car",
+  "settings": "Settings",
+  "editCar": "Edit car information"
 
 }
    

@@ -258,3 +258,37 @@ header {
         }
 
 }
+
+.language-buttons button {
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.language-buttons button.active {
+    background-color: #4caf50 !important;
+    color: white !important;
+    border-color: #4caf50 !important;
+    box-shadow: 0 4px 10px  !important;
+    box-shadow: #4caf50 !important;
+    
+}
+
+.language-buttons button:hover:not(.active) {
+    background-color: #f0f0f0;
+}
+.settings-edit-btns{
+    display: flex;
+        flex-direction: column;
+        
+}
+.settings-edit-btns button{
+     
+    margin: 10px;
+}
+
+.button-group button{
+    margin-right: 5px;
+}
