@@ -14,6 +14,7 @@ export default function AuthForm({ setUser, supabase }) {
   const [isChecked, setIsChecked] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const { t, i18n } = useTranslation();
+  
   const navigate = useNavigate();
 
   const changeLanguage = (language) => {
@@ -26,9 +27,19 @@ export default function AuthForm({ setUser, supabase }) {
     if (error) setError(error.message);
     else setUser(data.user);
   };
-
+ const setErrorWithTimeout = (message) => {
+    setError(message);
+    setTimeout(() => setError(''), 3000); // Очистка ошибки через 3 секунды
+  };
   const handleOtpSignUp = async () => {
     setError('');
+     
+    
+if (!email || !password) {
+      setErrorWithTimeout(t('enterEmailAndPassword'));
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;

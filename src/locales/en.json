@@ -142,7 +142,13 @@
   "serviceName": "Service Name",
   "address": "Address",
   "phone": "Phone",
-  "enterCustomSubcategory":"Enter custom Subcategory"
+  "enterCustomSubcategory":"Enter custom Subcategory",
+  "enterEmailAndPassword": "Please enter email and password to register.",
+  "sortBy": "Sort by",
+  "dateOldToNew": "Date: oldest to newest",
+  "dateNewToOld": "Date: newest to oldest",
+  "repairsThenMaintenance": "Repairs, then maintenance",
+  "maintenanceThenRepairs": "Maintenance, then repairs"
 
 }
    

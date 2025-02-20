@@ -137,7 +137,7 @@
    "serviceDashboard": "Панель управления сервисом",
     "deleteCar": "Удалить автомобиль из истории",
     "oilChangeDate": "Дата замены масла",
-     "addedByService": "Добавлено сервисом",
+     "addedByService": "✅",
     "loginError": "Ошибка при входе. Пожалуйста, попробуйте снова.",
    "serviceRegistration": "Регистрация сервиса",
   "login": "Войти",
@@ -173,7 +173,13 @@
     "Fuel System": "Топливная система",
     "Air Conditioning": "Кондиционирование",
     "Electrical System": "Электросистема",
-    "enterCustomSubcategory": "Введите свою подкатегорию"
+    "enterCustomSubcategory": "Введите свою подкатегорию",
+    "enterEmailAndPassword": "Для регистрации необходимо ввести email и пароль",
+    "sortBy": "Сортировать по",
+  "dateOldToNew": "Дате: от старых к новым",
+  "dateNewToOld": "Дате: от новых к старым",
+  "repairsThenMaintenance": "Ремонты, затем ТО",
+  "maintenanceThenRepairs": "ТО, затем ремонты"
 
 
 

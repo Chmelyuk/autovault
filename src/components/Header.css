@@ -2,51 +2,61 @@
 header {
     display: flex;
     justify-content: flex-end;
-    /* Размещаем иконку справа */
     align-items: center;
     padding: 20px;
     background-color: #121212;
-    /* Темный фон */
     color: #e0e0e0;
-    /* Светлый текст */
     position: relative;
     border-bottom: 1px solid #333;
     min-height: 40px;
 }
 
-/* Иконка пользователя */
-.user-icon {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+/* Бургер-меню */
+.burger-menu {
     width: 40px;
     height: 40px;
-    background-color: #1E293B;
-    color: white;
-    font-weight: bold;
-    font-size: 1.2rem;
-    border-radius: 50%;
     cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-left: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
     position: absolute;
-        top: 20px;
-        /* Сдвиг вниз от иконки */
-        right: 20px;
-    /* Расстояние между краем экрана и иконкой */
+    top: 20px;
+    right: 20px;
+    transition: transform 0.3s ease;
 }
 
-.user-icon:hover {
-    background-color: #3c5275;
+.burger-menu:hover {
+    transform: scale(1.1);
+}
+
+.burger-line {
+    width: 30px;
+    height: 3px;
+    background-color: #e0e0e0;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+/* Анимация для бургера при открытии */
+.burger-menu.open .burger-line:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+
+.burger-menu.open .burger-line:nth-child(2) {
+    opacity: 0;
+}
+
+.burger-menu.open .burger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
 }
 
 /* Выпадающее меню */
 .dropdown-menu {
     position: absolute;
     top: 60px;
-    /* Сдвиг вниз от иконки */
     right: 20px;
-    /* Сдвиг справа */
     background-color: #2c2c2c;
     color: #e0e0e0;
     padding: 10px 20px;
@@ -56,6 +66,7 @@ header {
     flex-direction: column;
     gap: 10px;
     animation: fadeIn 0.3s ease;
+    z-index: 1000;
 }
 
 /* Кнопки в выпадающем меню */
@@ -74,6 +85,7 @@ header {
     background-color: #6200ea;
     color: white;
 }
+
 /* Стили для кастомной кнопки загрузки файла */
 .custom-file-upload {
     background-color: transparent;
@@ -96,6 +108,7 @@ header {
 .file-input {
     display: none;
 }
+
 /* Анимация для выпадающего меню */
 @keyframes fadeIn {
     0% {
@@ -109,7 +122,7 @@ header {
     }
 }
 
-/* Header.css */
+/* QR-стили остаются без изменений */
 .qr-modal {
     position: fixed;
     top: 0;
@@ -144,7 +157,6 @@ header {
     background: #0056b3;
 }
 
-/* Улучшение адаптивности для QR-сканера */
 .qr-scanner-modal {
     position: fixed;
     top: 0;
@@ -197,10 +209,11 @@ header {
         font-size: 20px;
         padding: 15px;
     }
-        .language-buttons button {
-            margin-bottom: 10px;
-            margin-right: 0;
-        }
+
+    .language-buttons button {
+        margin-bottom: 10px;
+        margin-right: 0;
+    }
 }
 
 .qr-code {
@@ -214,11 +227,12 @@ header {
         max-width: 70vw;
         max-height: 50vh;
     }
-        .language-buttons {
-            text-align: center;;
-        }
+
+    .language-buttons {
+        text-align: center;
+    }
 }
 
-.language-buttons button{
+.language-buttons button {
     margin-right: 10px;
 }

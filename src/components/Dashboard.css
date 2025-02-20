@@ -447,3 +447,16 @@ button {
     color: rgba(89, 255, 0, 0.362) !important;
     font-weight: bold;
 }
+
+
+.sort-selector {
+    margin-bottom: 10px;
+}
+
+.sort-selector label {
+    margin-right: 5px;
+}
+
+.sort-selector select {
+    padding: 5px;
+}
