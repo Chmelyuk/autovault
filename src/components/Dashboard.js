@@ -551,9 +551,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
     </div>
      
       <>
-        <br />
-        
-        {calculateRemainingMileage(car, maintenanceRecords) < 2000 && showWarning && (
+       {calculateRemainingMileage(car, maintenanceRecords) < 2000 && showWarning && (
           <div className="oil-warning">
             <a href="https://dok.ua" target="_blank" rel="noopener noreferrer">
               <img src={banner} alt={t('oilChangeWarning')} />

@@ -209,20 +209,15 @@ header {
         top: 55px;
     }
 
-    .logo-image {
-        position: absolute;
-        width: 60%;
-        height: auto;
-        top: -50%;
-        left: 0;
+    /* Адаптивный логотип */
+   
+    header {
+        padding: 15px 20px;
+        /* Уменьшаем отступы для мобильных */
     }
 }
 
-/* Логотип */
-.logo-image {
-    position: absolute;
-    width: 20%;
-}
+ 
 
 /* Кнопки языка */
 .language-buttons {
@@ -291,4 +286,50 @@ header {
 
 .button-group .delete-button:hover {
     background: linear-gradient(135deg, #ef5350, #e57373);
+}
+
+.logo-image {
+    position: absolute;
+    width: 20%;
+    /* Уменьшаем до 20% для десктопной версии */
+    height: auto;
+    left: 20px;
+    top: -60px;
+    object-fit: contain;
+    /* Убедимся, что изображение не искажается на всех устройствах */
+    z-index: 15;
+    /* Устанавливаем z-index выше, чем у хедера, но ниже бургера */
+}
+
+@media (min-width: 1200px) {
+    .logo-image {
+        width: 20%;
+        left: 20px;
+        top: -60px;
+        /* Десктопная версия (ширина > 1200px) */
+    }
+
+     
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+    .logo-image {
+        
+        width: 20%;
+        left: 20px;
+         top: -20%;
+        /* Таблетки и средние экраны (768px - 1199px) */
+    }
+
+    
+}
+
+@media (min-width: 320px) and (max-width: 767px) {
+    .logo-image {
+    width: 50%;
+        left: 10px;
+        top: -25%;
+        /* Мобильные устройства (320px - 767px) */
+    }
+ 
 }

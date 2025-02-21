@@ -360,7 +360,9 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
         <span className="burger-line"></span>
       </div>
       
-      <img src={logo} alt="Car" className="logo-image" />
+      <div className="logo-container">
+        <img src={logo} alt="Car" className="logo-image" onError={(e) => { e.target.src = '/default-logo.png'; console.log("Ошибка загрузки логотипа, использовано запасное изображение"); }} />
+      </div>
 
       {isDropdownOpen && (
         <div className="dropdown-menu" ref={dropdownRef}>
