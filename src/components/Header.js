@@ -152,13 +152,14 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
     if (name === 'model' && editCar.brand) fetchModels(value, editCar.brand);
   };
 
-  const toggleDropdown = () => {
-    setIsDropdownOpen((prev) => !prev);
+  const toggleDropdown = (e) => {
+    e.stopPropagation(); // Предотвращаем всплытие события клика
+    setIsDropdownOpen((prev) => !prev); // Переключаем состояние дропдауна
   };
 
   const openAddCarModal = () => {
     setShowAddCarModal(true);
-    setIsDropdownOpen(false);
+    setIsDropdownOpen(false); // Закрываем дропдаун при открытии модала
   };
 
   const closeAddCarModal = () => {
@@ -167,7 +168,7 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
 
   const openSettingsModal = () => {
     setShowSettingsModal(true);
-    setIsDropdownOpen(false);
+    setIsDropdownOpen(false); // Закрываем дропдаун при открытии модала
   };
 
   const closeSettingsModal = () => {
@@ -176,7 +177,7 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
 
   const handleEditModalOpen = () => {
     setShowEditCarModal(true);
-    setShowSettingsModal(false);
+    setShowSettingsModal(false); // Закрываем настройки при открытии редактирования
   };
 
   const closeEditCarModal = () => {
@@ -222,7 +223,7 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
     }
     setQrData(selectedCar.id);
     setShowQRCode(true);
-    setIsDropdownOpen(false);
+    setIsDropdownOpen(false); // Закрываем дропдаун при открытии QR-кода
   };
 
   const handleScanSuccess = async (data) => {
@@ -284,7 +285,7 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
       fetchRepairs(carId);
       fetchMaintenance(carId);
       setShowQRScanner(false);
-      setIsDropdownOpen(false);
+      setIsDropdownOpen(false); // Закрываем дропдаун после успешного сканирования
     } catch (error) {
       console.error("❌ Ошибка при обработке данных из QR-кода:", error);
     }
@@ -364,7 +365,7 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
       {isDropdownOpen && (
         <div className="dropdown-menu" ref={dropdownRef}>
           <CarTracker user={user} car={car} supabase={supabase} setCar={setCar} />
-         <button onClick={openSettingsModal}>{t('settings')}</button>
+          <button onClick={openSettingsModal}>{t('settings')}</button>
           <button onClick={handleGenerateQRCode}>{t('generateQRCode')}</button>
           <button onClick={() => { setShowQRScanner(true); setIsDropdownOpen(false); }}>{t('scanQRCode')}</button>
           <button onClick={handleLogout}>{t('logout')}</button>
@@ -398,8 +399,8 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
                 </button>
               </div>
               <div className='settings-edit-btns'>
-              <button onClick={handleEditModalOpen}>{t('editInfo')}</button>
-              <button onClick={openAddCarModal}>{t('addCar')}</button>
+                <button onClick={handleEditModalOpen}>{t('editInfo')}</button>
+                <button onClick={openAddCarModal}>{t('addCar')}</button>
               </div>
             </div>
             <button onClick={closeSettingsModal}>{t('close')}</button>

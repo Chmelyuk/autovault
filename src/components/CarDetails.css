@@ -13,12 +13,11 @@
 }
 
 .car-details img {
-    width: 100%;
-    /* Занимает половину ширины контейнера */
-    height: auto;
+    max-height: auto;
     border-radius: 10px;
     border: 2px solid #ffffff33;
     margin-bottom: 20px;
+    max-width: 100%;
 }
 
 .car-details .info {
@@ -189,4 +188,11 @@
 .details-button:active {
     background-color: #d35400;
     transform: scale(0.98);
+}
+ 
+
+@media (max-width: 768px) {
+.car-details img {
+        max-width: 100%;
+    }
 }

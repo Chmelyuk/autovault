@@ -5,6 +5,7 @@ import ProgressBar from './ProgressBar';
 import banner from '../components/banner.jpg';
 import { useTranslation } from 'react-i18next';
 import './Dashboard.css';
+import CircularProgressBar from './CircularProgressBar';
 
 export default function Dashboard({ user, supabase, handleLogout }) {
   const { t } = useTranslation();
@@ -257,44 +258,48 @@ export default function Dashboard({ user, supabase, handleLogout }) {
     }
   };
 
-  const addMaintenance = async () => {
-    if (!car) return;
-    if (maintenance.oilChange && !maintenance.oilChangeMileage) {
-      alert(t("fillOilChangeMileage"));
-      return;
-    }
-    const formattedDate = maintenanceDate || null; // Дата необязательна
-    const { data, error } = await supabase.from("maintenance").insert([{
-      user_id: user.id,
-      car_id: car.id,
-      oil_change: maintenance.oilChange,
-      oil_change_mileage: maintenance.oilChange ? (maintenance.oilChangeMileage || null) : null,
-      oil_change_date: formattedDate,
-      filter_change: maintenance.filterChange,
-      brake_check: maintenance.brakeCheck,
-      tire_rotation: maintenance.tireRotation,
-      coolant_flush: maintenance.coolantFlush,
-    }]).select("*");
+ const addMaintenance = async () => {
+  if (!car) return;
+  if (maintenance.oilChange && !maintenance.oilChangeMileage) {
+    alert(t("fillOilChangeMileage"));
+    return;
+  }
 
-    if (error) {
-      console.error("Ошибка при добавлении ТО:", error.message);
-    } else {
-      setMaintenanceRecords(prev => [...prev, ...data]);
-      setIsMaintenanceModalOpen(false);
-      setMaintenance({
-        oilChange: false,
-        filterChange: false,
-        brakeCheck: false,
-        tireRotation: false,
-        coolantFlush: false,
-        oilChangeMileage: "",
-      });
-      setMaintenanceDate("");
-      if (maintenance.oilChange && maintenance.oilChangeMileage && maintenance.oilChangeMileage > car.mileage) {
-        updateCarMileage(maintenance.oilChangeMileage);
-      }
+  // Если maintenanceDate не указана, используем текущую дату
+  const today = new Date().toISOString().split("T")[0]; // Получаем текущую дату в формате YYYY-MM-DD
+  const formattedDate = maintenanceDate || today; // Если дата не указана, берем сегодняшнюю
+
+  const { data, error } = await supabase.from("maintenance").insert([{
+    user_id: user.id,
+    car_id: car.id,
+    oil_change: maintenance.oilChange,
+    oil_change_mileage: maintenance.oilChange ? (maintenance.oilChangeMileage || null) : null,
+    oil_change_date: formattedDate, // Всегда записываем дату
+    filter_change: maintenance.filterChange,
+    brake_check: maintenance.brakeCheck,
+    tire_rotation: maintenance.tireRotation,
+    coolant_flush: maintenance.coolantFlush,
+  }]).select("*");
+
+  if (error) {
+    console.error("Ошибка при добавлении ТО:", error.message);
+  } else {
+    setMaintenanceRecords(prev => [...prev, ...data]);
+    setIsMaintenanceModalOpen(false);
+    setMaintenance({
+      oilChange: false,
+      filterChange: false,
+      brakeCheck: false,
+      tireRotation: false,
+      coolantFlush: false,
+      oilChangeMileage: "",
+    });
+    setMaintenanceDate(""); // Очищаем поле даты
+    if (maintenance.oilChange && maintenance.oilChangeMileage && maintenance.oilChangeMileage > car.mileage) {
+      updateCarMileage(maintenance.oilChangeMileage);
     }
-  };
+  }
+};
 
   const updateMaintenance = async () => {
     if (!editMaintenance || !editMaintenance.id) return;
@@ -438,7 +443,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
             value={car?.id || ""}
             onChange={(e) => setCar(cars.find(c => c.id === e.target.value) || null)}
           >
-            <option value="">{t('selectCar')}</option>
+            
             {cars.map(c => (
               <option key={c.id} value={c.id}>
                 {c.brand} {c.model} ({c.year})
@@ -464,8 +469,10 @@ export default function Dashboard({ user, supabase, handleLogout }) {
           <button className="add-button" onClick={() => setIsMaintenanceModalOpen(true)}>{t('addMaintenance')}</button>
         </div>
 
-        <h3>{t('repairHistory')}</h3>
+        
         <div className="sort-selector">
+          <h3>{t('repairHistory')}</h3>
+          <div>
           <label>{t("sortBy")}:</label>
           <select value={sortMode} onChange={(e) => setSortMode(e.target.value)}>
             <option value="dateAsc">{t("dateOldToNew")}</option>
@@ -473,6 +480,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
             <option value="repairsFirst">{t("repairsThenMaintenance")}</option>
             <option value="maintenanceFirst">{t("maintenanceThenRepairs")}</option>
           </select>
+          </div>
         </div>
 
         <div className="repair-history">
@@ -481,60 +489,82 @@ export default function Dashboard({ user, supabase, handleLogout }) {
               getSortedRecords().map(record => (
                 <li key={record.category ? `repair-${record.id}` : `maintenance-${record.id}`}>
                   {record.category ? (
-                    <>
-                      <strong>🛠 {t(record.category)}</strong>
-                      <p>{record.subcategory && ` ${t('subcategory')}: ${t(record.subcategory)}`}</p>
-                      <p>{record.description}</p>
-                      {record.mileage && <p>{t('mileageAtRepair')}: {record.mileage} км</p>}
-                      {record.date && <p>📅 {t('date')}: {new Date(record.date).toLocaleDateString()}</p>}
-                      {record.addbyservice && <p className="added-by-service">{t('addedByService')} {record.serviceName && `(${record.serviceName})`}</p>}
-                      <div className="button-container">
-                        <button onClick={() => { setEditRepair(record); setIsEditRepairModalOpen(true); }}>{t('edit')}</button>
-                        <button onClick={() => deleteRepair(record.id)}>{t('delete')}</button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <strong>
-                        {!record.oil_change && !record.coolant_flush && !record.tire_rotation && !record.filter_change && !record.brake_check && '🔧'}
-                      </strong>
-                      {record.oil_change ? (
-                        <>
-                          🛢️{t('oilChange')}
-                          {record.oil_change_date
-                            ? ` ${t('at')} ${record.oil_change_mileage || t('unknown')} км ${new Date(record.oil_change_date).toLocaleDateString()}`
-                            : record.oil_change_mileage
-                              ? ` ${t('at')} ${record.oil_change_mileage} км (${t('unknownDate')})`
-                              : ` (${t('unknownDate')})`}
-                        </>
-                      ) : (
-                        record.oil_change_date && ` 📅 ${new Date(record.oil_change_date).toLocaleDateString()}`
-                      )}
-                      <p>{record.filter_change && `🌀${t('filterChange')}`}</p>
-                      <p>{record.brake_check && ` 🛑${t('brakeCheck')}`}</p>
-                      <p>{record.tire_rotation && ` 🛞${t('tireRotation')}`}</p>
-                      <p>{record.coolant_flush && ` ❄️${t('coolantFlush')}`}</p>
-                      {record.addbyservice && <p className="added-by-service">{t('addedByService')} {record.serviceName && `(${record.serviceName})`}</p>}
-                      <div className="button-container">
-                        <button onClick={() => { setEditMaintenance(record); setIsEditMaintenanceModalOpen(true); }}>{t('edit')}</button>
-                        <button onClick={() => deleteMaintenance(record.id)}>{t('delete')}</button>
-                      </div>
-                      {record.oil_change && record.oil_change_mileage && (
-                        <>
-                          <br/>
-                          <ProgressBar progress={calculateRemainingMileage(car, maintenanceRecords)} total={calculateTotalMileageInterval(car)} />
-                          {calculateRemainingMileage(car, maintenanceRecords) < 2000 && showWarning && (
-                            <div className="oil-warning">
-                              <a href="https://dok.ua" target="_blank" rel="noopener noreferrer">
-                                <img src={banner} alt={t('oilChangeWarning')} />
-                              </a>
-                              <button className="close-button" onClick={() => setShowWarning(false)}>×</button>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </>
-                  )}
+  // Логика для ремонтов остается без изменений
+  <>
+    <strong>🛠 {t(record.category)}</strong>
+    <p>{record.subcategory && ` ${t('subcategory')}: ${t(record.subcategory)}`}</p>
+    <p>{record.description}</p>
+    {record.mileage && <p>{t('mileageAtRepair')}: {record.mileage} км</p>}
+    {record.date && <p>📅 {t('date')}: {new Date(record.date).toLocaleDateString()}</p>}
+    {record.addbyservice && <p className="added-by-service">{t('addedByService')} {record.serviceName && `(${record.serviceName})`}</p>}
+    <div className="button-container">
+      <button onClick={() => { setEditRepair(record); setIsEditRepairModalOpen(true); }}>{t('edit')}</button>
+      <button onClick={() => deleteRepair(record.id)}>{t('delete')}</button>
+    </div>
+  </>
+) : (
+  // Логика для обслуживания
+  <>
+    {/* Собираем все активные виды работ и дату в массив */}
+    {(() => {
+      const workTypes = [];
+      if (record.oil_change) {
+        workTypes.push(
+          <p key="oil_change">
+            🛢️ {t('oilChange')}
+            {record.oil_change_mileage ? ` ${t('at')} ${record.oil_change_mileage} км` : ''}
+          </p>
+        );
+      }
+      if (record.filter_change) workTypes.push(<p key="filter_change">🌀 {t('filterChange')}</p>);
+      if (record.brake_check) workTypes.push(<p key="brake_check">🛑 {t('brakeCheck')}</p>);
+      if (record.tire_rotation) workTypes.push(<p key="tire_rotation">🛞 {t('tireRotation')}</p>);
+      if (record.coolant_flush) workTypes.push(<p key="coolant_flush">❄️ {t('coolantFlush')}</p>);
+
+      // Добавляем дату всегда, если она есть
+      if (record.oil_change_date) {
+        workTypes.push(
+          <p key="date">📅 {t('date')}: {new Date(record.oil_change_date).toLocaleDateString()}</p>
+        );
+      }
+
+      return workTypes.length > 0 ? (
+        workTypes
+      ) : (
+        <p>🔧 {t('noMaintenanceSelected')}</p> // Если ничего не выбрано и нет даты
+      );
+    })()}
+    {record.addbyservice && <p className="added-by-service">{t('addedByService')} {record.serviceName && `(${record.serviceName})`}</p>}
+    {record.oil_change && record.oil_change_mileage &&
+    <div className={`circular-progress-wrapper ${
+          (calculateRemainingMileage(car, maintenanceRecords) / calculateTotalMileageInterval(car)) * 100 < 30
+            ? 'low'
+            : (calculateRemainingMileage(car, maintenanceRecords) / calculateTotalMileageInterval(car)) * 100 < 60
+            ? 'medium'
+            : ''
+        }`}>
+          <CircularProgressBar progress={calculateRemainingMileage(car, maintenanceRecords)} total={calculateTotalMileageInterval(car)} />
+        </div>}
+    <div className="button-container">
+      <button onClick={() => { setEditMaintenance(record); setIsEditMaintenanceModalOpen(true); }}>{t('edit')}</button>
+      <button onClick={() => deleteMaintenance(record.id)}>{t('delete')}</button>
+    </div>
+     
+      <>
+        <br />
+        
+        {calculateRemainingMileage(car, maintenanceRecords) < 2000 && showWarning && (
+          <div className="oil-warning">
+            <a href="https://dok.ua" target="_blank" rel="noopener noreferrer">
+              <img src={banner} alt={t('oilChangeWarning')} />
+            </a>
+            <button className="close-button" onClick={() => setShowWarning(false)}>×</button>
+          </div>
+        )}
+      </>
+    
+  </>
+)}
                 </li>
               ))
             ) : (

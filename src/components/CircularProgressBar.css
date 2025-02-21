@@ -1,0 +1,98 @@
+.circular-progress-container {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #1a1a1a;
+    /* Темный фон для контраста */
+    border-radius: 50%;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.3);
+    /* Тень снаружи и внутри */
+    padding: 10px;
+}
+
+.circular-progress {
+    transform: rotate(-90deg);
+    /* Прогресс начинается сверху */
+}
+
+.circular-progress-background {
+    fill: none;
+    stroke: #2c2c2c;
+    /* Темно-серый фон */
+    stroke-width: 12;
+    opacity: 0.8;
+}
+
+.circular-progress-bar {
+    fill: none;
+    stroke-linecap: round;
+    /* Закругленные концы */
+    stroke-width: 12;
+    transition: stroke-dashoffset 0.6s ease-in-out, stroke 0.3s ease;
+    /* Плавная анимация */
+    filter: drop-shadow(0 0 5px rgba(76, 175, 80, 0.5));
+    /* Свечение для прогресса */
+}
+
+.circular-progress-text {
+    position: absolute;
+    text-align: center;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-family: 'Inter', sans-serif;
+}
+
+.progress-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    /* Тень текста */
+}
+
+.progress-label {
+    font-size: 12px;
+    font-weight: 400;
+    color: #c8cbcbf9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.progress-percentage {
+    font-size: 16px;
+    font-weight: 600;
+    color: #4caf50;
+    /* Зеленый по умолчанию */
+    transition: color 0.3s ease;
+}
+
+/* Изменение цвета процента в зависимости от состояния */
+.circular-progress-container.low .progress-percentage {
+    color: #f44336;
+}
+
+.circular-progress-container.medium .progress-percentage {
+    color: #ff9800;
+}
+
+/* Анимация появления */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.circular-progress-container {
+    animation: fadeIn 0.5s ease-out forwards;
+}

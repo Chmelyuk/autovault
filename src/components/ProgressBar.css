@@ -1,18 +1,44 @@
 .progress-bar-container {
     width: 100%;
-    height: 20px;
-    background-color: #e0e0e0;
-    border-radius: 10px;
+    height: 24px;
+    /* Увеличим высоту для более выразительного вида */
+    background: #f3eeee;
+    /* Темный фон, как у кругового */
+    border-radius: 12px;
+    /* Более плавные углы */
     overflow: hidden;
     position: relative;
-    text-align: center;
-    white-space: nowrap;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), inset 0 0 5px rgba(0, 0, 0, 0.3);
+    /* Тени снаружи и внутри */
+    padding: 2px;
+    border: 1px solid wheat;
+    /* Внутренний отступ для контраста */
 }
 
 .progress-bar {
     height: 100% !important;
-    transition: width 0.3s ease;
-    
+    transition: width 0.6s ease-in-out;
+    /* Плавная анимация заполнения */
+    background: linear-gradient(135deg, #4caf50, #81c784);
+    /* Зеленый градиент по умолчанию */
+    border-radius: 10px;
+    /* Закругленные углы внутри контейнера */
+    filter: drop-shadow(0 0 5px rgba(76, 175, 80, 0.5));
+    /* Свечение */
+   
+}
+
+/* Варианты градиентов в зависимости от состояния */
+.progress-bar.low {
+    background: linear-gradient(135deg, #f44336, #ef5350);
+    /* Красный градиент */
+    filter: drop-shadow(0 0 5px rgba(244, 67, 54, 0.5));
+}
+
+.progress-bar.medium {
+    background: linear-gradient(135deg, #ff9800, #ffb300);
+    /* Оранжевый градиент */
+    filter: drop-shadow(0 0 5px rgba(255, 152, 0, 0.5));
 }
 
 .progress-text {
@@ -20,7 +46,32 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: #000;
-    font-size: 12px;
-    font-weight: bold;
+    color: #4e5183;
+    /* Белый текст для контраста с темным фоном */
+    font-size: 14px;
+    /* Чуть больше для читаемости */
+    font-weight: 600;
+    /* Полужирный шрифт */
+    font-family: 'Inter', sans-serif;
+    /* Единый шрифт с круговым */
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    /* Тень текста */
+    white-space: nowrap;
+}
+
+/* Анимация появления */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+.progress-bar-container {
+    animation: fadeIn 0.5s ease-out forwards;
 }

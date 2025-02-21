@@ -1,23 +1,23 @@
 import React from 'react';
-import './ProgressBar.css'; // Создайте файл стилей для прогресс-бара
+import './ProgressBar.css';
 import { useTranslation } from 'react-i18next';
 
 const ProgressBar = ({ progress, total }) => {
-  const percentage = (progress / total) * 100;
-  let color = 'green';
-  
+  const { t } = useTranslation();
+  const percentage = Math.min((progress / total) * 100, 100); // Ограничиваем до 100%
+  let statusClass = ''; // Класс для стилизации
 
   if (percentage < 30) {
-    color = 'red';
+    statusClass = 'low'; // Красный
   } else if (percentage < 60) {
-    color = 'orange';
+    statusClass = 'medium'; // Оранжевый
   }
-const { t } = useTranslation();
+
   return (
     <div className="progress-bar-container">
       <div
-        className="progress-bar"
-        style={{ width: `${percentage}%`, backgroundColor: color }}
+        className={`progress-bar ${statusClass}`}
+        style={{ width: `${percentage}%` }}
       ></div>
       <span className="progress-text">{progress} {t('rangeToChange')}</span>
     </div>

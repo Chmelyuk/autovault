@@ -24,7 +24,6 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-     
 }
 
 .header h1 {
@@ -44,9 +43,15 @@ button {
     color: #ffffff;
     cursor: pointer;
     transition: all 0.3s ease-in-out;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
- 
+
+button:hover {
+    background: linear-gradient(135deg, #334155, #3d4b70);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+}
+
 /* Стили для выбора автомобиля */
 .car-selector-wrapper {
     margin-bottom: 20px;
@@ -74,8 +79,6 @@ button {
     padding: 20px;
     border-radius: 12px;
     margin-bottom: 20px;
-   
-    
 }
 
 .car-details h2 {
@@ -85,68 +88,76 @@ button {
     font-weight: 600;
 }
 
- 
-
-/* Стили для кнопок в контейнере */
-.button-container {
+/* Стили для контейнера действий */
+.action-buttons {
     display: flex;
-    gap: 10px;
-    margin-top: 10px;
+    margin-bottom: 20px;
 }
 
-.button-container button {
-    background: linear-gradient(135deg, #1E293B, #334155);
-    border: none;
-    border-radius: 12px;
-    padding: 12px 20px;
-    font-size: 16px;
-    color: #ffffff;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+.add-button {
+    margin-right: 10px;
 }
-
- 
 
 /* Стили для истории ремонтов и ТО */
-.repair-history,
-.maintenance-history {
+.repair-history {
     background-color: #1a1a1a;
     border-radius: 12px;
     margin-bottom: 20px;
-    
+    padding: 20px;
 }
 
-.repair-history h3,
-.maintenance-history h3 {
+.repair-history h3 {
     margin-top: 0;
     color: #ffffff;
     font-size: 18px;
     font-weight: 600;
 }
 
-.repair-history ul,
-.maintenance-history ul {
+/* Сетка для карточек */
+.repair-history ul {
     list-style-type: none;
     padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
 }
 
-.repair-history li,
-.maintenance-history li {
+.repair-history li {
     background-color: #2c2c2c;
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 10px;
+    padding: 20px;
+    border-radius: 12px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    
-    
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: auto;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    position: relative;
 }
- 
+
+.repair-history li:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
 
 .repair-history li p,
-.maintenance-history li p {
-    margin: 5px 0;
+.repair-history li strong {
+    margin: 8px 0;
     color: #e0e0e0;
+}
+
+.repair-history li p[key="date"] {
+    color: #4caf50;
+    font-weight: 500;
+}
+
+/* Кнопки в карточках */
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: auto;
+    gap: 10px;
+    padding: 10px 0;
 }
 
 /* Стили для модальных окон */
@@ -170,6 +181,9 @@ button {
     width: 90%;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .modal-content h3 {
@@ -178,16 +192,12 @@ button {
     font-size: 20px;
     font-weight: 600;
 }
-.modal-content select{
-    width: 100% !important;
-}
-.modal-content textarea{
-    min-height: 30px;
-}
+
 .modal-content input,
 .modal-content select,
 .modal-content textarea {
-    width: 90%;
+    width: 95%;
+    /* Исправлено с 90% для единообразия */
     padding: 12px;
     margin-bottom: 16px;
     border-radius: 8px;
@@ -197,7 +207,9 @@ button {
     font-size: 14px;
     transition: border-color 0.3s ease;
 }
-
+.modal-content select {
+    width: 100%;
+}
 .modal-content input:focus,
 .modal-content select:focus,
 .modal-content textarea:focus {
@@ -205,24 +217,143 @@ button {
     outline: none;
 }
 
- 
- 
+.modal-content textarea {
+    min-height: 30px;
+}
+
 /* Стили для чекбоксов */
 .checkbox-label {
     display: flex;
     align-items: center;
+    gap: 8px;
     margin-bottom: 16px;
-    color: #f5f5f5;
-    font-size: 14px;
+    color: #ffffff;
+    font-size: 16px;
 }
 
 .checkbox-label input {
-    margin-right: 10px;
+    width: 18px;
+    height: 18px;
     accent-color: #4caf50;
 }
-.add-button{
-    margin-right: 10px;
+
+/* Стили для специальных кнопок модала */
+.modal-actions {
+    display: flex;
+    justify-content: center;
 }
+
+.select-all-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.select-all-btn:hover {
+    background-color: #444;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.save-btn,
+.cancel-btn {
+    flex: 1;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.save-btn {
+    background-color: #008000;
+    color: white;
+    border: none;
+}
+
+.cancel-btn {
+    background-color: #800000;
+    color: white;
+    border: none;
+}
+
+/* Стили для деталей автомобиля */
+.car-details-container {
+    background-color: #0b1723;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    margin-bottom: 20px;
+}
+
+.oil-change-section {
+    color: #cfd8dc;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.oil-change {
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
+}
+
+/* Дополнительные стили */
+.error-message {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+.added-by-service {
+    color: rgba(89, 255, 0, 0.362) !important;
+    font-weight: bold;
+}
+
+/* Стили для селектора сортировки */
+.sort-selector {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.sort-selector label {
+    color: #f5f5f5;
+    font-weight: 500;
+    font-size: 16px;
+}
+
+.sort-selector select {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    font-size: 14px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.sort-selector select:hover {
+    border-color: #4caf50;
+}
+
+.sort-selector select:focus {
+    border-color: #4caf50;
+    outline: none;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+}
+
 /* Адаптив для мобильных устройств */
 @media (max-width: 768px) {
     .header {
@@ -248,6 +379,21 @@ button {
         margin-bottom: 15px;
     }
 
+    .repair-history li {
+        padding: 15px;
+    }
+
+    .button-container {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+    }
+
+    .button-container button {
+        width: 100%;
+        padding: 8px 16px;
+    }
+
     .modal-content {
         padding: 16px;
     }
@@ -258,6 +404,7 @@ button {
     }
 }
 
+/* Стили для предупреждения об замене масла */
 .oil-warning {
     position: relative;
     display: inline-block;
@@ -288,177 +435,17 @@ button {
     padding: 0;
 }
 
-
-.modal-content {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.modal-title {
-    font-size: 18px;
-    font-weight: bold;
-    text-align: center;
-    color: #ffffff;
-}
-
-.modal-actions {
-    display: flex;
+/* Стили для обертки прогресс-бара */
+.circular-progress-wrapper {
+    display: inline-flex;
     justify-content: center;
-}
-
-.select-all-btn {
-    width: 100%;
-    padding: 10px;
-    background-color: #333;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.select-all-btn:hover {
-    background-color: #444;
-}
-
-.checkbox-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.checkbox-label {
-    display: flex;
     align-items: center;
-    gap: 10px;
-    color: white;
 }
 
-.input-mileage {
-    width: 100%;
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #555;
-    background-color: #222;
-    color: white;
+.circular-progress-wrapper.low .progress-percentage {
+    color: #f44336;
 }
 
-.modal-buttons {
-    display: flex;
-    justify-content: space-between;
+.circular-progress-wrapper.medium .progress-percentage {
+    color: #ff9800;
 }
-
-.save-btn,
-.cancel-btn {
-    flex: 1;
-    padding: 10px;
-    margin: 5px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.save-btn {
-    background-color: #008000;
-    color: white;
-    border: none;
-}
-
-.cancel-btn {
-    background-color: #800000;
-    color: white;
-    border: none;
-}
-
-.checkbox-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    /* Уменьшаем расстояние между чекбоксом и текстом */
-    color: white;
-    font-size: 16px;
-    /* Сделаем шрифт чуть крупнее для удобства */
-}
-
-.checkbox-label input {
-    width: 18px;
-    height: 18px;
-}
-
-.modal-buttons {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 15px;
-    /* Добавим отступ сверху */
-}
-.car-details-container {
-    background-color: #0b1723;
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-    margin-bottom: 20px;
-}
-
-.oil-change-section {
-    color: #cfd8dc;
-    font-size: 1.1rem;
-    margin-bottom: 12px;
-    text-align: center;
-}
-
-.oil-change {
-    font-weight: bold;
-    text-shadow: 0px 0px 5px rgba(0, 255, 0, 0.3);
-}
-
-.error-message {
-    color: red;
-    font-size: 0.9em;
-    margin-top: 5px;
-}
-.added-by-service {
-    color: rgba(89, 255, 0, 0.362) !important;
-    font-weight: bold;
-}
-
-/* Стили для селектора сортировки */
-.sort-selector {
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.sort-selector label {
-    color: #f5f5f5;
-    font-weight: 500;
-    font-size: 16px;
-}
-
-.sort-selector select {
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: 1px solid #333;
-    background-color: #1a1a1a;
-    color: #e0e0e0;
-    font-size: 14px;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
-}
-
-.sort-selector select:hover {
-    border-color: #4caf50;
-}
-
-.sort-selector select:focus {
-    border-color: #4caf50;
-    outline: none;
-    box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
-}
- 

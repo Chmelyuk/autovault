@@ -1,3 +1,5 @@
+/* Header.css */
+
 /* Общие стили для Header */
 header {
     display: flex;
@@ -69,24 +71,8 @@ header {
     z-index: 1000;
 }
 
-/* Кнопки в выпадающем меню */
-.dropdown-menu button {
-    background-color: transparent;
-    color: #e0e0e0;
-    border: none;
-    font-size: 1rem;
-    cursor: pointer;
-    padding: 10px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
-}
-
-.dropdown-menu button:hover {
-    background-color: #6200ea;
-    color: white;
-}
-
-/* Стили для кастомной кнопки загрузки файла */
+/* Кнопки в выпадающем меню и кастомные кнопки */
+.dropdown-menu button,
 .custom-file-upload {
     background-color: transparent;
     color: #e0e0e0;
@@ -99,6 +85,7 @@ header {
     text-align: center;
 }
 
+.dropdown-menu button:hover,
 .custom-file-upload:hover {
     background-color: #6200ea;
     color: white;
@@ -122,56 +109,31 @@ header {
     }
 }
 
-/* QR-стили остаются без изменений */
-.qr-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.qr-content {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-}
-
-.qr-content button {
-    margin-top: 20px;
-    padding: 10px 20px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.qr-content button:hover {
-    background: #0056b3;
-}
-
+/* QR-стили */
+.qr-modal,
 .qr-scanner-modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.9);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
 }
 
+.qr-modal {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.qr-scanner-modal {
+    background-color: rgba(0, 0, 0, 0.9);
+}
+
+.qr-content,
 .qr-scanner-content {
-    background-color: #1a1a1a;
+    background: #1a1a1a;
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -182,11 +144,33 @@ header {
     overflow-y: auto;
 }
 
+.qr-content {
+    background: white;
+}
+
+.qr-content button,
 .qr-scanner-content button {
     width: 100%;
     margin-top: 15px;
-    font-size: 18px;
     padding: 12px;
+    font-size: 18px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.qr-content button:hover,
+.qr-scanner-content button:hover {
+    background: #0056b3;
+}
+
+.qr-code {
+    max-width: 80vw;
+    max-height: 80vh;
+    object-fit: contain;
 }
 
 @media (max-width: 768px) {
@@ -210,53 +194,47 @@ header {
         padding: 15px;
     }
 
-    .language-buttons button {
-        margin-bottom: 10px;
-        margin-right: 0;
-    }
-}
-
-.qr-code {
-    max-width: 80vw;
-    max-height: 80vh;
-    object-fit: contain;
-}
-
-@media (max-width: 768px) {
     .qr-code {
         max-width: 70vw;
         max-height: 50vh;
     }
 
-    .language-buttons {
-        text-align: center;
+    .burger-menu {
+        top: 15px;
+        right: 15px;
     }
 
-    
+    .dropdown-menu {
+        right: 15px;
+        top: 55px;
+    }
+
+    .logo-image {
+        position: absolute;
+        width: 60%;
+        height: auto;
+        top: -50%;
+        left: 0;
+    }
 }
 
-.language-buttons button {
-    margin-right: 10px;
-}
-
-
-.logo-image{
+/* Логотип */
+.logo-image {
     position: absolute;
     width: 20%;
-    padding-top: 2%;
 }
 
+/* Кнопки языка */
+.language-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
 
-@media (max-width: 700px) {
-    .logo-image {
-            position: absolute;
-            width: 60%;
-            height: auto;
-            top: -50%;
-            left: 0;
-            
-        }
-
+.language-buttons span {
+    color: #e0e0e0;
+    font-size: 1rem;
 }
 
 .language-buttons button {
@@ -265,30 +243,52 @@ header {
     background-color: white;
     cursor: pointer;
     transition: all 0.2s ease;
+    font-size: 1rem;
 }
 
 .language-buttons button.active {
-    background-color: #4caf50 !important;
-    color: white !important;
-    border-color: #4caf50 !important;
-    box-shadow: 0 4px 10px  !important;
-    box-shadow: #4caf50 !important;
-    
+    background-color: #4caf50;
+    color: white;
+    border-color: #4caf50;
+    box-shadow: 0 4px 10px rgba(76, 175, 80, 0.5);
 }
 
 .language-buttons button:hover:not(.active) {
     background-color: #f0f0f0;
 }
-.settings-edit-btns{
+
+/* Кнопки настроек и редактирования */
+.settings-edit-btns,
+.button-group {
     display: flex;
-        flex-direction: column;
-        
-}
-.settings-edit-btns button{
-     
-    margin: 10px;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
 }
 
-.button-group button{
-    margin-right: 5px;
+.settings-edit-btns button,
+.button-group button {
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+    background: linear-gradient(135deg, #1E293B, #334155);
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.settings-edit-btns button:hover,
+.button-group button:hover {
+    background: linear-gradient(135deg, #334155, #4caf50);
+}
+
+.button-group .delete-button {
+    background: linear-gradient(135deg, #f44336, #ef5350);
+}
+
+.button-group .delete-button:hover {
+    background: linear-gradient(135deg, #ef5350, #e57373);
 }

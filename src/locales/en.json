@@ -151,7 +151,9 @@
   "maintenanceThenRepairs": "Maintenance, then repairs",
   "selectCar": "Select car",
   "settings": "Settings",
-  "editCar": "Edit car information"
+  "editCar": "Edit car information",
+   "category": "Category:",
+  "date": "Date"
 
 }
    
