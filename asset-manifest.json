@@ -1,18 +1,23 @@
 {
   "files": {
-    "main.css": "/autovault/static/css/main.eff8bf35.css",
-    "main.js": "/autovault/static/js/main.1bc68d16.js",
+    "main.css": "/autovault/static/css/main.7028cbe2.css",
+    "main.js": "/autovault/static/js/main.6af69336.js",
     "static/js/198.a224d5f7.chunk.js": "/autovault/static/js/198.a224d5f7.chunk.js",
     "static/media/banner.jpg": "/autovault/static/media/banner.003f3ef068d4f0117267.jpg",
     "static/media/logo_car.png": "/autovault/static/media/logo_car.0514d9d6fd9a505de255.png",
+    "static/media/tire.png": "/autovault/static/media/tire.d068d646174474af64e3.png",
     "static/media/logo.png": "/autovault/static/media/logo.4988674b41652a501cc8.png",
+    "static/media/break.png": "/autovault/static/media/break.4935db848e227e2d6fc6.png",
+    "static/media/filter.png": "/autovault/static/media/filter.3bfcf00387b04914f2b2.png",
+    "static/media/oil.png": "/autovault/static/media/oil.bbbc2f269ddd6ca1a518.png",
+    "static/media/cool.png": "/autovault/static/media/cool.beea1cdd7ae3792f1efe.png",
     "index.html": "/autovault/index.html",
-    "main.eff8bf35.css.map": "/autovault/static/css/main.eff8bf35.css.map",
-    "main.1bc68d16.js.map": "/autovault/static/js/main.1bc68d16.js.map",
+    "main.7028cbe2.css.map": "/autovault/static/css/main.7028cbe2.css.map",
+    "main.6af69336.js.map": "/autovault/static/js/main.6af69336.js.map",
     "198.a224d5f7.chunk.js.map": "/autovault/static/js/198.a224d5f7.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.eff8bf35.css",
-    "static/js/main.1bc68d16.js"
+    "static/css/main.7028cbe2.css",
+    "static/js/main.6af69336.js"
   ]
 }
