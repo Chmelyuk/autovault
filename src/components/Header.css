@@ -225,12 +225,17 @@ header {
     align-items: center;
     gap: 10px;
     margin-bottom: 10px;
+    justify-content: center;
 }
-
-.language-buttons span {
-    color: #e0e0e0;
+.language-header{
+color: #e0e0e0;
     font-size: 1rem;
+    display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
 }
+ 
 
 .language-buttons button {
     padding: 5px 10px;
@@ -277,7 +282,7 @@ header {
 
 .settings-edit-btns button:hover,
 .button-group button:hover {
-    background: linear-gradient(135deg, #334155, #4caf50);
+    background: linear-gradient(135deg, #334155, #4c89af);
 }
 
 .button-group .delete-button {

@@ -153,7 +153,12 @@
   "settings": "Settings",
   "editCar": "Edit car information",
    "category": "Category:",
-  "date": "Date"
+  "date": "Date",
+  "tileView": "Tile",
+  "listView": "List",
+  "view": "View:",
+  "gpsON": "Tracker is on",
+  "waitingGPS": "Waiting GPS"
 
 }
    

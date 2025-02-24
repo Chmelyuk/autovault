@@ -30,8 +30,11 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
   const [suggestedBrands, setSuggestedBrands] = useState([]);
   const [suggestedModels, setSuggestedModels] = useState([]);
   const { t, i18n } = useTranslation();
-  const [car, setCar] = useState(null);
+  const [car, setCar] = useState(selectedCar || null);
   const dropdownRef = useRef(null);
+useEffect(() => {
+  setCar(selectedCar || null);
+}, [selectedCar]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -379,8 +382,9 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>{t('settings')}</h3>
             <div className="settings-content">
+              <div className='language-header'> <span>{t('language')}: </span></div>
               <div className="language-buttons">
-                <span>{t('language')}: </span>
+                
                 <button 
                   className={i18n.language === 'en' ? 'active' : ''} 
                   onClick={() => i18n.changeLanguage('en')}

@@ -157,7 +157,7 @@ body {
 }
 
 /* Переключатель языка */
-.language-buttons {
+.language-auth-buttons {
     position: absolute;
     top: 20px;
     right: 20px;

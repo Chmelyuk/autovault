@@ -84,7 +84,7 @@ if (!email || !password) {
     <div className="auth-container">
       <img src={logo} alt="Car" className="logo-image" />
       <div className="auth-box">
-        <div className="language-buttons">
+        <div className="language-auth-buttons">
           <button onClick={() => changeLanguage('en')}>English</button>
           <button onClick={() => changeLanguage('ru')}>Русский</button>
           <button onClick={() => changeLanguage('uk')}>Українська</button>
