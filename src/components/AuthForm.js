@@ -81,14 +81,16 @@ if (!email || !password) {
   };
 
   return (
+    
     <div className="auth-container">
       <img src={logo} alt="Car" className="logo-image" />
-      <div className="auth-box">
-        <div className="language-auth-buttons">
+      <div className="language-auth-buttons">
           <button onClick={() => changeLanguage('en')}>English</button>
           <button onClick={() => changeLanguage('ru')}>Русский</button>
           <button onClick={() => changeLanguage('uk')}>Українська</button>
         </div>
+      <div className="auth-box">
+        
 
         <h2 className="auth-title">{t('signInSignUp')}</h2>
         <input
@@ -141,7 +143,7 @@ if (!email || !password) {
           <label htmlFor="terms" className="terms-label">
             {t('agreeWithTerms')}{' '}
             <span className="terms-link" onClick={() => setShowModal(true)}>
-              {t('termsAndConditions')}
+              <strong>{t('termsAndConditions')}</strong>
             </span>
           </label>
         </div>
