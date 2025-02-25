@@ -158,7 +158,9 @@
   "listView": "List",
   "view": "View:",
   "gpsON": "Tracker is on",
-  "waitingGPS": "Waiting GPS"
+  "waitingGPS": "Waiting GPS",
+  "confirmDelete": "Confirm delete"
+  
 
 }
    

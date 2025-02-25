@@ -191,7 +191,8 @@
   "listView": "Список",
   "view": "Вид:",
    "gpsON": "Трекер включен",
-  "waitingGPS": "Ожидание GPS"
+  "waitingGPS": "Ожидание GPS",
+  "confirmDelete": "Подтвердить удаление"
   
 
 
