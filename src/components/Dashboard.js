@@ -216,14 +216,22 @@ export default function Dashboard({ user, supabase, handleLogout }) {
     alert(t("fillRequiredFields"));
     return;
   }
+
+  console.log("repairCategory:", repairCategory);
+  console.log("repairCategories:", repairCategories);
+
   const categoryName = repairCategory === "other"
     ? customCategory || "Other"
-    : repairCategories.find(cat => cat.id === repairCategory)?.name || "Other";
-  const subcategoryName = repairSubcategory === "other" ? customCategory : repairSubcategory;
-  
-  // Устанавливаем текущую дату, если repairDate не указана
-  const today = new Date().toISOString().split("T")[0]; // Формат YYYY-MM-DD
+    : repairCategories.find(cat => String(cat.id) === String(repairCategory))?.name || "Other";
+
+  const subcategoryName = repairSubcategory === "other"
+    ? customCategory
+    : repairSubcategories.find(sub => String(sub.id) === String(repairSubcategory))?.name || repairSubcategory;
+
+  const today = new Date().toISOString().split("T")[0];
   const formattedDate = repairDate || today;
+
+  console.log("Adding repair with category:", categoryName, "subcategory:", subcategoryName);
 
   const { data, error } = await supabase.from("repairs").insert([{
     user_id: user.id,
@@ -245,10 +253,12 @@ export default function Dashboard({ user, supabase, handleLogout }) {
     setCustomCategory("");
     setRepairDescription("");
     setRepairMileage("");
-    setRepairDate(""); // Сбрасываем поле ввода даты
+    setRepairDate("");
     if (repairMileage && parseInt(repairMileage) > car.mileage) updateCarMileage(parseInt(repairMileage));
   }
 };
+
+
   const addMaintenance = async () => {
     if (!car) return;
     if (maintenance.oilChange && !maintenance.oilChangeMileage) {
