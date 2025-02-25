@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Header from './Header';
 import CarDetails from './CarDetails';
 import ProgressBar from './ProgressBar';
@@ -38,99 +38,17 @@ export default function Dashboard({ user, supabase, handleLogout }) {
   });
   const [showWarning, setShowWarning] = useState(true);
   const [sortMode, setSortMode] = useState("dateDesc");
-
-  // Инициализируем car как null, а затем синхронизируем с localStorage после загрузки данных
   const [car, setCar] = useState(null);
   const [selectedCarId, setSelectedCarId] = useState(() => {
     return localStorage.getItem('selectedCarId') || null;
   });
 
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      if (!user) return;
-
-      const { data: carsData, error: carsError } = await supabase
-        .from("cars")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (carsError) {
-        console.error("❌ Ошибка при загрузке машин:", carsError.message);
-        return;
-      }
-
-      setCars(carsData || []);
-
-      // Синхронизируем car с selectedCarId после загрузки данных
-      const savedCarId = localStorage.getItem('selectedCarId');
-      let selectedCar = null;
-
-      if (savedCarId) {
-        selectedCar = carsData.find(c => c.id === savedCarId);
-      }
-
-      // Если сохранённого ID нет или он некорректен, выбираем первый автомобиль
-      if (!selectedCar && carsData.length > 0) {
-        selectedCar = carsData[0];
-        setSelectedCarId(carsData[0].id);
-        localStorage.setItem('selectedCarId', carsData[0].id);
-      }
-
-      setCar(selectedCar);
-    };
-
-    fetchInitialData();
-  }, [user, supabase]);
-
-  useEffect(() => {
-    if (car?.id) {
-      setSelectedCarId(car.id);
-      localStorage.setItem('selectedCarId', car.id);
-      Promise.all([fetchRepairs(car.id), fetchMaintenance(car.id)])
-        .catch(err => console.error("❌ Ошибка при загрузке данных:", err));
-    } else {
-      setRepairs([]);
-      setMaintenanceRecords([]);
-    }
-  }, [car]);
-
-  useEffect(() => {
-    if (isRepairModalOpen) {
-      fetchRepairCategories();
-    }
-  }, [isRepairModalOpen]);
-
-  const toggleViewMode = () => {
-    setViewMode(viewMode === "tile" ? "list" : "tile");
-  };
-
-  const fetchCars = async () => {
-    if (!user) return;
-    const { data, error } = await supabase
-      .from("cars")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("❌ Ошибка при загрузке машин:", error.message);
-    } else {
-      setCars(data || []);
-      const savedCarId = localStorage.getItem('selectedCarId');
-      const selectedCar = savedCarId
-        ? data.find(c => c.id === savedCarId) || (data.length > 0 ? data[0] : null)
-        : data.length > 0 ? data[0] : null;
-      setCar(selectedCar);
-      setSelectedCarId(selectedCar?.id || null);
-    }
-  };
-
-  const fetchRepairs = async (carId) => {
+  // Мемоизация функций
+  const fetchRepairs = useCallback(async (carId) => {
     if (!carId) return;
     const { data, error } = await supabase
       .from("repairs")
-      .select("*, service_id")
+      .select("id, category, subcategory, description, mileage, date, addbyservice, service_id, user_id, car_id")
       .eq("car_id", carId)
       .eq("user_id", user.id);
 
@@ -157,14 +75,14 @@ export default function Dashboard({ user, supabase, handleLogout }) {
         return repair;
       })
     );
-    setRepairs(repairsWithServiceNames);
-  };
+    setRepairs(repairsWithServiceNames || []);
+  }, [supabase, user]);
 
-  const fetchMaintenance = async (carId) => {
+  const fetchMaintenance = useCallback(async (carId) => {
     if (!carId) return;
     const { data, error } = await supabase
       .from("maintenance")
-      .select("id, oil_change, oil_change_mileage, oil_change_date, filter_change, brake_check, tire_rotation, coolant_flush, addbyservice, service_id, user_id")
+      .select("id, oil_change, oil_change_mileage, oil_change_date, filter_change, brake_check, tire_rotation, coolant_flush, addbyservice, service_id, user_id, car_id")
       .eq("car_id", carId);
 
     if (error) {
@@ -190,16 +108,76 @@ export default function Dashboard({ user, supabase, handleLogout }) {
         return maint;
       })
     );
-    setMaintenanceRecords(maintenanceWithServiceNames);
-  };
+    setMaintenanceRecords(maintenanceWithServiceNames || []);
+  }, [supabase, user]);
 
-  const fetchRepairCategories = async () => {
-    const { data, error } = await supabase.from("repair_categories").select("*");
+  const fetchRepairCategories = useCallback(async () => {
+    if (repairCategories.length > 0) return;
+    const { data, error } = await supabase.from("repair_categories").select("id, name");
     if (error) {
       console.error("Ошибка при загрузке категорий:", error.message);
     } else {
       setRepairCategories(data.map(cat => ({ ...cat, name: t(cat.name) })));
     }
+  }, [supabase, t, repairCategories.length]);
+
+  const fetchCars = useCallback(async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("cars")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("❌ Ошибка при загрузке машин:", error.message);
+    } else {
+      setCars(data || []);
+      const savedCarId = localStorage.getItem('selectedCarId');
+      const selectedCar = savedCarId
+        ? data.find(c => c.id === savedCarId) || (data.length > 0 ? data[0] : null)
+        : data.length > 0 ? data[0] : null;
+      setCar(selectedCar);
+      setSelectedCarId(selectedCar?.id || null);
+      if (selectedCar) {
+        await Promise.all([fetchRepairs(selectedCar.id), fetchMaintenance(selectedCar.id)]);
+      }
+    }
+  }, [user, supabase, fetchRepairs, fetchMaintenance]);
+
+  // Инициализация данных
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      if (!user) return;
+      const { data: carsData, error } = await supabase
+        .from("cars")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("❌ Ошибка при загрузке машин:", error.message);
+        return;
+      }
+
+      setCars(carsData || []);
+      const savedCarId = localStorage.getItem('selectedCarId');
+      const selectedCar = savedCarId ? carsData.find(c => c.id === savedCarId) : carsData[0];
+
+      if (selectedCar) {
+        setCar(selectedCar);
+        setSelectedCarId(selectedCar.id);
+        localStorage.setItem('selectedCarId', selectedCar.id);
+        await Promise.all([fetchRepairs(selectedCar.id), fetchMaintenance(selectedCar.id)]);
+      }
+      await fetchRepairCategories();
+    };
+
+    fetchInitialData();
+  }, [user, supabase, fetchRepairs, fetchMaintenance, fetchRepairCategories]);
+
+  const toggleViewMode = () => {
+    setViewMode(viewMode === "tile" ? "list" : "tile");
   };
 
   const fetchRepairSubcategories = async (categoryId) => {
@@ -234,41 +212,43 @@ export default function Dashboard({ user, supabase, handleLogout }) {
   };
 
   const addRepair = async () => {
-    if (!car || !repairCategory) {
-      alert(t("fillRequiredFields"));
-      return;
-    }
-    const categoryName = repairCategory === "other"
-      ? customCategory || "Other"
-      : repairCategories.find(cat => cat.id === repairCategory)?.name || "Other";
-    const subcategoryName = repairSubcategory === "other" ? customCategory : repairSubcategory;
-    const formattedDate = repairDate || null;
+  if (!car || !repairCategory) {
+    alert(t("fillRequiredFields"));
+    return;
+  }
+  const categoryName = repairCategory === "other"
+    ? customCategory || "Other"
+    : repairCategories.find(cat => cat.id === repairCategory)?.name || "Other";
+  const subcategoryName = repairSubcategory === "other" ? customCategory : repairSubcategory;
+  
+  // Устанавливаем текущую дату, если repairDate не указана
+  const today = new Date().toISOString().split("T")[0]; // Формат YYYY-MM-DD
+  const formattedDate = repairDate || today;
 
-    const { data, error } = await supabase.from("repairs").insert([{
-      user_id: user.id,
-      car_id: car.id,
-      category: categoryName,
-      subcategory: subcategoryName || null,
-      description: repairDescription || null,
-      mileage: repairMileage ? parseInt(repairMileage) : null,
-      date: formattedDate,
-    }]).select("*");
+  const { data, error } = await supabase.from("repairs").insert([{
+    user_id: user.id,
+    car_id: car.id,
+    category: categoryName,
+    subcategory: subcategoryName || null,
+    description: repairDescription || null,
+    mileage: repairMileage ? parseInt(repairMileage) : null,
+    date: formattedDate,
+  }]).select("*");
 
-    if (error) {
-      console.error("Ошибка при добавлении ремонта:", error.message);
-    } else {
-      setRepairs(prev => [...prev, ...data]);
-      setIsRepairModalOpen(false);
-      setRepairCategory("");
-      setRepairSubcategory("");
-      setCustomCategory("");
-      setRepairDescription("");
-      setRepairMileage("");
-      setRepairDate("");
-      if (repairMileage && parseInt(repairMileage) > car.mileage) updateCarMileage(parseInt(repairMileage));
-    }
-  };
-
+  if (error) {
+    console.error("Ошибка при добавлении ремонта:", error.message);
+  } else {
+    setRepairs(prev => [...prev, ...data]);
+    setIsRepairModalOpen(false);
+    setRepairCategory("");
+    setRepairSubcategory("");
+    setCustomCategory("");
+    setRepairDescription("");
+    setRepairMileage("");
+    setRepairDate(""); // Сбрасываем поле ввода даты
+    if (repairMileage && parseInt(repairMileage) > car.mileage) updateCarMileage(parseInt(repairMileage));
+  }
+};
   const addMaintenance = async () => {
     if (!car) return;
     if (maintenance.oilChange && !maintenance.oilChangeMileage) {
@@ -433,23 +413,6 @@ export default function Dashboard({ user, supabase, handleLogout }) {
         return combinedRecords;
     }
   };
-  useEffect(() => {
-  if (car?.id) {
-    setSelectedCarId(car.id);
-    localStorage.setItem('selectedCarId', car.id);
-    Promise.all([fetchRepairs(car.id), fetchMaintenance(car.id)])
-      .catch(err => console.error("❌ Ошибка при загрузке данных:", err));
-  } else {
-    setRepairs([]);
-    setMaintenanceRecords([]);
-  }
-}, [car, fetchRepairs, fetchMaintenance]); // Added fetchRepairs and fetchMaintenance
-
-useEffect(() => {
-  if (isRepairModalOpen) {
-    fetchRepairCategories();
-  }
-}, [isRepairModalOpen, fetchRepairCategories]);
 
   return (
     <>
@@ -468,11 +431,15 @@ useEffect(() => {
           <select
             className="car-selector"
             value={selectedCarId || ""}
-            onChange={(e) => {
+            onChange={async (e) => {
               const newSelectedCarId = e.target.value;
               const selected = cars.find(c => c.id === newSelectedCarId) || null;
               setSelectedCarId(newSelectedCarId);
               setCar(selected);
+              if (selected) {
+                localStorage.setItem('selectedCarId', selected.id);
+                await Promise.all([fetchRepairs(selected.id), fetchMaintenance(selected.id)]);
+              }
             }}
           >
             {cars.length === 0 ? (
@@ -506,115 +473,122 @@ useEffect(() => {
 
         <div className="sort-selector">
           <h3>{t('repairHistory')}</h3>
+        </div>
+        <div className='view'>
+          <div>
+            <label>{t("sortBy")}:</label>
+            <select value={sortMode} onChange={(e) => setSortMode(e.target.value)}>
+              <option value="dateAsc">{t("dateOldToNew")}</option>
+              <option value="dateDesc">{t("dateNewToOld")}</option>
+              <option value="repairsFirst">{t("repairsThenMaintenance")}</option>
+              <option value="maintenanceFirst">{t("maintenanceThenRepairs")}</option>
+            </select>
           </div>
-          <div className='view'>
-            <div>
-              <label>{t("sortBy")}:</label>
-              <select value={sortMode} onChange={(e) => setSortMode(e.target.value)}>
-                <option value="dateAsc">{t("dateOldToNew")}</option>
-                <option value="dateDesc">{t("dateNewToOld")}</option>
-                <option value="repairsFirst">{t("repairsThenMaintenance")}</option>
-                <option value="maintenanceFirst">{t("maintenanceThenRepairs")}</option>
-              </select>
-            </div>
-            <div className='view-text'>
-              <h3>{t('view')}</h3>
-              <select onChange={toggleViewMode} value={viewMode}>
-                <option value="tile">{t('tileView')}</option>
-                <option value="list">{t('listView')}</option>
-              </select>
-            </div>
-          
+          <div className='view-text'>
+            <h3>{t('view')}</h3>
+            <select onChange={toggleViewMode} value={viewMode}>
+              <option value="tile">{t('tileView')}</option>
+              <option value="list">{t('listView')}</option>
+            </select>
+          </div>
         </div>
 
         <div className={`repair-history ${viewMode}`}>
-  <ul>
-    {getSortedRecords().length > 0 ? (
-      getSortedRecords().map(record => (
-        <li key={record.category ? `repair-${record.id}` : `maintenance-${record.id}`}>
-          {record.category ? (
-            <>
-              <div className="record-group">
-                <strong>🛠 {t(record.category)}</strong>
-                {record.subcategory && <p>{t('subcategory')}: {t(record.subcategory)}</p>}
-                {record.description && <p>{record.description}</p>}
-                {record.mileage && <p>{t('mileageAtRepair')}: {record.mileage} км</p>}
-                {record.date && <p key="date">📅 {t('date')}: {new Date(record.date).toLocaleDateString()}</p>}
-              </div>
-              {record.addbyservice && <p className="added-by-service">{t('addedByService')} {record.serviceName && `(${record.serviceName})`}</p>}
-              <div className="button-container">
-                <button onClick={() => { setEditRepair(record); setIsEditRepairModalOpen(true); }}>{t('edit')}</button>
-                <button onClick={() => deleteRepair(record.id)}>{t('delete')}</button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="record-group">
-                {(() => {
-                  const workTypes = [];
-                  if (record.oil_change) {
-                    workTypes.push(
-                      <p key="oil_change" className="work-type oil-change">
-                         {t('oilChange')}
-                        {record.oil_change_mileage ? ` ${t('at')} ${record.oil_change_mileage} км` : ''}
-                      </p>
-                    );
-                  }
-                 if (record.filter_change) workTypes.push(
-  <p key="filter_change" className="work-type filter-change">{t('filterChange')}</p>
-);
-if (record.brake_check) workTypes.push(
-  <p key="brake_check" className="work-type brake-check">{t('brakeCheck')}</p>
-);
-if (record.tire_rotation) workTypes.push(
-  <p key="tire_rotation" className="work-type tire-rotation">{t('tireRotation')}</p>
-);
-if (record.coolant_flush) workTypes.push(
-  <p key="coolant_flush" className="work-type coolant-flush">{t('coolantFlush')}</p>
-);
+          <ul>
+            {getSortedRecords().length > 0 ? (
+              getSortedRecords().map(record => (
+                <li key={record.category ? `repair-${record.id}` : `maintenance-${record.id}`}>
+                  {record.category ? (
+                    <>
+                      <div className="record-group">
+                        <strong>🛠 {t(record.category)}</strong>
+                        {record.subcategory && <p>{t('subcategory')}: {t(record.subcategory)}</p>}
+                        {record.description && <p>{record.description}</p>}
+                        {record.mileage && <p>{t('mileageAtRepair')}: {record.mileage} км</p>}
+                        {record.date && <p key="date">📅 {t('date')}: {new Date(record.date).toLocaleDateString()}</p>}
+                      </div>
+                      {record.addbyservice && (
+                        <p className="added-by-service">
+                          {t('addedByService')} {record.serviceName && `(${record.serviceName})`}
+                        </p>
+                      )}
+                      <div className="button-container">
+                        <button onClick={() => { setEditRepair(record); setIsEditRepairModalOpen(true); }}>{t('edit')}</button>
+                        <button onClick={() => deleteRepair(record.id)}>{t('delete')}</button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="record-group">
+                        {(() => {
+                          const workTypes = [];
+                          if (record.oil_change) {
+                            workTypes.push(
+                              <p key="oil_change" className="work-type oil-change">
+                                {t('oilChange')}
+                                {record.oil_change_mileage ? ` ${t('at')} ${record.oil_change_mileage} км` : ''}
+                              </p>
+                            );
+                          }
+                          if (record.filter_change) workTypes.push(
+                            <p key="filter_change" className="work-type filter-change">{t('filterChange')}</p>
+                          );
+                          if (record.brake_check) workTypes.push(
+                            <p key="brake_check" className="work-type brake-check">{t('brakeCheck')}</p>
+                          );
+                          if (record.tire_rotation) workTypes.push(
+                            <p key="tire_rotation" className="work-type tire-rotation">{t('tireRotation')}</p>
+                          );
+                          if (record.coolant_flush) workTypes.push(
+                            <p key="coolant_flush" className="work-type coolant-flush">{t('coolantFlush')}</p>
+                          );
 
-                  if (record.oil_change_date) {
-                    workTypes.push(
-                      <p key="date">📅 {t('date')}: {new Date(record.oil_change_date).toLocaleDateString()}</p>
-                    );
-                  }
+                          if (record.oil_change_date) {
+                            workTypes.push(
+                              <p key="date">📅 {t('date')}: {new Date(record.oil_change_date).toLocaleDateString()}</p>
+                            );
+                          }
 
-                  return workTypes.length > 0 ? workTypes : <p>🔧 {t('noMaintenanceSelected')}</p>;
-                })()}
-              </div>
-              {record.addbyservice && <p className="added-by-service">{t('addedByService')} {record.serviceName && `(${record.serviceName})`}</p>}
-              {record.oil_change && record.oil_change_mileage && (
-                <div className={`circular-progress-wrapper ${
-                  (calculateRemainingMileage(car, maintenanceRecords) / calculateTotalMileageInterval(car)) * 100 < 30
-                    ? 'low'
-                    : (calculateRemainingMileage(car, maintenanceRecords) / calculateTotalMileageInterval(car)) * 100 < 60
-                    ? 'medium'
-                    : ''
-                }`}>
-                  <CircularProgressBar progress={calculateRemainingMileage(car, maintenanceRecords)} total={calculateTotalMileageInterval(car)} />
-                </div>
-              )}
-              <div className="button-container">
-                <button onClick={() => { setEditMaintenance(record); setIsEditMaintenanceModalOpen(true); }}>{t('edit')}</button>
-                <button onClick={() => deleteMaintenance(record.id)}>{t('delete')}</button>
-              </div>
-              {calculateRemainingMileage(car, maintenanceRecords) < 2000 && showWarning && (
-                <div className="oil-warning">
-                  <a href="https://dok.ua" target="_blank" rel="noopener noreferrer">
-                    <img src={banner} alt={t('oilChangeWarning')} />
-                  </a>
-                  <button className="close-button" onClick={() => setShowWarning(false)}>×</button>
-                </div>
-              )}
-            </>
-          )}
-        </li>
-      ))
-    ) : (
-      <p>{t('noRepairData')}</p>
-    )}
-  </ul>
-</div>
+                          return workTypes.length > 0 ? workTypes : <p>🔧 {t('noMaintenanceSelected')}</p>;
+                        })()}
+                      </div>
+                      {record.addbyservice && (
+                        <p className="added-by-service">
+                          {t('addedByService')} {record.serviceName && `(${record.serviceName})`}
+                        </p>
+                      )}
+                      {record.oil_change && record.oil_change_mileage && (
+                        <div className={`circular-progress-wrapper ${
+                          (calculateRemainingMileage(car, maintenanceRecords) / calculateTotalMileageInterval(car)) * 100 < 30
+                            ? 'low'
+                            : (calculateRemainingMileage(car, maintenanceRecords) / calculateTotalMileageInterval(car)) * 100 < 60
+                            ? 'medium'
+                            : ''
+                        }`}>
+                          <CircularProgressBar progress={calculateRemainingMileage(car, maintenanceRecords)} total={calculateTotalMileageInterval(car)} />
+                        </div>
+                      )}
+                      <div className="button-container">
+                        <button onClick={() => { setEditMaintenance(record); setIsEditMaintenanceModalOpen(true); }}>{t('edit')}</button>
+                        <button onClick={() => deleteMaintenance(record.id)}>{t('delete')}</button>
+                      </div>
+                      {calculateRemainingMileage(car, maintenanceRecords) < 2000 && showWarning && (
+                        <div className="oil-warning">
+                          <a href="https://dok.ua" target="_blank" rel="noopener noreferrer">
+                            <img src={banner} alt={t('oilChangeWarning')} />
+                          </a>
+                          <button className="close-button" onClick={() => setShowWarning(false)}>×</button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </li>
+              ))
+            ) : (
+              <p>{t('noRepairData')}</p>
+            )}
+          </ul>
+        </div>
       </div>
 
       {isRepairModalOpen && (

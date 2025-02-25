@@ -7,10 +7,16 @@ import ServiceDashboard from "./components/ServiceDashboard";
 import ServiceRegistrationForm from "./components/ServiceRegistrationForm";
 import './i18n';
 
-// Инициализация Supabase клиента
 const supabase = createClient(
   "https://uowtueztcqvaeqzhovqb.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvd3R1ZXp0Y3F2YWVxemhvdnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1MDYyNDYsImV4cCI6MjA1NDA4MjI0Nn0.R-pev2rQ3YqkO0SDoyYIK7a1ZfcyUa2ezpL3WTaddx8"
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvd3R1ZXp0Y3F2YWVxemhvdnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1MDYyNDYsImV4cCI6MjA1NDA4MjI0Nn0.R-pev2rQ3YqkO0SDoyYIK7a1ZfcyUa2ezpL3WTaddx8',
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    }
+  }
 );
 
 export default function App() {
@@ -22,6 +28,7 @@ export default function App() {
       const { data, error } = await supabase.auth.getSession();
       if (error) {
         console.error("Ошибка получения сессии:", error.message);
+        setUser(null);
         return;
       }
       const currentUser = data?.session?.user || null;
@@ -48,6 +55,7 @@ export default function App() {
     getSession();
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Событие авторизации:", event);
       const newUser = session?.user || null;
       setUser(newUser);
       if (newUser) {
@@ -65,6 +73,8 @@ export default function App() {
               navigate("/service-dashboard", { state: { user: newUser } });
             }
           });
+      } else {
+        navigate("/");
       }
     });
 
@@ -74,12 +84,25 @@ export default function App() {
   }, [navigate]);
 
   const handleLogout = async () => {
+    console.log("Начало процесса выхода");
     try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error("Ошибка при получении сессии:", sessionError.message);
+      }
+      if (!sessionData?.session) {
+        console.warn("Сессия отсутствует, очищаем состояние вручную");
+        setUser(null);
+        navigate("/");
+        return;
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error("Ошибка при выходе из системы:", error.message);
         return;
       }
+      console.log("Выход успешен");
       setUser(null);
       navigate("/");
     } catch (err) {
