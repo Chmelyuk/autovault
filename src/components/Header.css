@@ -1,6 +1,17 @@
-/* Header.css */
-
 /* Общие стили для Header */
+body {
+    background-color: #0a0a0a;
+    color: #c8cbcbf9;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+body.light-theme {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
 header {
     display: flex;
     justify-content: flex-end;
@@ -11,6 +22,12 @@ header {
     position: relative;
     border-bottom: 1px solid #333;
     min-height: 40px;
+}
+
+body.light-theme header {
+    background-color: #ffffff;
+    color: #333;
+    border-bottom: 1px solid #ddd;
 }
 
 /* Бургер-меню */
@@ -39,6 +56,10 @@ header {
     background-color: #e0e0e0;
     border-radius: 2px;
     transition: all 0.3s ease;
+}
+
+body.light-theme .burger-line {
+    background-color: #333;
 }
 
 /* Анимация для бургера при открытии */
@@ -71,6 +92,12 @@ header {
     z-index: 1000;
 }
 
+body.light-theme .dropdown-menu {
+    background-color: #ffffff;
+    color: #333;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
 /* Кнопки в выпадающем меню и кастомные кнопки */
 .dropdown-menu button,
 .custom-file-upload {
@@ -85,10 +112,21 @@ header {
     text-align: center;
 }
 
+body.light-theme .dropdown-menu button,
+body.light-theme .custom-file-upload {
+    color: #333;
+}
+
 .dropdown-menu button:hover,
 .custom-file-upload:hover {
     background-color: #6200ea;
     color: white;
+}
+
+body.light-theme .dropdown-menu button:hover,
+body.light-theme .custom-file-upload:hover {
+    background-color: #e0e0e0;
+    color: #333;
 }
 
 /* Скрываем стандартный input[type="file"] */
@@ -127,8 +165,16 @@ header {
     background: rgba(0, 0, 0, 0.5);
 }
 
+body.light-theme .qr-modal {
+    background: rgba(0, 0, 0, 0.3);
+}
+
 .qr-scanner-modal {
     background-color: rgba(0, 0, 0, 0.9);
+}
+
+body.light-theme .qr-scanner-modal {
+    background-color: rgba(0, 0, 0, 0.7);
 }
 
 .qr-content,
@@ -142,6 +188,12 @@ header {
     width: 400px;
     max-height: 80vh;
     overflow-y: auto;
+}
+
+body.light-theme .qr-content,
+body.light-theme .qr-scanner-content {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .qr-content {
@@ -208,16 +260,7 @@ header {
         right: 15px;
         top: 55px;
     }
-
-    /* Адаптивный логотип */
-   
-    header {
-        padding: 15px 20px;
-        /* Уменьшаем отступы для мобильных */
-    }
 }
-
- 
 
 /* Кнопки языка */
 .language-buttons {
@@ -227,15 +270,19 @@ header {
     margin-bottom: 10px;
     justify-content: center;
 }
-.language-header{
-color: #e0e0e0;
+
+.language-header {
+    color: #e0e0e0;
     font-size: 1rem;
     display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 10px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
 }
- 
+
+body.light-theme .language-header {
+    color: #333;
+}
 
 .language-buttons button {
     padding: 5px 10px;
@@ -244,6 +291,11 @@ color: #e0e0e0;
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 1rem;
+}
+
+body.light-theme .language-buttons button {
+    background-color: #f0f0f0;
+    border-color: #999;
 }
 
 .language-buttons button.active {
@@ -255,6 +307,10 @@ color: #e0e0e0;
 
 .language-buttons button:hover:not(.active) {
     background-color: #f0f0f0;
+}
+
+body.light-theme .language-buttons button:hover:not(.active) {
+    background-color: #e0e0e0;
 }
 
 /* Кнопки настроек и редактирования */
@@ -280,30 +336,114 @@ color: #e0e0e0;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
+body.light-theme .settings-edit-btns button,
+body.light-theme .button-group button {
+    background: linear-gradient(135deg, #e0e0e0, #d0d0d0);
+    color: #333;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
 .settings-edit-btns button:hover,
 .button-group button:hover {
     background: linear-gradient(135deg, #334155, #4c89af);
+}
+
+body.light-theme .settings-edit-btns button:hover,
+body.light-theme .button-group button:hover {
+    background: linear-gradient(135deg, #d0d0d0, #b0b0b0);
 }
 
 .button-group .delete-button {
     background: linear-gradient(135deg, #f44336, #ef5350);
 }
 
+body.light-theme .button-group .delete-button {
+    background: linear-gradient(135deg, #ff6666, #ff9999);
+}
+
 .button-group .delete-button:hover {
     background: linear-gradient(135deg, #ef5350, #e57373);
 }
 
+body.light-theme .button-group .delete-button:hover {
+    background: linear-gradient(135deg, #ff9999, #ffcccc);
+}
+
+/* Стили для переключателя темы */
+.theme-switch-container {
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-switch-label {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #e0e0e0;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+body.light-theme .theme-switch-label {
+    color: #333;
+}
+
+.theme-switch {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: relative;
+    width: 50px;
+    height: 24px;
+    background-color: #ccc;
+    border-radius: 24px;
+    transition: background-color 0.3s ease;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    top: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+
+.theme-switch:checked+.slider {
+    background-color: #4caf50;
+}
+
+.theme-switch:checked+.slider:before {
+    transform: translateX(26px);
+}
+
+.theme-switch-label:hover .slider {
+    background-color: #bbb;
+}
+
+.theme-switch:checked+.slider:hover {
+    background-color: #45a049;
+}
+
+/* Логотип */
 .logo-image {
     position: absolute;
     width: 20%;
-    /* Уменьшаем до 20% для десктопной версии */
     height: auto;
     left: 20px;
     top: -60px;
     object-fit: contain;
-    /* Убедимся, что изображение не искажается на всех устройствах */
     z-index: 15;
-    /* Устанавливаем z-index выше, чем у хедера, но ниже бургера */
 }
 
 @media (min-width: 1200px) {
@@ -311,30 +451,21 @@ color: #e0e0e0;
         width: 20%;
         left: 20px;
         top: -60px;
-        /* Десктопная версия (ширина > 1200px) */
     }
-
-     
 }
 
 @media (min-width: 768px) and (max-width: 1199px) {
     .logo-image {
-        
         width: 20%;
         left: 20px;
-         top: -20%;
-        /* Таблетки и средние экраны (768px - 1199px) */
+        top: -20%;
     }
-
-    
 }
 
 @media (min-width: 320px) and (max-width: 767px) {
     .logo-image {
-    width: 50%;
+        width: 50%;
         left: 10px;
         top: -25%;
-        /* Мобильные устройства (320px - 767px) */
     }
- 
 }

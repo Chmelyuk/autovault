@@ -159,8 +159,10 @@
   "view": "View:",
   "gpsON": "Tracker is on",
   "waitingGPS": "Waiting GPS",
-  "confirmDelete": "Confirm delete"
-  
+  "confirmDelete": "Confirm delete",
+  "theme": "Theme",
+  "dark": "Dark",
+  "light":"Light"  
 
 }
    

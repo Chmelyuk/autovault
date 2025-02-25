@@ -15,6 +15,11 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
   const [showAddCarModal, setShowAddCarModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showEditCarModal, setShowEditCarModal] = useState(false);
+  const [isDarkTheme, setIsDarkTheme] = useState(() => {
+    // Загружаем сохраненную тему из localStorage, по умолчанию темная
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme ? savedTheme === 'dark' : true;
+  });
   const [newCar, setNewCar] = useState({
     brand: '',
     model: '',
@@ -32,9 +37,10 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
   const { t, i18n } = useTranslation();
   const [car, setCar] = useState(selectedCar || null);
   const dropdownRef = useRef(null);
-useEffect(() => {
-  setCar(selectedCar || null);
-}, [selectedCar]);
+
+  useEffect(() => {
+    setCar(selectedCar || null);
+  }, [selectedCar]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -51,6 +57,20 @@ useEffect(() => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isDropdownOpen]);
+
+  // Применяем сохраненную тему при монтировании компонента
+  useEffect(() => {
+    document.body.classList.toggle('light-theme', !isDarkTheme);
+  }, [isDarkTheme]);
+
+  // Функция переключения темы с сохранением в localStorage
+  const toggleTheme = () => {
+    setIsDarkTheme(prev => {
+      const newTheme = !prev;
+      localStorage.setItem('theme', newTheme ? 'dark' : 'light');
+      return newTheme;
+    });
+  };
 
   const fetchBrands = async (input) => {
     const trimmedInput = input.trim();
@@ -156,13 +176,13 @@ useEffect(() => {
   };
 
   const toggleDropdown = (e) => {
-    e.stopPropagation(); // Предотвращаем всплытие события клика
-    setIsDropdownOpen((prev) => !prev); // Переключаем состояние дропдауна
+    e.stopPropagation();
+    setIsDropdownOpen((prev) => !prev);
   };
 
   const openAddCarModal = () => {
     setShowAddCarModal(true);
-    setIsDropdownOpen(false); // Закрываем дропдаун при открытии модала
+    setIsDropdownOpen(false);
   };
 
   const closeAddCarModal = () => {
@@ -171,7 +191,7 @@ useEffect(() => {
 
   const openSettingsModal = () => {
     setShowSettingsModal(true);
-    setIsDropdownOpen(false); // Закрываем дропдаун при открытии модала
+    setIsDropdownOpen(false);
   };
 
   const closeSettingsModal = () => {
@@ -180,7 +200,7 @@ useEffect(() => {
 
   const handleEditModalOpen = () => {
     setShowEditCarModal(true);
-    setShowSettingsModal(false); // Закрываем настройки при открытии редактирования
+    setShowSettingsModal(false);
   };
 
   const closeEditCarModal = () => {
@@ -226,7 +246,7 @@ useEffect(() => {
     }
     setQrData(selectedCar.id);
     setShowQRCode(true);
-    setIsDropdownOpen(false); // Закрываем дропдаун при открытии QR-кода
+    setIsDropdownOpen(false);
   };
 
   const handleScanSuccess = async (data) => {
@@ -288,7 +308,7 @@ useEffect(() => {
       fetchRepairs(carId);
       fetchMaintenance(carId);
       setShowQRScanner(false);
-      setIsDropdownOpen(false); // Закрываем дропдаун после успешного сканирования
+      setIsDropdownOpen(false);
     } catch (error) {
       console.error("❌ Ошибка при обработке данных из QR-кода:", error);
     }
@@ -382,9 +402,10 @@ useEffect(() => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>{t('settings')}</h3>
             <div className="settings-content">
-              <div className='language-header'> <span>{t('language')}: </span></div>
+              <div className='language-header'>
+                <span>{t('language')}: </span>
+              </div>
               <div className="language-buttons">
-                
                 <button 
                   className={i18n.language === 'en' ? 'active' : ''} 
                   onClick={() => i18n.changeLanguage('en')}
@@ -404,6 +425,20 @@ useEffect(() => {
                   🇺🇦
                 </button>
               </div>
+              
+              <div className="theme-switch-container">
+                <label className="theme-switch-label">
+                  {t('theme')}: {isDarkTheme ? t('dark') : t('light')}
+                  <input
+                    type="checkbox"
+                    checked={isDarkTheme}
+                    onChange={toggleTheme}
+                    className="theme-switch"
+                  />
+                  <span className="slider"></span>
+                </label>
+              </div>
+
               <div className='settings-edit-btns'>
                 <button onClick={handleEditModalOpen}>{t('editInfo')}</button>
                 <button onClick={openAddCarModal}>{t('addCar')}</button>
@@ -685,7 +720,7 @@ useEffect(() => {
         <div className="qr-modal" onClick={() => setShowQRCode(false)}>
           <div className="qr-content" onClick={(e) => e.stopPropagation()}>
             <QRCodeSVG value={qrData} size={312} level="H" margin={20} />
-            <button onClick={() => setShowQRCode(false)}>Close</button>
+            <button onClick={() => setShowQRCode(false)}>{t('close')}</button>
           </div>
         </div>
       )}
@@ -694,7 +729,7 @@ useEffect(() => {
         <div className="qr-scanner-modal" onClick={() => setShowQRScanner(false)}>
           <div className="qr-scanner-content" onClick={(e) => e.stopPropagation()}>
             <QRScanner onScanSuccess={handleScanSuccess} onScanError={handleScanError} />
-            <button onClick={() => setShowQRScanner(false)}>Close</button>
+            <button onClick={() => setShowQRScanner(false)}>{t('close')}</button>
           </div>
         </div>
       )}
