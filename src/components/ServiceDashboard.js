@@ -484,7 +484,7 @@ export default function ServiceDashboard({ user, handleLogout }) {
               <button className="add-button" onClick={() => { setSelectedCar(selectedCar); setIsMaintenanceModalOpen(true); }}>
                 {t('addMaintenance')}
               </button>
-              <button className="delete-button" onClick={() => deleteCar(selectedCar.id)}>{t('deleteCar')}</button>
+              <button className="add-button" onClick={() => deleteCar(selectedCar.id)}>{t('deleteCar')}</button>
               <button className="analytics-button" onClick={fetchAnalytics}>
                 {isLoadingAnalytics ? t('loadingAnalytics') : t('viewAnalytics')}
               </button>

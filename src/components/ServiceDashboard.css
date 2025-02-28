@@ -497,13 +497,27 @@ p {
     color: #495057;
     font-size: 16px;
 }
+@media (max-width: 768px) {
+    .analytics-button {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+}
 
+.analytics-button {
+    margin-right: 10px;
+}
 /* Стили для кнопок остаются, но добавляем улучшения */
 .analytics-button {
-    padding: 14px 28px;
-    font-size: 16px;
-    border-radius: 10px;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, #1E293B, #334155);
+        border: none;
+        border-radius: 12px;
+        padding: 12px 20px;
+        font-size: 16px;
+        color: #ffffff;
+        cursor: pointer;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .analytics-button {
