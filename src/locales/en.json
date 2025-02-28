@@ -162,7 +162,21 @@
   "confirmDelete": "Confirm delete",
   "theme": "Theme",
   "dark": "Dark",
-  "light":"Light"  
+  "light":"Light" ,
+  "fleet": "Fleet",
+  "noCarSelected": "No Car Selected",
+  "viewAnalytics": "View Analytics",
+  "loadingAnalytics": "Loading Analytics...",
+  "analytics": "Analytics",
+  "popularRepairs": "Popular Repairs",
+  "topRepairCategories": "Top Repair Categories",
+  "topRepairSubcategories": "Top Repair Subcategories",
+  "times": "{{count}} time{{count, plural, one {} other {s}}}",
+  "oilChangeIntervals": "Oil Change Intervals",
+  "avgMileageInterval": "Average Mileage Interval",
+  "avgMonthsInterval": "Average Months Interval",
+  "months": "months",
+   "noAnalyticsData": "No analytics data available"
 
 }
    
