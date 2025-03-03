@@ -23,10 +23,12 @@ export default function ServiceDashboard({ user, handleLogout }) {
     oilChange: false,
     oilChangeMileage: '',
     oilChangeDate: '',
-    filterChange: false,
+    airFilterChange: false, // Заменяем filterChange на airFilterChange
+    oilFilterChange: false, // Добавляем oilFilterChange
     brakeCheck: false,
     tireRotation: false,
     coolantFlush: false,
+    allSelected: false, // Добавляем для кнопки "Выбрать все"
   });
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -35,14 +37,15 @@ export default function ServiceDashboard({ user, handleLogout }) {
     setMaintenance((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
+      allSelected: false, // Сбрасываем allSelected при индивидуальном изменении
     }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (maintenance.oilChange && !maintenance.oilChangeDate) {
-      setErrorMessage('Введите дату замены масла.');
+    if (maintenance.oilChange && (!maintenance.oilChangeMileage || !maintenance.oilChangeDate)) {
+      setErrorMessage(t('fillOilChangeFields')); // Обновляем сообщение об ошибке
       return;
     }
 
@@ -50,7 +53,8 @@ export default function ServiceDashboard({ user, handleLogout }) {
       oil_change: maintenance.oilChange,
       oil_change_mileage: maintenance.oilChange ? maintenance.oilChangeMileage || null : null,
       oil_change_date: maintenance.oilChange ? maintenance.oilChangeDate || null : null,
-      filter_change: maintenance.filterChange,
+      air_filter_change: maintenance.airFilterChange, // Обновляем поля
+      oil_filter_change: maintenance.oilFilterChange, // Обновляем поля
       brake_check: maintenance.brakeCheck,
       tire_rotation: maintenance.tireRotation,
       coolant_flush: maintenance.coolantFlush,
@@ -63,10 +67,12 @@ export default function ServiceDashboard({ user, handleLogout }) {
       oilChange: false,
       oilChangeMileage: '',
       oilChangeDate: '',
-      filterChange: false,
+      airFilterChange: false,
+      oilFilterChange: false,
       brakeCheck: false,
       tireRotation: false,
       coolantFlush: false,
+      allSelected: false,
     });
   };
 
@@ -109,7 +115,7 @@ export default function ServiceDashboard({ user, handleLogout }) {
             id, category, subcategory, description, mileage, date, addbyservice, service_id
           ),
           maintenance (
-            id, oil_change, oil_change_mileage, oil_change_date, filter_change, brake_check, tire_rotation, coolant_flush, addbyservice, service_id, date
+            id, oil_change, oil_change_mileage, oil_change_date, air_filter_change, oil_filter_change, brake_check, tire_rotation, coolant_flush, addbyservice, service_id
           )
         `)
         .in('id', carIds);
@@ -163,7 +169,6 @@ export default function ServiceDashboard({ user, handleLogout }) {
 
       setCars(carsWithServiceNames);
 
-      // Восстановление выбранного автомобиля из localStorage
       const savedCarId = localStorage.getItem('selectedCarId');
       if (savedCarId) {
         const savedCar = carsWithServiceNames.find((car) => car.id === savedCarId);
@@ -303,7 +308,6 @@ export default function ServiceDashboard({ user, handleLogout }) {
     }
   }, [cars]);
 
-  // Сохраняем выбранный автомобиль в localStorage при его изменении
   useEffect(() => {
     if (selectedCar) {
       localStorage.setItem('selectedCarId', selectedCar.id);
@@ -384,7 +388,7 @@ export default function ServiceDashboard({ user, handleLogout }) {
       fetchCars();
       if (selectedCar && selectedCar.id === carId) {
         setSelectedCar(null);
-        localStorage.removeItem('selectedCarId'); // Удаляем сохраненный ID, если машина удалена
+        localStorage.removeItem('selectedCarId');
       }
     } catch (err) {
       console.error('Ошибка при удалении автомобиля:', err);
@@ -521,12 +525,13 @@ export default function ServiceDashboard({ user, handleLogout }) {
                 selectedCar.maintenance.map((m) => (
                   <div key={m.id} className="maintenance-entry">
                     {m.oil_change && <p>{t('oilChange')}: {m.oil_change_mileage} км</p>}
-                    {(m.oil_change_date || m.date) && (
+                    {(m.oil_change_date) && (
                       <p>
-                        {t('oilChangeDate')}: {new Date(m.oil_change_date || m.date).toLocaleDateString()}
+                        {t('oilChangeDate')}: {new Date(m.oil_change_date).toLocaleDateString()}
                       </p>
                     )}
-                    {m.filter_change && <p>{t('filterChange')}</p>}
+                    {m.air_filter_change && <p>{t('airFilterChange')}</p>}
+                    {m.oil_filter_change && <p>{t('oilFilterChange')}</p>}
                     {m.brake_check && <p>{t('brakeCheck')}</p>}
                     {m.tire_rotation && <p>{t('tireRotation')}</p>}
                     {m.coolant_flush && <p>{t('coolantFlush')}</p>}
@@ -653,76 +658,112 @@ export default function ServiceDashboard({ user, handleLogout }) {
               <h3>{t('addMaintenance')}</h3>
               {errorMessage && <p className="error-message">{errorMessage}</p>}
               <form onSubmit={handleSubmit}>
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="oilChange"
-                    checked={maintenance.oilChange}
-                    onChange={handleMaintenanceChange}
-                  />
-                  {t('oilChange')}
-                </label>
-
-                {maintenance.oilChange && (
-                  <>
+                <div className="modal-actions">
+                  <button
+                    className="select-all-btn"
+                    type="button"
+                    onClick={() => {
+                      const newValue = !maintenance.allSelected;
+                      setMaintenance((prev) => ({
+                        ...prev,
+                        oilChange: newValue,
+                        airFilterChange: newValue,
+                        oilFilterChange: newValue,
+                        brakeCheck: newValue,
+                        tireRotation: newValue,
+                        coolantFlush: newValue,
+                        allSelected: newValue,
+                      }));
+                    }}
+                  >
+                    {maintenance.allSelected ? t('deselectAll') : t('selectAll')}
+                  </button>
+                </div>
+                <div className="checkbox-group">
+                  <label className="checkbox-label">
                     <input
-                      type="number"
-                      name="oilChangeMileage"
-                      value={maintenance.oilChangeMileage}
+                      type="checkbox"
+                      name="oilChange"
+                      checked={maintenance.oilChange}
                       onChange={handleMaintenanceChange}
-                      placeholder={t('mileageAtOilChange')}
-                      className="form-input"
                     />
+                    {t('oilChange')}
+                  </label>
+                  {maintenance.oilChange && (
+                    <>
+                      <input
+                        type="number"
+                        name="oilChangeMileage"
+                        value={maintenance.oilChangeMileage}
+                        onChange={handleMaintenanceChange}
+                        placeholder={t('mileageAtOilChange')}
+                        className="form-input"
+                        required
+                      />
+                      <input
+                        type="date"
+                        name="oilChangeDate"
+                        value={maintenance.oilChangeDate}
+                        onChange={handleMaintenanceChange}
+                        className="form-input"
+                        required
+                      />
+                    </>
+                  )}
+                  <label className="checkbox-label">
                     <input
-                      type="date"
-                      name="oilChangeDate"
-                      value={maintenance.oilChangeDate}
+                      type="checkbox"
+                      name="airFilterChange"
+                      checked={maintenance.airFilterChange}
                       onChange={handleMaintenanceChange}
-                      className="form-input"
-                      required
                     />
-                  </>
-                )}
-
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="filterChange"
-                    checked={maintenance.filterChange}
-                    onChange={handleMaintenanceChange}
-                  />
-                  {t('filterChange')}
-                </label>
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="brakeCheck"
-                    checked={maintenance.brakeCheck}
-                    onChange={handleMaintenanceChange}
-                  />
-                  {t('brakeCheck')}
-                </label>
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="tireRotation"
-                    checked={maintenance.tireRotation}
-                    onChange={handleMaintenanceChange}
-                  />
-                  {t('tireRotation')}
-                </label>
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="coolantFlush"
-                    checked={maintenance.coolantFlush}
-                    onChange={handleMaintenanceChange}
-                  />
-                  {t('coolantFlush')}
-                </label>
-
+                    {t('airFilterChange')}
+                  </label>
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      name="oilFilterChange"
+                      checked={maintenance.oilFilterChange}
+                      onChange={handleMaintenanceChange}
+                    />
+                    {t('oilFilterChange')}
+                  </label>
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      name="brakeCheck"
+                      checked={maintenance.brakeCheck}
+                      onChange={handleMaintenanceChange}
+                    />
+                    {t('brakeCheck')}
+                  </label>
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      name="tireRotation"
+                      checked={maintenance.tireRotation}
+                      onChange={handleMaintenanceChange}
+                    />
+                    {t('tireRotation')}
+                  </label>
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      name="coolantFlush"
+                      checked={maintenance.coolantFlush}
+                      onChange={handleMaintenanceChange}
+                    />
+                    {t('coolantFlush')}
+                  </label>
+                </div>
                 <div className="form-buttons">
-                  <button type="submit" className="form-button submit-button">{t('save')}</button>
+                  <button
+                    type="submit"
+                    className="form-button submit-button"
+                    disabled={maintenance.oilChange && (!maintenance.oilChangeMileage || !maintenance.oilChangeDate)}
+                  >
+                    {t('save')}
+                  </button>
                   <button
                     type="button"
                     onClick={() => setIsMaintenanceModalOpen(false)}
