@@ -196,3 +196,10 @@
         max-width: 100%;
     }
 }
+
+@media (min-width: 768px) {
+    .car-details img {
+        max-width: 500px !important;
+        max-height: fit-content;
+    }
+}
