@@ -176,7 +176,9 @@
   "avgMileageInterval": "Average Mileage Interval",
   "avgMonthsInterval": "Average Months Interval",
   "months": "months",
-   "noAnalyticsData": "No analytics data available"
+   "noAnalyticsData": "No analytics data available",
+   "airFilterChange": "Air Filter Change",  
+  "oilFilterChange": "Oil Filter Change"
 
 }
    

@@ -30,11 +30,13 @@ export default function Dashboard({ user, supabase, handleLogout }) {
   const [repairDescription, setRepairDescription] = useState("");
   const [maintenance, setMaintenance] = useState({
     oilChange: false,
-    filterChange: false,
+    airFilterChange: false,
+    oilFilterChange: false,
     brakeCheck: false,
     tireRotation: false,
     coolantFlush: false,
     oilChangeMileage: "",
+    allSelected: false // Новое поле для отслеживания "все выбрано"
   });
   const [showWarning, setShowWarning] = useState(true);
   const [sortMode, setSortMode] = useState("dateDesc");
@@ -78,38 +80,38 @@ export default function Dashboard({ user, supabase, handleLogout }) {
     setRepairs(repairsWithServiceNames || []);
   }, [supabase, user]);
 
-  const fetchMaintenance = useCallback(async (carId) => {
-    if (!carId) return;
-    const { data, error } = await supabase
-      .from("maintenance")
-      .select("id, oil_change, oil_change_mileage, oil_change_date, filter_change, brake_check, tire_rotation, coolant_flush, addbyservice, service_id, user_id, car_id")
-      .eq("car_id", carId);
+ const fetchMaintenance = useCallback(async (carId) => {
+  if (!carId) return;
+  const { data, error } = await supabase
+    .from("maintenance")
+    .select("id, oil_change, oil_change_mileage, oil_change_date, air_filter_change, oil_filter_change, brake_check, tire_rotation, coolant_flush, addbyservice, service_id, user_id, car_id")
+    .eq("car_id", carId);
 
-    if (error) {
-      console.error("❌ Ошибка при загрузке ТО:", error.message);
-      setMaintenanceRecords([]);
-      return;
-    }
+  if (error) {
+    console.error("❌ Ошибка при загрузке ТО:", error.message);
+    setMaintenanceRecords([]);
+    return;
+  }
 
-    const maintenanceWithServiceNames = await Promise.all(
-      data.map(async (maint) => {
-        if (maint.service_id) {
-          const { data: serviceProfile, error: serviceError } = await supabase
-            .from("profiles")
-            .select("service_name")
-            .eq("id", maint.service_id)
-            .single();
-          if (serviceError) {
-            console.error("Ошибка загрузки сервиса:", serviceError.message);
-            return { ...maint, serviceName: "Unknown" };
-          }
-          return { ...maint, serviceName: serviceProfile?.service_name || "" };
+  const maintenanceWithServiceNames = await Promise.all(
+    data.map(async (maint) => {
+      if (maint.service_id) {
+        const { data: serviceProfile, error: serviceError } = await supabase
+          .from("profiles")
+          .select("service_name")
+          .eq("id", maint.service_id)
+          .single();
+        if (serviceError) {
+          console.error("Ошибка загрузки сервиса:", serviceError.message);
+          return { ...maint, serviceName: "Unknown" };
         }
-        return maint;
-      })
-    );
-    setMaintenanceRecords(maintenanceWithServiceNames || []);
-  }, [supabase, user]);
+        return { ...maint, serviceName: serviceProfile?.service_name || "" };
+      }
+      return maint;
+    })
+  );
+  setMaintenanceRecords(maintenanceWithServiceNames || []);
+}, [supabase, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchRepairCategories = useCallback(async () => {
     if (repairCategories.length > 0) return;
@@ -131,50 +133,43 @@ export default function Dashboard({ user, supabase, handleLogout }) {
 
     if (error) {
       console.error("❌ Ошибка при загрузке машин:", error.message);
+      setCars([]);
+      setCar(null);
+      setSelectedCarId(null);
+      localStorage.removeItem('selectedCarId');
     } else {
       setCars(data || []);
       const savedCarId = localStorage.getItem('selectedCarId');
-      const selectedCar = savedCarId
-        ? data.find(c => c.id === savedCarId) || (data.length > 0 ? data[0] : null)
-        : data.length > 0 ? data[0] : null;
-      setCar(selectedCar);
-      setSelectedCarId(selectedCar?.id || null);
-      if (selectedCar) {
-        await Promise.all([fetchRepairs(selectedCar.id), fetchMaintenance(selectedCar.id)]);
+      let selectedCar = null;
+
+      if (savedCarId) {
+        selectedCar = data.find(c => c.id === savedCarId);
       }
-    }
-  }, [user, supabase, fetchRepairs, fetchMaintenance]);
-
-  // Инициализация данных
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      if (!user) return;
-      const { data: carsData, error } = await supabase
-        .from("cars")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("❌ Ошибка при загрузке машин:", error.message);
-        return;
+      if (!selectedCar && data.length > 0) {
+        selectedCar = data[0];
       }
-
-      setCars(carsData || []);
-      const savedCarId = localStorage.getItem('selectedCarId');
-      const selectedCar = savedCarId ? carsData.find(c => c.id === savedCarId) : carsData[0];
 
       if (selectedCar) {
         setCar(selectedCar);
         setSelectedCarId(selectedCar.id);
         localStorage.setItem('selectedCarId', selectedCar.id);
         await Promise.all([fetchRepairs(selectedCar.id), fetchMaintenance(selectedCar.id)]);
+      } else {
+        setCar(null);
+        setSelectedCarId(null);
+        localStorage.removeItem('selectedCarId');
       }
+    }
+  }, [user, supabase, fetchRepairs, fetchMaintenance]);
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      if (!user) return;
+      await fetchCars();
       await fetchRepairCategories();
     };
-
     fetchInitialData();
-  }, [user, supabase, fetchRepairs, fetchMaintenance, fetchRepairCategories]);
+  }, [user, fetchCars, fetchRepairCategories]);
 
   const toggleViewMode = () => {
     setViewMode(viewMode === "tile" ? "list" : "tile");
@@ -212,52 +207,46 @@ export default function Dashboard({ user, supabase, handleLogout }) {
   };
 
   const addRepair = async () => {
-  if (!car || !repairCategory) {
-    alert(t("fillRequiredFields"));
-    return;
-  }
+    if (!car || !repairCategory) {
+      alert(t("fillRequiredFields"));
+      return;
+    }
 
-  console.log("repairCategory:", repairCategory);
-  console.log("repairCategories:", repairCategories);
+    const categoryName = repairCategory === "other"
+      ? customCategory || "Other"
+      : repairCategories.find(cat => String(cat.id) === String(repairCategory))?.name || "Other";
 
-  const categoryName = repairCategory === "other"
-    ? customCategory || "Other"
-    : repairCategories.find(cat => String(cat.id) === String(repairCategory))?.name || "Other";
+    const subcategoryName = repairSubcategory === "other"
+      ? customCategory
+      : repairSubcategories.find(sub => String(sub.id) === String(repairSubcategory))?.name || repairSubcategory;
 
-  const subcategoryName = repairSubcategory === "other"
-    ? customCategory
-    : repairSubcategories.find(sub => String(sub.id) === String(repairSubcategory))?.name || repairSubcategory;
+    const today = new Date().toISOString().split("T")[0];
+    const formattedDate = repairDate || today;
 
-  const today = new Date().toISOString().split("T")[0];
-  const formattedDate = repairDate || today;
+    const { data, error } = await supabase.from("repairs").insert([{
+      user_id: user.id,
+      car_id: car.id,
+      category: categoryName,
+      subcategory: subcategoryName || null,
+      description: repairDescription || null,
+      mileage: repairMileage ? parseInt(repairMileage) : null,
+      date: formattedDate,
+    }]).select("*");
 
-  console.log("Adding repair with category:", categoryName, "subcategory:", subcategoryName);
-
-  const { data, error } = await supabase.from("repairs").insert([{
-    user_id: user.id,
-    car_id: car.id,
-    category: categoryName,
-    subcategory: subcategoryName || null,
-    description: repairDescription || null,
-    mileage: repairMileage ? parseInt(repairMileage) : null,
-    date: formattedDate,
-  }]).select("*");
-
-  if (error) {
-    console.error("Ошибка при добавлении ремонта:", error.message);
-  } else {
-    setRepairs(prev => [...prev, ...data]);
-    setIsRepairModalOpen(false);
-    setRepairCategory("");
-    setRepairSubcategory("");
-    setCustomCategory("");
-    setRepairDescription("");
-    setRepairMileage("");
-    setRepairDate("");
-    if (repairMileage && parseInt(repairMileage) > car.mileage) updateCarMileage(parseInt(repairMileage));
-  }
-};
-
+    if (error) {
+      console.error("Ошибка при добавлении ремонта:", error.message);
+    } else {
+      setRepairs(prev => [...prev, ...data]);
+      setIsRepairModalOpen(false);
+      setRepairCategory("");
+      setRepairSubcategory("");
+      setCustomCategory("");
+      setRepairDescription("");
+      setRepairMileage("");
+      setRepairDate("");
+      if (repairMileage && parseInt(repairMileage) > car.mileage) updateCarMileage(parseInt(repairMileage));
+    }
+  };
 
   const addMaintenance = async () => {
     if (!car) return;
@@ -275,7 +264,8 @@ export default function Dashboard({ user, supabase, handleLogout }) {
       oil_change: maintenance.oilChange,
       oil_change_mileage: maintenance.oilChange ? (maintenance.oilChangeMileage || null) : null,
       oil_change_date: formattedDate,
-      filter_change: maintenance.filterChange,
+      air_filter_change: maintenance.airFilterChange,
+      oil_filter_change: maintenance.oilFilterChange,
       brake_check: maintenance.brakeCheck,
       tire_rotation: maintenance.tireRotation,
       coolant_flush: maintenance.coolantFlush,
@@ -288,11 +278,13 @@ export default function Dashboard({ user, supabase, handleLogout }) {
       setIsMaintenanceModalOpen(false);
       setMaintenance({
         oilChange: false,
-        filterChange: false,
+        airFilterChange: false,
+        oilFilterChange: false,
         brakeCheck: false,
         tireRotation: false,
         coolantFlush: false,
         oilChangeMileage: "",
+        allSelected: false
       });
       setMaintenanceDate("");
       if (maintenance.oilChange && maintenance.oilChangeMileage && maintenance.oilChangeMileage > car.mileage) {
@@ -308,7 +300,8 @@ export default function Dashboard({ user, supabase, handleLogout }) {
       .from("maintenance")
       .update({
         oil_change: editMaintenance.oil_change,
-        filter_change: editMaintenance.filter_change,
+        air_filter_change: editMaintenance.air_filter_change,
+        oil_filter_change: editMaintenance.oil_filter_change,
         brake_check: editMaintenance.brake_check,
         tire_rotation: editMaintenance.tire_rotation,
         coolant_flush: editMaintenance.coolant_flush,
@@ -324,6 +317,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
     } else {
       setMaintenanceRecords(prev => prev.map(m => m.id === data.id ? data : m));
       setIsEditMaintenanceModalOpen(false);
+      setEditMaintenance(null);
     }
   };
 
@@ -424,6 +418,19 @@ export default function Dashboard({ user, supabase, handleLogout }) {
     }
   };
 
+  const handleCarSelection = async (e) => {
+    const newSelectedCarId = e.target.value;
+    const selected = cars.find(c => c.id === newSelectedCarId) || null;
+    setSelectedCarId(newSelectedCarId);
+    setCar(selected);
+    if (selected) {
+      localStorage.setItem('selectedCarId', selected.id);
+      await Promise.all([fetchRepairs(selected.id), fetchMaintenance(selected.id)]);
+    } else {
+      localStorage.removeItem('selectedCarId');
+    }
+  };
+
   return (
     <>
       <Header
@@ -441,16 +448,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
           <select
             className="car-selector"
             value={selectedCarId || ""}
-            onChange={async (e) => {
-              const newSelectedCarId = e.target.value;
-              const selected = cars.find(c => c.id === newSelectedCarId) || null;
-              setSelectedCarId(newSelectedCarId);
-              setCar(selected);
-              if (selected) {
-                localStorage.setItem('selectedCarId', selected.id);
-                await Promise.all([fetchRepairs(selected.id), fetchMaintenance(selected.id)]);
-              }
-            }}
+            onChange={handleCarSelection}
           >
             {cars.length === 0 ? (
               <option value="">{t('noCarsAvailable')}</option>
@@ -540,8 +538,11 @@ export default function Dashboard({ user, supabase, handleLogout }) {
                               </p>
                             );
                           }
-                          if (record.filter_change) workTypes.push(
-                            <p key="filter_change" className="work-type filter-change">{t('filterChange')}</p>
+                          if (record.air_filter_change) workTypes.push(
+                            <p key="air_filter_change" className="work-type air-filter-change">{t('airFilterChange')}</p>
+                          );
+                          if (record.oil_filter_change) workTypes.push(
+                            <p key="oil_filter_change" className="work-type oil-filter-change">{t('oilFilterChange')}</p>
                           );
                           if (record.brake_check) workTypes.push(
                             <p key="brake_check" className="work-type brake-check">{t('brakeCheck')}</p>
@@ -579,7 +580,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
                         </div>
                       )}
                       <div className="button-container">
-                        <button onClick={() => { setEditMaintenance(record); setIsEditMaintenanceModalOpen(true); }}>{t('edit')}</button>
+                        <button onClick={() => { setEditMaintenance({ ...record, allSelected: false }); setIsEditMaintenanceModalOpen(true); }}>{t('edit')}</button>
                         <button onClick={() => deleteMaintenance(record.id)}>{t('delete')}</button>
                       </div>
                       {calculateRemainingMileage(car, maintenanceRecords) < 2000 && showWarning && (
@@ -638,42 +639,103 @@ export default function Dashboard({ user, supabase, handleLogout }) {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3 className="modal-title">{t('addMaintenance')}</h3>
             <div className="modal-actions">
-              <button className="select-all-btn" onClick={() => setMaintenance(prev => {
-                const allChecked = Object.values(prev).every(val => val);
-                return { oilChange: !allChecked, filterChange: !allChecked, brakeCheck: !allChecked, tireRotation: !allChecked, coolantFlush: !allChecked, oilChangeMileage: prev.oilChangeMileage };
-              })}>
-                {Object.values(maintenance).every(val => val) ? t('deselectAll') : t('selectAll')}
+              <button 
+                className="select-all-btn" 
+                onClick={() => {
+                  const newValue = !maintenance.allSelected;
+                  setMaintenance(prev => ({
+                    ...prev,
+                    oilChange: newValue,
+                    airFilterChange: newValue,
+                    oilFilterChange: newValue,
+                    brakeCheck: newValue,
+                    tireRotation: newValue,
+                    coolantFlush: newValue,
+                    allSelected: newValue
+                  }));
+                }}
+              >
+                {maintenance.allSelected ? t('deselectAll') : t('selectAll')}
               </button>
             </div>
             <div className="checkbox-group">
               <label className="checkbox-label">
-                <input type="checkbox" checked={maintenance.oilChange} onChange={(e) => setMaintenance({ ...maintenance, oilChange: e.target.checked })} />
+                <input 
+                  type="checkbox" 
+                  checked={maintenance.oilChange} 
+                  onChange={(e) => setMaintenance({ ...maintenance, oilChange: e.target.checked, allSelected: false })} 
+                />
                 {t('oilChange')}
               </label>
               {maintenance.oilChange && (
-                <input className="input-mileage" type="number" placeholder={t('mileageAtOilChange')} value={maintenance.oilChangeMileage} onChange={(e) => setMaintenance({ ...maintenance, oilChangeMileage: e.target.value })} />
+                <input 
+                  className="input-mileage" 
+                  type="number" 
+                  placeholder={t('mileageAtOilChange')} 
+                  value={maintenance.oilChangeMileage} 
+                  onChange={(e) => setMaintenance({ ...maintenance, oilChangeMileage: e.target.value })} 
+                />
               )}
               <label className="checkbox-label">
-                <input type="checkbox" checked={maintenance.filterChange} onChange={(e) => setMaintenance({ ...maintenance, filterChange: e.target.checked })} />
-                {t('filterChange')}
+                <input 
+                  type="checkbox" 
+                  checked={maintenance.airFilterChange} 
+                  onChange={(e) => setMaintenance({ ...maintenance, airFilterChange: e.target.checked, allSelected: false })} 
+                />
+                {t('airFilterChange')}
               </label>
               <label className="checkbox-label">
-                <input type="checkbox" checked={maintenance.brakeCheck} onChange={(e) => setMaintenance({ ...maintenance, brakeCheck: e.target.checked })} />
+                <input 
+                  type="checkbox" 
+                  checked={maintenance.oilFilterChange} 
+                  onChange={(e) => setMaintenance({ ...maintenance, oilFilterChange: e.target.checked, allSelected: false })} 
+                />
+                {t('oilFilterChange')}
+              </label>
+              <label className="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  checked={maintenance.brakeCheck} 
+                  onChange={(e) => setMaintenance({ ...maintenance, brakeCheck: e.target.checked, allSelected: false })} 
+                />
                 {t('brakeCheck')}
               </label>
               <label className="checkbox-label">
-                <input type="checkbox" checked={maintenance.tireRotation} onChange={(e) => setMaintenance({ ...maintenance, tireRotation: e.target.checked })} />
+                <input 
+                  type="checkbox" 
+                  checked={maintenance.tireRotation} 
+                  onChange={(e) => setMaintenance({ ...maintenance, tireRotation: e.target.checked, allSelected: false })} 
+                />
                 {t('tireRotation')}
               </label>
               <label className="checkbox-label">
-                <input type="checkbox" checked={maintenance.coolantFlush} onChange={(e) => setMaintenance({ ...maintenance, coolantFlush: e.target.checked })} />
+                <input 
+                  type="checkbox" 
+                  checked={maintenance.coolantFlush} 
+                  onChange={(e) => setMaintenance({ ...maintenance, coolantFlush: e.target.checked, allSelected: false })} 
+                />
                 {t('coolantFlush')}
               </label>
             </div>
-            <input type="date" value={maintenanceDate || ""} onChange={(e) => setMaintenanceDate(e.target.value)} />
+            <input 
+              type="date" 
+              value={maintenanceDate || ""} 
+              onChange={(e) => setMaintenanceDate(e.target.value)} 
+            />
             <div className="modal-buttons">
-              <button className="save-btn" onClick={addMaintenance} disabled={maintenance.oilChange && !maintenance.oilChangeMileage}>{t('save')}</button>
-              <button className="cancel-btn" onClick={() => setIsMaintenanceModalOpen(false)}>{t('cancel')}</button>
+              <button 
+                className="save-btn" 
+                onClick={addMaintenance} 
+                disabled={maintenance.oilChange && !maintenance.oilChangeMileage}
+              >
+                {t('save')}
+              </button>
+              <button 
+                className="cancel-btn" 
+                onClick={() => setIsMaintenanceModalOpen(false)}
+              >
+                {t('cancel')}
+              </button>
             </div>
           </div>
         </div>
@@ -683,31 +745,88 @@ export default function Dashboard({ user, supabase, handleLogout }) {
         <div className="modal" onClick={() => setIsEditMaintenanceModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>{t('editMaintenance')}</h3>
+            <div className="modal-actions">
+              <button 
+                className="select-all-btn" 
+                onClick={() => {
+                  const newValue = !editMaintenance?.allSelected;
+                  setEditMaintenance(prev => ({
+                    ...prev,
+                    oil_change: newValue,
+                    air_filter_change: newValue,
+                    oil_filter_change: newValue,
+                    brake_check: newValue,
+                    tire_rotation: newValue,
+                    coolant_flush: newValue,
+                    allSelected: newValue
+                  }));
+                }}
+              >
+                {editMaintenance?.allSelected ? t('deselectAll') : t('selectAll')}
+              </button>
+            </div>
             <form onSubmit={(e) => { e.preventDefault(); updateMaintenance(); }}>
               <label className="checkbox-label">
-                <input type="checkbox" checked={editMaintenance?.oil_change || false} onChange={(e) => setEditMaintenance({ ...editMaintenance, oil_change: e.target.checked })} />
+                <input 
+                  type="checkbox" 
+                  checked={editMaintenance?.oil_change || false} 
+                  onChange={(e) => setEditMaintenance({ ...editMaintenance, oil_change: e.target.checked, allSelected: false })} 
+                />
                 {t('oilChange')}
               </label>
               {editMaintenance?.oil_change && (
                 <>
-                  <input type="number" placeholder={t('mileageAtOilChange')} value={editMaintenance?.oil_change_mileage || ""} onChange={(e) => setEditMaintenance({ ...editMaintenance, oil_change_mileage: e.target.value })} />
-                  <input type="date" value={editMaintenance?.oil_change_date?.split("T")[0] || ""} onChange={(e) => setEditMaintenance({ ...editMaintenance, oil_change_date: e.target.value })} />
+                  <input 
+                    type="number" 
+                    placeholder={t('mileageAtOilChange')} 
+                    value={editMaintenance?.oil_change_mileage || ""} 
+                    onChange={(e) => setEditMaintenance({ ...editMaintenance, oil_change_mileage: e.target.value })} 
+                  />
+                  <input 
+                    type="date" 
+                    value={editMaintenance?.oil_change_date?.split("T")[0] || ""} 
+                    onChange={(e) => setEditMaintenance({ ...editMaintenance, oil_change_date: e.target.value })} 
+                  />
                 </>
               )}
               <label className="checkbox-label">
-                <input type="checkbox" checked={editMaintenance?.filter_change || false} onChange={(e) => setEditMaintenance({ ...editMaintenance, filter_change: e.target.checked })} />
-                {t('filterChange')}
+                <input 
+                  type="checkbox" 
+                  checked={editMaintenance?.air_filter_change || false} 
+                  onChange={(e) => setEditMaintenance({ ...editMaintenance, air_filter_change: e.target.checked, allSelected: false })} 
+                />
+                {t('airFilterChange')}
               </label>
               <label className="checkbox-label">
-                <input type="checkbox" checked={editMaintenance?.brake_check || false} onChange={(e) => setEditMaintenance({ ...editMaintenance, brake_check: e.target.checked })} />
+                <input 
+                  type="checkbox" 
+                  checked={editMaintenance?.oil_filter_change || false} 
+                  onChange={(e) => setEditMaintenance({ ...editMaintenance, oil_filter_change: e.target.checked, allSelected: false })} 
+                />
+                {t('oilFilterChange')}
+              </label>
+              <label className="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  checked={editMaintenance?.brake_check || false} 
+                  onChange={(e) => setEditMaintenance({ ...editMaintenance, brake_check: e.target.checked, allSelected: false })} 
+                />
                 {t('brakeCheck')}
               </label>
               <label className="checkbox-label">
-                <input type="checkbox" checked={editMaintenance?.tire_rotation || false} onChange={(e) => setEditMaintenance({ ...editMaintenance, tire_rotation: e.target.checked })} />
+                <input 
+                  type="checkbox" 
+                  checked={editMaintenance?.tire_rotation || false} 
+                  onChange={(e) => setEditMaintenance({ ...editMaintenance, tire_rotation: e.target.checked, allSelected: false })} 
+                />
                 {t('tireRotation')}
               </label>
               <label className="checkbox-label">
-                <input type="checkbox" checked={editMaintenance?.coolant_flush || false} onChange={(e) => setEditMaintenance({ ...editMaintenance, coolant_flush: e.target.checked })} />
+                <input 
+                  type="checkbox" 
+                  checked={editMaintenance?.coolant_flush || false} 
+                  onChange={(e) => setEditMaintenance({ ...editMaintenance, coolant_flush: e.target.checked, allSelected: false })} 
+                />
                 {t('coolantFlush')}
               </label>
               <button type="submit" disabled={editMaintenance?.oil_change && !editMaintenance?.oil_change_mileage}>{t('save')}</button>

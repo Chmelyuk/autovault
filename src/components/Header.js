@@ -7,7 +7,7 @@ import CarTracker from './CarTracker';
 import { supabase } from "../supabaseClient";
 import logo from '../components/logo.png';
 
-export default function Header({ user, handleLogout, openEditModal, fetchCars, fetchRepairs, fetchMaintenance, selectedCar, cars = [] }) {
+export default function Header({ user, handleLogout, fetchCars, fetchRepairs, fetchMaintenance, selectedCar, cars = [] }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
   const [qrData, setQrData] = useState(null);
@@ -16,10 +16,10 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showEditCarModal, setShowEditCarModal] = useState(false);
   const [isDarkTheme, setIsDarkTheme] = useState(() => {
-    // Загружаем сохраненную тему из localStorage, по умолчанию темная
     const savedTheme = localStorage.getItem('theme');
     return savedTheme ? savedTheme === 'dark' : true;
   });
+  const [hasLocationPermission, setHasLocationPermission] = useState(false); // Подняли состояние
   const [newCar, setNewCar] = useState({
     brand: '',
     model: '',
@@ -58,12 +58,10 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
     };
   }, [isDropdownOpen]);
 
-  // Применяем сохраненную тему при монтировании компонента
   useEffect(() => {
     document.body.classList.toggle('light-theme', !isDarkTheme);
   }, [isDarkTheme]);
 
-  // Функция переключения темы с сохранением в localStorage
   const toggleTheme = () => {
     setIsDarkTheme(prev => {
       const newTheme = !prev;
@@ -387,9 +385,23 @@ export default function Header({ user, handleLogout, openEditModal, fetchCars, f
         <img src={logo} alt="Car" className="logo-image" onError={(e) => { e.target.src = '/default-logo.png'; console.log("Ошибка загрузки логотипа, использовано запасное изображение"); }} />
       </div>
 
+      <CarTracker 
+        user={user} 
+        car={car} 
+        supabase={supabase} 
+        setCar={setCar} 
+        setHasLocationPermission={setHasLocationPermission} // Передаем setter
+      />
+
       {isDropdownOpen && (
         <div className="dropdown-menu" ref={dropdownRef}>
-          <CarTracker user={user} car={car} supabase={supabase} setCar={setCar} />
+          <div>
+            {hasLocationPermission ? (
+              <p>📍 {t('gpsON')}</p>
+            ) : (
+              <p>⏳ {t('waitingGPS')}</p>
+            )}
+          </div>
           <button onClick={openSettingsModal}>{t('settings')}</button>
           <button onClick={handleGenerateQRCode}>{t('generateQRCode')}</button>
           <button onClick={() => { setShowQRScanner(true); setIsDropdownOpen(false); }}>{t('scanQRCode')}</button>

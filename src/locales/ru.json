@@ -7,7 +7,7 @@
   "oilChange": "Замена масла",
   "filterChange": "Замена фильтра",
   "brakeCheck": "Проверка тормозов",
-  "tireRotation": "Ротация шин",
+  "tireRotation": "Смена резины",
   "coolantFlush": "Замена охлаждающей жидкости",
   "addRepair": "Добавить ремонт",
   "addMaintenance": "Добавить обслуживание",
@@ -213,7 +213,9 @@
    "AvgMileageInterval": "Средний интервал пробега",
   "AvgMonthsInterval": "Средний интервал месяцев",
   "months": "месяцев",
-  "null": "Нет данных"
+  "null": "Нет данных",
+  "airFilterChange": "Замена воздушного фильтра",  
+  "oilFilterChange": "Замена масляного фильтра"
   
 
 

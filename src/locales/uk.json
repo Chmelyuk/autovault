@@ -210,7 +210,9 @@
   "avgMonthsInterval": "Середній інтервал місяців",
   "months": "місяців",
     "noAnalyticsData": "Дані для аналітики відсутні",
-     "Petrol": "Бензин"
+     "Petrol": "Бензин",
+     "airFilterChange": "Заміна повітряного фільтра",  
+  "oilFilterChange": "Заміна масляного фільтра"
 
   
 
