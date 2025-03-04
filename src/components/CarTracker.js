@@ -3,23 +3,21 @@ import { useTranslation } from 'react-i18next';
 
 const SPEED_THRESHOLD_CAR = 30; // Минимальная скорость для автомобиля (км/ч)
 
-export default function CarTracker({ user, car, supabase, setCar }) {
+export default function CarTracker({ user, car, supabase, setCar, setHasLocationPermission }) {
   const { t } = useTranslation();
-  const [lastCoords, setLastCoords] = useState(null); // Для UI и последних координат
-  const [hasLocationPermission, setHasLocationPermission] = useState(false); // Статус доступа к геолокации
-  const lastCoordsRef = useRef(null); // Для логики отслеживания
+  const [lastCoords, setLastCoords] = useState(null);
+  const lastCoordsRef = useRef(null);
 
   useEffect(() => {
     if (!navigator.geolocation) {
       console.error("Геолокация не поддерживается вашим браузером");
-       
+      alert(t('geolocationNotSupported'));
       setHasLocationPermission(false);
       return;
     }
 
     if (!user || !car) return;
 
-    // Проверка начального статуса разрешения геолокации
     const checkPermission = async () => {
       if (navigator.permissions && navigator.permissions.query) {
         try {
@@ -45,14 +43,13 @@ export default function CarTracker({ user, car, supabase, setCar }) {
 
         console.log(`📍 Скорость: ${speedKmh} км/ч, Координаты: ${latitude}, ${longitude}`);
 
-        // Устанавливаем разрешение как true, если получили позицию
         setHasLocationPermission(true);
 
         if (speedKmh >= SPEED_THRESHOLD_CAR) {
           if (lastCoordsRef.current) {
             const distance = calculateDistance(lastCoordsRef.current, { latitude, longitude });
 
-            if (distance > 0.05) { // Только если проехали больше 50 метров
+            if (distance > 0.05) {
               console.log(`🛣 Пройдено: ${distance.toFixed(2)} км`);
               updateCarMileage(distance);
             }
@@ -63,7 +60,6 @@ export default function CarTracker({ user, car, supabase, setCar }) {
       },
       (error) => {
         console.error("❌ Ошибка геолокации:", error);
-        // Определяем статус разрешения на основе ошибки
         if (error.code === error.PERMISSION_DENIED) {
           setHasLocationPermission(false);
         }
@@ -75,11 +71,10 @@ export default function CarTracker({ user, car, supabase, setCar }) {
       console.log("Остановка отслеживания геолокации...");
       navigator.geolocation.clearWatch(watchId);
     };
-  }, [user, car, supabase, setCar, t]);
+  }, [user, car, supabase, setCar, setHasLocationPermission, t]);
 
-  // Функция расчёта расстояния между двумя координатами (Хаверсинова формула)
   function calculateDistance(coord1, coord2) {
-    const R = 6371; // Радиус Земли в км
+    const R = 6371;
     const dLat = toRad(coord2.latitude - coord1.latitude);
     const dLon = toRad(coord2.longitude - coord1.longitude);
     const lat1 = toRad(coord1.latitude);
@@ -89,14 +84,14 @@ export default function CarTracker({ user, car, supabase, setCar }) {
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Расстояние в км
+    return R * c;
   }
 
   function toRad(value) {
     return (value * Math.PI) / 180;
   }
 
-  const DEBOUNCE_DELAY = 5000; // Задержка 5 секунд между обновлениями
+  const DEBOUNCE_DELAY = 5000;
   const lastUpdateTime = useRef(0);
 
   async function updateCarMileage(distance) {
@@ -123,13 +118,5 @@ export default function CarTracker({ user, car, supabase, setCar }) {
     }
   }
 
-  return (
-    <div>
-      {hasLocationPermission ? (
-        <p>📍 {t('gpsON')}</p>
-      ) : (
-        <p>⏳ {t('waitingGPS')}</p>
-      )}
-    </div>
-  );
+  return null; // Компонент больше не рендерит UI здесь
 }
