@@ -11,8 +11,7 @@ export default function CarTracker({ user, car, supabase, setCar, setHasLocation
   useEffect(() => {
     if (!navigator.geolocation) {
       console.error("Геолокация не поддерживается вашим браузером");
-      alert(t('geolocationNotSupported'));
-      setHasLocationPermission(false);
+       setHasLocationPermission(false);
       return;
     }
 

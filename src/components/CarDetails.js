@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { supabase } from "../supabaseClient"; // Подключаем настроенный клиент
-import { useTranslation } from "react-i18next"; // Импортируем хук для перевода
+import { supabase } from "../supabaseClient";
+import { useTranslation } from "react-i18next";
 import './CarDetails.css';
 import logo_car from '../components/logo_car.png';
 
 export default function CarDetails({ user, car, setCar }) {
-  const { t } = useTranslation(); // Используем хук для перевода
+  const { t } = useTranslation();
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [year, setYear] = useState("");
@@ -19,10 +19,9 @@ export default function CarDetails({ user, car, setCar }) {
   const [turbocharged, setTurbocharged] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [carImage, setCarImage] = useState(
-  car ? localStorage.getItem(`carImage_${car.id}`) || logo_car : logo_car
-);
+    car ? localStorage.getItem(`carImage_${car.id}`) || logo_car : logo_car
+  );
 
-  // Функция для получения брендов
   const fetchBrands = async (input) => {
     const trimmedInput = input.trim();
     if (trimmedInput.length < 2) return;
@@ -44,7 +43,6 @@ export default function CarDetails({ user, car, setCar }) {
     }
   };
 
-  // Функция для получения моделей
   const fetchModels = async (input) => {
     const trimmedInput = input.trim();
     if (trimmedInput.length < 2) return;
@@ -66,7 +64,6 @@ export default function CarDetails({ user, car, setCar }) {
     }
   };
 
-  // Обработчики выбора
   const handleBrandSelect = (selectedBrand) => {
     setBrand(selectedBrand);
     setSuggestedBrands([]);
@@ -84,7 +81,6 @@ export default function CarDetails({ user, car, setCar }) {
     }, 200);
   };
 
-  // Обработчики ввода
   const handleBrandChange = (e) => {
     const value = e.target.value;
     setBrand(value);
@@ -97,7 +93,6 @@ export default function CarDetails({ user, car, setCar }) {
     fetchModels(value);
   };
 
-  // Функция для добавления машины
   const addCar = async () => {
     const newCar = { 
       brand, 
@@ -106,49 +101,45 @@ export default function CarDetails({ user, car, setCar }) {
       engine, 
       mileage, 
       vin, 
-      fuelType: fuelType,
-      transmissionType: transmissionType,
+      fuelType,
+      transmissionType,
       turbocharged,
       user_id: user.id 
     };
 
     const { data, error } = await supabase.from("cars").insert([newCar]).select("*").single();
     
-    if (error) {
-      console.error("Car insert error:", error.message);
-    } else {
+    if (!error) {
       setCar(data);
     }
   };
 
-useEffect(() => {
-  if (car) {
-    setCarImage(localStorage.getItem(`carImage_${car.id}`) || logo_car);
-  }
-}, [car]);
-
- const handleImageClick = () => {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result;
-        localStorage.setItem(`carImage_${car.id}`, result); // ✅ Сохраняем с ID машины
-        setCarImage(result);
-      };
-      reader.readAsDataURL(file);
+  useEffect(() => {
+    if (car) {
+      setCarImage(localStorage.getItem(`carImage_${car.id}`) || logo_car);
     }
+  }, [car]);
+
+  const handleImageClick = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result;
+          localStorage.setItem(`carImage_${car.id}`, result);
+          setCarImage(result);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
   };
-  input.click();
-};
 
-
-
-    return car ? (
+  return car ? (
     <div className="car-details">
       <h3 className="car-title">{t('yourCar')}</h3>
       <img
