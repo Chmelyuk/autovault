@@ -10,22 +10,31 @@
     max-width: 100%;
     padding: 20px;
     margin: 0 auto;
-    /* Центрирование контейнера */
 }
 
-/* Стили для изображения автомобиля */
-.car-details img {
+/* Контейнер для изображения */
+.car-image-container {
     width: 100%;
-    /* Занимает всю ширину контейнера */
     max-width: 400px;
     /* Ограничение ширины по умолчанию */
-    height: auto;
-    /* Сохранение пропорций */
+    height: 250px;
+    /* Фиксированная высота для обрезки */
+    overflow: hidden;
+    /* Обрезаем всё, что не помещается */
     border-radius: 10px;
     border: 2px solid #ffffff33;
     margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Стили для изображения автомобиля */
+.car-details .car-image {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    /* Обрезка изображения для сохранения пропорций */
+    /* Обрезаем изображение, если оно не подходит */
 }
 
 /* Контейнер информации */
@@ -163,25 +172,21 @@
 @media (max-width: 768px) {
     .car-details {
         padding: 15px;
-        /* Уменьшаем отступы */
     }
 
-    .car-details img {
+    .car-image-container {
         max-width: 100%;
-        /* Полная ширина на мобильных */
-        max-height: 250px;
-        /* Ограничение высоты для компактности */
+        height: 200px;
+        /* Уменьшаем высоту для мобильных */
     }
 
     .car-title {
         font-size: 20px;
-        /* Уменьшаем заголовок */
         margin-bottom: 15px;
     }
 
     .car-text {
         font-size: 14px;
-        /* Уменьшаем текст */
     }
 
     .details-button {
@@ -193,7 +198,6 @@
     .add-car-form {
         padding: 15px;
         max-width: 100%;
-        /* Полная ширина на мобильных */
     }
 }
 
@@ -202,8 +206,8 @@
         padding: 10px;
     }
 
-    .car-details img {
-        max-height: 200px;
+    .car-image-container {
+        height: 150px;
         /* Еще меньше для маленьких экранов */
     }
 
@@ -219,26 +223,3 @@
         font-size: 12px;
         padding: 6px 12px;
     }
-
-    .add-car-form input,
-    .add-car-form select {
-        font-size: 14px;
-        padding: 8px;
-    }
-
-    .add-car-form button {
-        font-size: 16px;
-        padding: 8px;
-    }
-}
-
-@media (min-width: 768px) {
-    .car-details img {
-        max-width: 500px !important;
-        height: auto;
-        /* Убираем фиксированную высоту */
-        object-fit: contain;
-        /* Показываем изображение целиком */
-    }
-}
-

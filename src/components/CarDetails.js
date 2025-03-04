@@ -127,32 +127,41 @@ export default function CarDetails({ user, car, setCar }) {
     input.accept = "image/*";
     input.onchange = (e) => {
       const file = e.target.files[0];
-      if (file) {
+      if (file && car && car.id) {
         const reader = new FileReader();
         reader.onload = () => {
           const result = reader.result;
-          if (car && car.id) {
-            localStorage.setItem(`carImage_${car.id}`, result);
-            setCarImage(result); // Устанавливаем чистый Data URL
-          } else {
-            console.error("Car ID is undefined, cannot save image.");
-          }
+          localStorage.setItem(`carImage_${car.id}`, result);
+          setCarImage(result);
+        };
+        reader.onerror = () => {
+          console.error("Ошибка загрузки изображения, используется стандартное.");
+          setCarImage(logo_car);
         };
         reader.readAsDataURL(file);
+      } else {
+        console.error("Нет файла или car.id, изображение не обновлено.");
       }
     };
     input.click();
   };
 
+  const handleImageError = () => {
+    setCarImage(logo_car); // Если изображение не загрузилось, используем стандартное
+  };
+
   return car ? (
     <div className="car-details">
       <h3 className="car-title">{t('yourCar')}</h3>
-      <img
-        src={carImage || logo_car} // Резервное изображение
-        alt="Car"
-        onClick={handleImageClick}
-        className="car-image"
-      />
+      <div className="car-image-container">
+        <img
+          src={carImage}
+          alt="Car"
+          onClick={handleImageClick}
+          onError={handleImageError}
+          className="car-image"
+        />
+      </div>
       <div className="info">
         <p className="car-text">{car.brand} {car.model} ({car.year})</p>
         <p className="car-text">{t('mileage')}: {car.mileage} {t('km')}</p>
