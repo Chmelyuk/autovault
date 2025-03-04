@@ -42,22 +42,7 @@ export default function Header({ user, handleLogout, fetchCars, fetchRepairs, fe
     setCar(selectedCar || null);
   }, [selectedCar]);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    if (isDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isDropdownOpen]);
-
+  
   useEffect(() => {
     document.body.classList.toggle('light-theme', !isDarkTheme);
   }, [isDarkTheme]);
