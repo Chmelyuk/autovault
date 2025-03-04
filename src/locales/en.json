@@ -178,7 +178,8 @@
   "months": "months",
    "noAnalyticsData": "No analytics data available",
    "airFilterChange": "Air Filter Change",  
-  "oilFilterChange": "Oil Filter Change"
+  "oilFilterChange": "Oil Filter Change",
+   "noCarsAvailable": "No cars available"
 
 }
    

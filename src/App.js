@@ -29,51 +29,66 @@ export default function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log("useEffect triggered for initial session check");
+
     const getSession = async () => {
       const { data, error } = await supabase.auth.getSession();
       if (error) {
+        console.log("Session error:", error.message);
         setUser(null);
-        navigate("/");
         return;
       }
 
       const currentUser = data?.session?.user || null;
       setUser(currentUser);
+      console.log("Initial user:", currentUser);
 
       if (currentUser) {
-        const { data: userData, error: profileError } = await supabase
-          .from("profiles")
-          .select("is_service")
-          .eq("id", currentUser.id)
-          .single();
+        try {
+          const { data: userData, error: profileError } = await supabase
+            .from("profiles")
+            .select("is_service")
+            .eq("id", currentUser.id)
+            .single();
 
-        if (profileError) {
-          if (profileError.code === "PGRST116" || profileError.status === 406) {
-            const { error: insertError } = await supabase
-              .from("profiles")
-              .insert({ id: currentUser.id, is_service: false });
-            if (insertError) {
-              navigate("/service-registration");
+          if (profileError) {
+            // Если профиля нет, создаём его с is_service: false по умолчанию
+            if (profileError.code === "PGRST116") {
+              const { error: insertError } = await supabase
+                .from("profiles")
+                .insert({ id: currentUser.id, is_service: false });
+              if (insertError) {
+                console.log("Insert profile error:", insertError);
+                navigate("/service-registration");
+                return;
+              }
+              console.log("Profile created, navigating to /");
+              navigate("/"); // Обычный пользователь идёт на Dashboard
             } else {
-              navigate("/");
+              console.log("Profile error:", profileError);
+              navigate("/service-registration");
             }
+            return;
           }
-          return;
-        }
 
-        if (userData?.is_service) {
-          navigate("/service-dashboard", { state: { user: currentUser } });
-        } else {
-          navigate("/");
+          if (userData?.is_service) {
+            console.log("Navigating to /service-dashboard");
+            navigate("/service-dashboard", { state: { user: currentUser } });
+          } else {
+            console.log("Navigating to /");
+            navigate("/");
+          }
+        } catch (error) {
+          console.log("Unknown error:", error);
+          navigate("/service-registration");
         }
-      } else {
-        navigate("/");
       }
     };
 
     getSession();
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event);
       const newUser = session?.user || null;
       setUser(newUser);
 
@@ -85,17 +100,22 @@ export default function App() {
           .single()
           .then(({ data, error }) => {
             if (error) {
-              if (error.code === "PGRST116" || error.status === 406) {
+              if (error.code === "PGRST116") {
                 supabase
                   .from("profiles")
                   .insert({ id: newUser.id, is_service: false })
                   .then(({ error: insertError }) => {
                     if (insertError) {
+                      console.log("Insert profile error in listener:", insertError);
                       navigate("/service-registration");
                     } else {
+                      console.log("Profile created in listener, navigating to /");
                       navigate("/");
                     }
                   });
+              } else {
+                console.log("Profile fetch error in listener:", error);
+                navigate("/service-registration");
               }
               return;
             }
@@ -105,8 +125,6 @@ export default function App() {
               navigate("/");
             }
           });
-      } else {
-        navigate("/");
       }
     });
 
@@ -119,12 +137,13 @@ export default function App() {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
+        console.log('Ошибка выхода:', error.message, error.status, error.code);
         return;
       }
       setUser(null);
       navigate("/");
     } catch (err) {
-      // Игнорируем неизвестные ошибки
+      console.log('Неизвестная ошибка при выходе:', err);
     }
   };
 

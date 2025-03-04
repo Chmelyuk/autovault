@@ -24,29 +24,38 @@ export default function AuthForm({ setUser, supabase }) {
 
   const handleLogin = async () => {
     setError('');
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setError(error.message);
-    else setUser(data.user);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        console.log('Ошибка входа:', error.message, error.status, error.code);
+        throw error;
+      }
+      setUser(data.user);
+      console.log('Login successful, navigating to dashboard');
+      navigate('/');
+    } catch (error) {
+      setError(error.message || t('loginError'));
+    }
   };
- const setErrorWithTimeout = (message) => {
+
+  const setErrorWithTimeout = (message) => {
     setError(message);
-    setTimeout(() => setError(''), 3000); // Очистка ошибки через 3 секунды
+    setTimeout(() => setError(''), 3000);
   };
+
   const handleOtpSignUp = async () => {
     setError('');
-     
-    
-if (!email || !password) {
-      setErrorWithTimeout(t('enterEmailAndPassword'));
+    if (!email || !password || !isChecked) {
+      setErrorWithTimeout(t('enterEmailPasswordAndAgree'));
       return;
     }
-
     try {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
-      const { otpError } = await supabase.auth.signInWithOtp({ email });
-      if (otpError) throw otpError;
-      setShowOtpInput(true);
+      const { error } = await supabase.auth.signInWithOtp({ email });
+      if (error) {
+        console.log('Ошибка отправки OTP:', error.message, error.status, error.code);
+        throw error;
+      }
+      setShowOtpInput(true); // Показываем только OTP-блок
       setIsOtpSent(true);
       setTimeout(() => {
         setIsOtpSent(false);
@@ -60,9 +69,18 @@ if (!email || !password) {
   const handleVerifyOtp = async () => {
     setError('');
     try {
-      const { data, error } = await supabase.auth.verifyOtp({ email, token: otp, type: 'signup' });
-      if (error) throw error;
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token: otp,
+        type: 'email',
+      });
+      if (error) {
+        console.log('Ошибка верификации OTP:', error.message, error.status, error.code);
+        throw error;
+      }
       setUser(data.user);
+      console.log('OTP verified, navigating to dashboard');
+      navigate('/');
     } catch (error) {
       setError(error.message || t('invalidOTP'));
     }
@@ -76,22 +94,21 @@ if (!email || !password) {
     setShowModal(false);
   };
 
-  const navigateToServiceRegistration = () => {
-    navigate('/autovault/service-registration');
-  };
+ const navigateToServiceRegistration = (e) => {
+  e.preventDefault();
+  console.log('Button clicked! Navigating to /service-registration');
+  navigate('/service-registration'); // работает, так как basename уже учтён в маршрутах
+};
 
   return (
-    
     <div className="auth-container">
       <img src={logo} alt="Car" className="logo-image" />
       <div className="language-auth-buttons">
-          <button onClick={() => changeLanguage('en')}>English</button>
-          <button onClick={() => changeLanguage('ru')}>Русский</button>
-          <button onClick={() => changeLanguage('uk')}>Українська</button>
-        </div>
+        <button onClick={() => changeLanguage('en')}>English</button>
+        <button onClick={() => changeLanguage('ru')}>Русский</button>
+        <button onClick={() => changeLanguage('uk')}>Українська</button>
+      </div>
       <div className="auth-box">
-        
-
         <h2 className="auth-title">{t('signInSignUp')}</h2>
         <input
           type="email"
@@ -107,18 +124,33 @@ if (!email || !password) {
           onChange={(e) => setPassword(e.target.value)}
           className="auth-input"
         />
-        <button onClick={handleLogin} className="auth-button">{t('signIn')}</button>
-        <button
-          onClick={handleOtpSignUp}
-          className={`auth-button secondary ${!isChecked ? 'disabled' : ''}`}
-          disabled={!isChecked}
-        >
-          {t('registerWithOTP')}
-        </button>
-        <button onClick={navigateToServiceRegistration} className="auth-button secondary">
-          {t('registerService')}
-        </button>
-        {showOtpInput && (
+
+        {!showOtpInput ? (
+          <>
+            <button
+              type="button"
+              onClick={handleLogin}
+              className="auth-button"
+            >
+              {t('signIn')}
+            </button>
+            <button
+              type="button"
+              onClick={handleOtpSignUp}
+              className={`auth-button secondary ${!isChecked ? 'disabled' : ''}`}
+              disabled={!isChecked || isOtpSent}
+            >
+              {isOtpSent ? t('otpSent') : t('registerWithOTP')}
+            </button>
+            <button
+              type="button"
+              onClick={navigateToServiceRegistration}
+              className="auth-button secondary"
+            >
+              {t('registerService')}
+            </button>
+          </>
+        ) : (
           <div className="otp-container">
             <input
               type="text"
@@ -127,9 +159,16 @@ if (!email || !password) {
               onChange={(e) => setOtp(e.target.value)}
               className="auth-input"
             />
-            <button onClick={handleVerifyOtp} className="auth-button">{t('verifyOTP')}</button>
+            <button
+              type="button"
+              onClick={handleVerifyOtp}
+              className="auth-button"
+            >
+              {t('verifyOTP')}
+            </button>
           </div>
         )}
+
         {error && <p className="auth-error">{error}</p>}
         
         <div className="terms-checkbox-container">

@@ -215,7 +215,8 @@
   "months": "месяцев",
   "null": "Нет данных",
   "airFilterChange": "Замена воздушного фильтра",  
-  "oilFilterChange": "Замена масляного фильтра"
+  "oilFilterChange": "Замена масляного фильтра",
+  "noCarsAvailable": "Автомобили отсутствуют"
   
 
 

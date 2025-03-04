@@ -212,8 +212,8 @@
     "noAnalyticsData": "Дані для аналітики відсутні",
      "Petrol": "Бензин",
      "airFilterChange": "Заміна повітряного фільтра",  
-  "oilFilterChange": "Заміна масляного фільтра"
-
+  "oilFilterChange": "Заміна масляного фільтра",
+   "noCarsAvailable": "Автом відсутні"
   
 
   

@@ -6,7 +6,7 @@ import TermsAndConditions from './TermsAndConditions';
 import logo from '../components/logo.png';
 
 
-export default function AuthForm({ supabase }) {
+export default function ServiceRegistrationForm({ supabase }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [serviceName, setServiceName] = useState('');
