@@ -116,7 +116,8 @@ export default function CarDetails({ user, car, setCar }) {
 
   useEffect(() => {
     if (car) {
-      setCarImage(localStorage.getItem(`carImage_${car.id}`) || logo_car);
+      const storedImage = localStorage.getItem(`carImage_${car.id}`);
+      setCarImage(storedImage ? `${storedImage}?t=${new Date().getTime()}` : logo_car);
     }
   }, [car]);
 
@@ -131,7 +132,7 @@ export default function CarDetails({ user, car, setCar }) {
         reader.onload = () => {
           const result = reader.result;
           localStorage.setItem(`carImage_${car.id}`, result);
-          setCarImage(result);
+          setCarImage(`${result}?t=${new Date().getTime()}`);
         };
         reader.readAsDataURL(file);
       }
