@@ -115,9 +115,9 @@ export default function CarDetails({ user, car, setCar }) {
   };
 
   useEffect(() => {
-    if (car) {
+    if (car && car.id) {
       const storedImage = localStorage.getItem(`carImage_${car.id}`);
-      setCarImage(storedImage ? `${storedImage}?t=${new Date().getTime()}` : logo_car);
+      setCarImage(storedImage || logo_car);
     }
   }, [car]);
 
@@ -131,8 +131,12 @@ export default function CarDetails({ user, car, setCar }) {
         const reader = new FileReader();
         reader.onload = () => {
           const result = reader.result;
-          localStorage.setItem(`carImage_${car.id}`, result);
-          setCarImage(`${result}?t=${new Date().getTime()}`);
+          if (car && car.id) {
+            localStorage.setItem(`carImage_${car.id}`, result);
+            setCarImage(result); // Устанавливаем чистый Data URL
+          } else {
+            console.error("Car ID is undefined, cannot save image.");
+          }
         };
         reader.readAsDataURL(file);
       }
@@ -144,7 +148,7 @@ export default function CarDetails({ user, car, setCar }) {
     <div className="car-details">
       <h3 className="car-title">{t('yourCar')}</h3>
       <img
-        src={carImage}
+        src={carImage || logo_car} // Резервное изображение
         alt="Car"
         onClick={handleImageClick}
         className="car-image"
