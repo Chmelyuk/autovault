@@ -134,27 +134,42 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
-      // Проверяем, есть ли сессия перед выходом
+      // Проверяем текущую сессию
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData?.session) {
+      if (sessionError) {
+        console.log("Session check error:", sessionError.message);
+        setUser(null);
+        navigate("/");
+        return;
+      }
+
+      if (!sessionData?.session) {
         console.log("No active session found, skipping signOut");
         setUser(null);
         navigate("/");
         return;
       }
 
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.log('Ошибка выхода:', error.message, error.status, error.code);
-        return;
+      // Если сессия есть, выполняем signOut
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) {
+        console.log('Sign out error:', signOutError.message, signOutError.status, signOutError.code);
+        // Если ошибка "Auth session missing", всё равно завершаем процесс
+        if (signOutError.message === "Auth session missing!") {
+          console.log("Session already missing on server, proceeding with logout");
+        } else {
+          throw signOutError; // Другие ошибки передаём в catch
+        }
+      } else {
+        console.log("Successfully signed out");
       }
-      console.log("Successfully signed out");
+
       setUser(null);
       navigate("/");
     } catch (err) {
-      console.log('Неизвестная ошибка при выходе:', err);
-      setUser(null); // На всякий случай сбрасываем состояние
-      navigate("/");
+      console.log('Unexpected error during logout:', err);
+      setUser(null);
+      navigate("/"); // В любом случае завершаем выход
     }
   };
 
