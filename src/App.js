@@ -52,7 +52,6 @@ export default function App() {
             .single();
 
           if (profileError) {
-            // Если профиля нет, создаём его с is_service: false по умолчанию
             if (profileError.code === "PGRST116") {
               const { error: insertError } = await supabase
                 .from("profiles")
@@ -63,7 +62,7 @@ export default function App() {
                 return;
               }
               console.log("Profile created, navigating to /");
-              navigate("/"); // Обычный пользователь идёт на Dashboard
+              navigate("/");
             } else {
               console.log("Profile error:", profileError);
               navigate("/service-registration");
@@ -135,15 +134,27 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
+      // Проверяем, есть ли сессия перед выходом
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData?.session) {
+        console.log("No active session found, skipping signOut");
+        setUser(null);
+        navigate("/");
+        return;
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.log('Ошибка выхода:', error.message, error.status, error.code);
         return;
       }
+      console.log("Successfully signed out");
       setUser(null);
       navigate("/");
     } catch (err) {
       console.log('Неизвестная ошибка при выходе:', err);
+      setUser(null); // На всякий случай сбрасываем состояние
+      navigate("/");
     }
   };
 
