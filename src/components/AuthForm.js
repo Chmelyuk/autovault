@@ -15,7 +15,6 @@ export default function AuthForm({ setUser, supabase }) {
   const [isChecked, setIsChecked] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const { t, i18n } = useTranslation();
-  
   const navigate = useNavigate();
 
   const changeLanguage = (language) => {
@@ -26,41 +25,34 @@ export default function AuthForm({ setUser, supabase }) {
     setError('');
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        console.log('Ошибка входа:', error.message, error.status, error.code);
-        throw error;
-      }
+      if (error) throw error;
       setUser(data.user);
-      console.log('Login successful, navigating to dashboard');
       navigate('/');
     } catch (error) {
       setError(error.message || t('loginError'));
     }
   };
 
-  const setErrorWithTimeout = (message) => {
-    setError(message);
-    setTimeout(() => setError(''), 3000);
-  };
-
   const handleOtpSignUp = async () => {
     setError('');
     if (!email || !password || !isChecked) {
-      setErrorWithTimeout(t('enterEmailPasswordAndAgree'));
+      setError(t('enterEmailPasswordAnd Agree'));
+      setTimeout(() => setError(''), 3000);
       return;
     }
     try {
-      const { error } = await supabase.auth.signInWithOtp({ email });
-      if (error) {
-        console.log('Ошибка отправки OTP:', error.message, error.status, error.code);
-        throw error;
-      }
-      setShowOtpInput(true); // Показываем только OTP-блок
+      // Регистрация с отправкой OTP
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`, // Опционально: куда перенаправить после подтверждения
+        },
+      });
+      if (error) throw error;
+      setShowOtpInput(true);
       setIsOtpSent(true);
-      setTimeout(() => {
-        setIsOtpSent(false);
-        setError('');
-      }, 60000);
+      setTimeout(() => setIsOtpSent(false), 60000);
     } catch (error) {
       setError(error.message || t('registrationError'));
     }
@@ -72,13 +64,14 @@ export default function AuthForm({ setUser, supabase }) {
       const { data, error } = await supabase.auth.verifyOtp({
         email,
         token: otp,
-        type: 'email',
+        type: 'signup', // Тип OTP для регистрации
       });
-      if (error) {
-        console.log('Ошибка верификации OTP:', error.message, error.status, error.code);
-        throw error;
-      }
+      if (error) throw error;
       setUser(data.user);
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .upsert({ id: data.user.id, is_service: false });
+      if (profileError) throw profileError;
       console.log('OTP verified, navigating to dashboard');
       navigate('/');
     } catch (error) {
@@ -86,19 +79,9 @@ export default function AuthForm({ setUser, supabase }) {
     }
   };
 
-  const handleCheckboxChange = () => {
-    setIsChecked(!isChecked);
+  const navigateToServiceRegistration = () => {
+    navigate('/service-registration');
   };
-
-  const handleModalClose = () => {
-    setShowModal(false);
-  };
-
- const navigateToServiceRegistration = (e) => {
-  e.preventDefault();
-  console.log('Button clicked! Navigating to /service-registration');
-  navigate('/service-registration'); // работает, так как basename уже учтён в маршрутах
-};
 
   return (
     <div className="auth-container">
@@ -127,11 +110,7 @@ export default function AuthForm({ setUser, supabase }) {
 
         {!showOtpInput ? (
           <>
-            <button
-              type="button"
-              onClick={handleLogin}
-              className="auth-button"
-            >
+            <button type="button" onClick={handleLogin} className="auth-button">
               {t('signIn')}
             </button>
             <button
@@ -159,24 +138,20 @@ export default function AuthForm({ setUser, supabase }) {
               onChange={(e) => setOtp(e.target.value)}
               className="auth-input"
             />
-            <button
-              type="button"
-              onClick={handleVerifyOtp}
-              className="auth-button"
-            >
+            <button type="button" onClick={handleVerifyOtp} className="auth-button">
               {t('verifyOTP')}
             </button>
           </div>
         )}
 
         {error && <p className="auth-error">{error}</p>}
-        
+
         <div className="terms-checkbox-container">
           <input
             type="checkbox"
             id="terms"
             checked={isChecked}
-            onChange={handleCheckboxChange}
+            onChange={() => setIsChecked(!isChecked)}
             className="terms-checkbox"
           />
           <label htmlFor="terms" className="terms-label">
@@ -192,7 +167,9 @@ export default function AuthForm({ setUser, supabase }) {
         <div className="modal-overlay">
           <div className="modal-content">
             <TermsAndConditions />
-            <button onClick={handleModalClose} className="modal-close-button">{t('close')}</button>
+            <button onClick={() => setShowModal(false)} className="modal-close-button">
+              {t('close')}
+            </button>
           </div>
         </div>
       )}

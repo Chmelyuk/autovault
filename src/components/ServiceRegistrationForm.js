@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import TermsAndConditions from './TermsAndConditions';
 import logo from '../components/logo.png';
 
-
 export default function ServiceRegistrationForm({ supabase }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,27 +13,29 @@ export default function ServiceRegistrationForm({ supabase }) {
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [showOtpInput, setShowOtpInput] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(true);
   const [error, setError] = useState('');
-  const { t, i18n } = useTranslation();
-  const navigate = useNavigate(); 
+  const [isChecked, setIsChecked] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [isChecked, setIsChecked] = useState(false); // Состояние чекбокса
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
 
   const handleModalClose = () => {
     setShowModal(false);
   };
 
   const handleServiceSignUp = async () => {
-    if (!isChecked) return; // Блокируем регистрацию, если чекбокс не отмечен
+    if (!isChecked) return;
     setError('');
     setShowOtpInput(true);
     try {
-      const { error: authError } = await supabase.auth.signUp({ email, password });
+      const { error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/service-dashboard`, // Опционально
+        },
+      });
       if (authError) throw authError;
-
-      const { error: otpError } = await supabase.auth.signInWithOtp({ email });
-      if (otpError) throw otpError;
     } catch (error) {
       setError(error.message || t('registrationError'));
     }
@@ -49,7 +50,7 @@ export default function ServiceRegistrationForm({ supabase }) {
       });
       if (otpError) throw otpError;
 
-      const { error: profileError } = await supabase.from('profiles').insert([
+      const { error: profileError } = await supabase.from('profiles').upsert([
         {
           id: data.user.id,
           email,
@@ -61,41 +62,29 @@ export default function ServiceRegistrationForm({ supabase }) {
       ]);
       if (profileError) throw profileError;
 
-      console.log('Service registered successfully');
+      console.log('Service registered successfully, navigating to /service-dashboard');
+      navigate('/service-dashboard', { state: { user: data.user } });
     } catch (error) {
       setError(error.message || t('invalidOTP'));
     }
   };
 
-  const handleLogin = async () => {
-    setError('');
-    try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-
-      console.log('User logged in successfully');
-    } catch (error) {
-      setError(error.message || t('loginError'));
-    }
-  };
-
   const handleAlreadyHaveAccount = () => {
-    navigate('/autovault/');
+    navigate('/');
   };
 
   const changeLanguage = (language) => {
     i18n.changeLanguage(language);
   };
 
-  // Функция для проверки заполненности всех полей
   const areAllFieldsFilled = () => {
     return (
-      email.trim() !== '' && // Проверка на пустой email
-      password.trim() !== '' && // Проверка на пустой пароль
-      serviceName.trim() !== '' && // Проверка на пустое название сервиса
-      address.trim() !== '' && // Проверка на пустой адрес
-      phone.trim() !== '' && // Проверка на пустой телефон
-      isChecked // Проверка на отметку чекбокса
+      email.trim() !== '' &&
+      password.trim() !== '' &&
+      serviceName.trim() !== '' &&
+      address.trim() !== '' &&
+      phone.trim() !== '' &&
+      isChecked
     );
   };
 
@@ -107,7 +96,7 @@ export default function ServiceRegistrationForm({ supabase }) {
           <button onClick={() => changeLanguage('ru')}>Русский</button>
           <button onClick={() => changeLanguage('uk')}>Українська</button>
         </div>
-        <h2>{isRegistering ? t('serviceRegistration') : t('login')}</h2>
+        <h2>{t('serviceRegistration')}</h2>
 
         <input
           type="email"
@@ -116,67 +105,63 @@ export default function ServiceRegistrationForm({ supabase }) {
           onChange={(e) => setEmail(e.target.value)}
           className="auth-input"
         />
-        {isRegistering && (
-          <>
-            <input
-              type="password"
-              placeholder={t('password')}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="auth-input"
-            />
-            <input
-              type="text"
-              placeholder={t('serviceName')}
-              value={serviceName}
-              onChange={(e) => setServiceName(e.target.value)}
-              className="auth-input"
-            />
-            <input
-              type="text"
-              placeholder={t('address')}
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="auth-input"
-            />
-            <input
-              type="text"
-              placeholder={t('phone')}
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="auth-input"
-            />
-<br/>
-            <label className="terms-checkbox">
-              <input 
-                type="checkbox" 
-                checked={isChecked} 
-                onChange={() => setIsChecked(!isChecked)} 
-              />
-              {t('agreeWithTerms')}{' '}
-              <span 
-                className="terms-link" 
-                onClick={() => setShowModal(true)} // Открываем модальное окно
-              >
-                {t('termsAndConditions')}
-              </span>
-            </label>
+        <input
+          type="password"
+          placeholder={t('password')}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="auth-input"
+        />
+        <input
+          type="text"
+          placeholder={t('serviceName')}
+          value={serviceName}
+          onChange={(e) => setServiceName(e.target.value)}
+          className="auth-input"
+        />
+        <input
+          type="text"
+          placeholder={t('address')}
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          className="auth-input"
+        />
+        <input
+          type="text"
+          placeholder={t('phone')}
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          className="auth-input"
+        />
+        <br/>
+        <label className="terms-checkbox">
+          <input 
+            type="checkbox" 
+            checked={isChecked} 
+            onChange={() => setIsChecked(!isChecked)} 
+          />
+          {t('agreeWithTerms')}{' '}
+          <span 
+            className="terms-link" 
+            onClick={() => setShowModal(true)}
+          >
+            {t('termsAndConditions')}
+          </span>
+        </label>
 
-            {showModal && (
-              <div className="modal-overlay">
-                <div className="modal-content">
-                  <TermsAndConditions />
-                  <button onClick={handleModalClose} className="modal-close-button">{t('close')}</button>
-                </div>
-              </div>
-            )}
-          </>
+        {showModal && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <TermsAndConditions />
+              <button onClick={handleModalClose} className="modal-close-button">{t('close')}</button>
+            </div>
+          </div>
         )}
 
         {!showOtpInput ? (
           <button
             className={`auth-button secondary ${!areAllFieldsFilled() ? 'disabled' : ''}`}
-            disabled={!areAllFieldsFilled()} // Отключаем, если не все поля заполнены
+            disabled={!areAllFieldsFilled()}
             onClick={handleServiceSignUp}
           >
             {t('registerService')}
@@ -195,7 +180,7 @@ export default function ServiceRegistrationForm({ supabase }) {
             </button>
           </>
         )}
-<img src={logo} alt="Car" className="logo-image" />
+        <img src={logo} alt="Car" className="logo-image" />
         {error && <p className="auth-error">{error}</p>}
 
         <div className="auth-toggle">
