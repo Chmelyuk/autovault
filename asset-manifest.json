@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/autovault/static/css/main.3d0dc4cc.css",
-    "main.js": "/autovault/static/js/main.6dfa10fd.js",
+    "main.js": "/autovault/static/js/main.04d6bad5.js",
     "static/js/962.c6935944.chunk.js": "/autovault/static/js/962.c6935944.chunk.js",
     "static/media/banner.jpg": "/autovault/static/media/banner.003f3ef068d4f0117267.jpg",
     "static/media/logo_car.png": "/autovault/static/media/logo_car.0514d9d6fd9a505de255.png",
@@ -14,11 +14,11 @@
     "static/media/cool.png": "/autovault/static/media/cool.beea1cdd7ae3792f1efe.png",
     "index.html": "/autovault/index.html",
     "main.3d0dc4cc.css.map": "/autovault/static/css/main.3d0dc4cc.css.map",
-    "main.6dfa10fd.js.map": "/autovault/static/js/main.6dfa10fd.js.map",
+    "main.04d6bad5.js.map": "/autovault/static/js/main.04d6bad5.js.map",
     "962.c6935944.chunk.js.map": "/autovault/static/js/962.c6935944.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.3d0dc4cc.css",
-    "static/js/main.6dfa10fd.js"
+    "static/js/main.04d6bad5.js"
   ]
 }
