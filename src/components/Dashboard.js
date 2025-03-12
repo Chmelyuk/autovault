@@ -1,3 +1,4 @@
+ 
 import React, { useState, useEffect, useCallback } from 'react';
 import Header from './Header';
 import CarDetails from './CarDetails';
@@ -46,45 +47,59 @@ export default function Dashboard({ user, supabase, handleLogout }) {
   });
 
   // Мемоизация функций
-  const fetchRepairs = useCallback(async (carId) => {
-    if (!carId) return;
-    const { data, error } = await supabase
-      .from("repairs")
-      .select("id, category, subcategory, description, mileage, date, addbyservice, service_id, user_id, car_id")
-      .eq("car_id", carId)
-      .eq("user_id", user.id);
+const fetchRepairs = useCallback(async (carId) => {
+  if (!carId) return;
+  const { data, error } = await supabase
+    .from("repairs")
+    .select(`
+      id, 
+      category, 
+      subcategory, 
+      description, 
+      mileage, 
+      date, 
+      addbyservice, 
+      service_id, 
+      user_id, 
+      car_id, 
+      profiles:service_id (service_name)
+    `)
+    .eq("car_id", carId)
+    .eq("user_id", user.id);
 
-    if (error) {
-      console.error("❌ Ошибка при загрузке ремонтов:", error.message);
-      setRepairs([]);
-      return;
-    }
+  if (error) {
+    console.error("❌ Ошибка при загрузке ремонтов:", error.message);
+    setRepairs([]);
+    return;
+  }
 
-    const repairsWithServiceNames = await Promise.all(
-      data.map(async (repair) => {
-        if (repair.service_id) {
-          const { data: serviceProfile, error: serviceError } = await supabase
-            .from("profiles")
-            .select("service_name")
-            .eq("id", repair.service_id)
-            .single();
-          if (serviceError) {
-            console.error("Ошибка загрузки сервиса:", serviceError.message);
-            return { ...repair, serviceName: "Unknown" };
-          }
-          return { ...repair, serviceName: serviceProfile?.service_name || "" };
-        }
-        return repair;
-      })
-    );
-    setRepairs(repairsWithServiceNames || []);
-  }, [supabase, user]);
+  const repairsWithServiceNames = data.map(repair => ({
+    ...repair,
+    serviceName: repair.profiles?.service_name || "Unknown",
+  }));
+  setRepairs(repairsWithServiceNames || []);
+}, [supabase, user]);
 
- const fetchMaintenance = useCallback(async (carId) => {
+const fetchMaintenance = useCallback(async (carId) => {
   if (!carId) return;
   const { data, error } = await supabase
     .from("maintenance")
-    .select("id, oil_change, oil_change_mileage, oil_change_date, air_filter_change, oil_filter_change, brake_check, tire_rotation, coolant_flush, addbyservice, service_id, user_id, car_id")
+    .select(`
+      id, 
+      oil_change, 
+      oil_change_mileage, 
+      oil_change_date, 
+      air_filter_change, 
+      oil_filter_change, 
+      brake_check, 
+      tire_rotation, 
+      coolant_flush, 
+      addbyservice, 
+      service_id, 
+      user_id, 
+      car_id, 
+      profiles:service_id (service_name)
+    `)
     .eq("car_id", carId);
 
   if (error) {
@@ -93,23 +108,10 @@ export default function Dashboard({ user, supabase, handleLogout }) {
     return;
   }
 
-  const maintenanceWithServiceNames = await Promise.all(
-    data.map(async (maint) => {
-      if (maint.service_id) {
-        const { data: serviceProfile, error: serviceError } = await supabase
-          .from("profiles")
-          .select("service_name")
-          .eq("id", maint.service_id)
-          .single();
-        if (serviceError) {
-          console.error("Ошибка загрузки сервиса:", serviceError.message);
-          return { ...maint, serviceName: "Unknown" };
-        }
-        return { ...maint, serviceName: serviceProfile?.service_name || "" };
-      }
-      return maint;
-    })
-  );
+  const maintenanceWithServiceNames = data.map(maint => ({
+    ...maint,
+    serviceName: maint.profiles?.service_name || "Unknown",
+  }));
   setMaintenanceRecords(maintenanceWithServiceNames || []);
 }, [supabase, user]); // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -1,74 +1,67 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';  // Импортируем хук для перевода
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../supabaseClient';  
 import './TermsAndConditions.css';
+import { useTranslation } from 'react-i18next';
 
 const TermsAndConditions = () => {
-  const { t } = useTranslation();  // Используем хук для перевода
-
+  const { i18n } = useTranslation();
+  const language = i18n.language.split('-')[0];  
+  const [terms, setTerms] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const currentDate = new Date().toLocaleDateString();
+
+  useEffect(() => {
+    const fetchTerms = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('terms_and_conditions')
+          .select('content, updated_at')
+          .eq('language', language) 
+          .single();
+
+        if (error) {
+          throw error;
+        }
+
+        setTerms(data.content);
+      } catch (err) {
+        setError('Failed to load terms and conditions.');
+        console.error('Ошибка загрузки условий:', err.message || err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTerms();
+  }, [language]);  
+
+  if (loading) {
+    return <div className="terms-container">Loading...</div>;
+  }
+
+  if (error || !terms) {
+    return <div className="terms-container">{error || 'No terms available.'}</div>;
+  }
 
   return (
     <div className="terms-container">
-      <h1 className="terms-title">{t('termsAndConditionsTitle')}</h1>
-      <p className="terms-date">{t('lastUpdated')}: {currentDate}</p>
-      
-      <p className="terms-paragraph">
-        {t('termsIntro')}
-      </p>
-      
-      <h2 className="terms-section-title">1. {t('generalTerms')}</h2>
-      <ul className="terms-list">
-        <li>{t('generalTerms1')}</li>
-        <li>{t('generalTerms2')}</li>
-      </ul>
+      <h1 className="terms-title">{terms.title}</h1>
+      <p className="terms-date">Last updated: {currentDate}</p>
+      <p className="terms-paragraph">{terms.intro}</p>
 
-      <h2 className="terms-section-title">2. {t('registration')}</h2>
-      <ul className="terms-list">
-        <li>{t('registration1')}</li>
-        <li>{t('registration2')}</li>
-      </ul>
-
-      <h2 className="terms-section-title">3. {t('privacy')}</h2>
-      <ul className="terms-list">
-        <li>{t('privacy1')}</li>
-        <li>{t('privacy2')}</li>
-        <li>{t('privacy3')}</li>
-      </ul>
-
-      <h2 className="terms-section-title">4. {t('usage')}</h2>
-      <ul className="terms-list">
-        <li>{t('usage1')}</li>
-        <li>{t('usage2')}</li>
-        <li>{t('usage3')}</li>
-      </ul>
-
-      <h2 className="terms-section-title">5. {t('disclaimer')}</h2>
-      <ul className="terms-list">
-        <li>{t('disclaimer1')}</li>
-        <li>{t('disclaimer2')}</li>
-        <li>{t('disclaimer3')}</li>
-      </ul>
-
-      <h2 className="terms-section-title">6. {t('changes')}</h2>
-      <ul className="terms-list">
-        <li>{t('changes1')}</li>
-        <li>{t('changes2')}</li>
-      </ul>
-
-      <h2 className="terms-section-title">7. {t('disputeResolution')}</h2>
-      <ul className="terms-list">
-        <li>{t('disputeResolution1')}</li>
-        <li>{t('disputeResolution2')}</li>
-      </ul>
-
-      <h2 className="terms-section-title">8. {t('contact')}</h2>
-      <p className="terms-paragraph">
-        {t('contactText')}
-      </p>
-
-      <p className="terms-paragraph">
-        {t('acceptance')}
-      </p>
+      {Object.keys(terms.sections).map((sectionKey, index) => (
+        <div key={sectionKey}>
+          <h2 className="terms-section-title">
+            {index + 1}. {terms.sections[sectionKey].title}
+          </h2>
+          <ul className="terms-list">
+            {terms.sections[sectionKey].items.map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </div>
   );
 };

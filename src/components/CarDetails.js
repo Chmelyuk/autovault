@@ -44,30 +44,38 @@ export default function CarDetails({ user, car, setCar }) {
   };
 
   const fetchModels = async (input) => {
-    const trimmedInput = input.trim();
-    if (trimmedInput.length < 2) return;
+  const trimmedInput = input.trim();
+  if (trimmedInput.length < 2 || !brand) {
+    setSuggestedModels([]); // Очищаем модели, если бренд не выбран
+    return;
+  }
 
-    try {
-      const { data, error } = await supabase
-        .from("car_list")
-        .select("model")
-        .ilike("model", `%${trimmedInput}%`);
+  try {
+    const { data, error } = await supabase
+      .from("car_list")
+      .select("model")
+      .eq("brand", brand) // Фильтр по выбранному бренду
+      .ilike("model", `%${trimmedInput}%`);
 
-      if (error) throw error;
+    if (error) throw error;
 
-      if (data.length > 0) {
-        const uniqueModels = [...new Set(data.map((item) => item.model))];
-        setSuggestedModels(uniqueModels);
-      }
-    } catch (error) {
-      console.error("Ошибка при загрузке моделей:", error.message);
+    if (data.length > 0) {
+      const uniqueModels = [...new Set(data.map((item) => item.model))];
+      setSuggestedModels(uniqueModels);
+    } else {
+      setSuggestedModels([]);
     }
-  };
-
-  const handleBrandSelect = (selectedBrand) => {
-    setBrand(selectedBrand);
-    setSuggestedBrands([]);
-  };
+  } catch (error) {
+    console.error("Ошибка при загрузке моделей:", error.message);
+    setSuggestedModels([]);
+  }
+};
+const handleBrandSelect = (selectedBrand) => {
+  setBrand(selectedBrand);
+  setModel("");  
+  setSuggestedBrands([]);
+  setSuggestedModels([]);  
+};
 
   const handleModelSelect = (selectedModel) => {
     setModel(selectedModel);
@@ -87,11 +95,15 @@ export default function CarDetails({ user, car, setCar }) {
     fetchBrands(value);
   };
 
-  const handleModelChange = (e) => {
-    const value = e.target.value;
-    setModel(value);
-    fetchModels(value);
-  };
+const handleModelChange = (e) => {
+  const value = e.target.value;
+  setModel(value);
+  if (brand) {
+    fetchModels(value); 
+  } else {
+    setSuggestedModels([]);  
+  }
+};
 
   const addCar = async () => {
     const newCar = { 
@@ -199,13 +211,14 @@ export default function CarDetails({ user, car, setCar }) {
         </ul>
       )}
       <input 
-        type="text" 
-        placeholder={t('model')} 
-        value={model} 
-        onChange={handleModelChange} 
-        onBlur={handleBlur} 
-        className="input-field"
-      />
+  type="text" 
+  placeholder={t('model')} 
+  value={model} 
+  onChange={handleModelChange} 
+  onBlur={handleBlur} 
+  className="input-field"
+  disabled={!brand}  
+/>
       {suggestedModels.length > 0 && (
         <ul className="suggestions">
           {suggestedModels.map((suggestion, index) => (
