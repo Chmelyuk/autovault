@@ -1,4 +1,3 @@
- 
 import React, { useState, useEffect, useCallback } from 'react';
 import Header from './Header';
 import CarDetails from './CarDetails';
@@ -37,7 +36,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
     tireRotation: false,
     coolantFlush: false,
     oilChangeMileage: "",
-    allSelected: false // Новое поле для отслеживания "все выбрано"
+    allSelected: false
   });
   const [showWarning, setShowWarning] = useState(true);
   const [sortMode, setSortMode] = useState("dateDesc");
@@ -47,73 +46,73 @@ export default function Dashboard({ user, supabase, handleLogout }) {
   });
 
   // Мемоизация функций
-const fetchRepairs = useCallback(async (carId) => {
-  if (!carId) return;
-  const { data, error } = await supabase
-    .from("repairs")
-    .select(`
-      id, 
-      category, 
-      subcategory, 
-      description, 
-      mileage, 
-      date, 
-      addbyservice, 
-      service_id, 
-      user_id, 
-      car_id, 
-      profiles:service_id (service_name)
-    `)
-    .eq("car_id", carId)
-    .eq("user_id", user.id);
+  const fetchRepairs = useCallback(async (carId) => {
+    if (!carId) return;
+    const { data, error } = await supabase
+      .from("repairs")
+      .select(`
+        id, 
+        category, 
+        subcategory, 
+        description, 
+        mileage, 
+        date, 
+        addbyservice, 
+        service_id, 
+        user_id, 
+        car_id, 
+        profiles:service_id (service_name)
+      `)
+      .eq("car_id", carId)
+      .eq("user_id", user.id);
 
-  if (error) {
-    console.error("❌ Ошибка при загрузке ремонтов:", error.message);
-    setRepairs([]);
-    return;
-  }
+    if (error) {
+      console.error("❌ Ошибка при загрузке ремонтов:", error.message);
+      setRepairs([]);
+      return;
+    }
 
-  const repairsWithServiceNames = data.map(repair => ({
-    ...repair,
-    serviceName: repair.profiles?.service_name || "Unknown",
-  }));
-  setRepairs(repairsWithServiceNames || []);
-}, [supabase, user]);
+    const repairsWithServiceNames = data.map(repair => ({
+      ...repair,
+      serviceName: repair.profiles?.service_name || "Unknown",
+    }));
+    setRepairs(repairsWithServiceNames || []);
+  }, [supabase, user]);
 
-const fetchMaintenance = useCallback(async (carId) => {
-  if (!carId) return;
-  const { data, error } = await supabase
-    .from("maintenance")
-    .select(`
-      id, 
-      oil_change, 
-      oil_change_mileage, 
-      oil_change_date, 
-      air_filter_change, 
-      oil_filter_change, 
-      brake_check, 
-      tire_rotation, 
-      coolant_flush, 
-      addbyservice, 
-      service_id, 
-      user_id, 
-      car_id, 
-      profiles:service_id (service_name)
-    `)
-    .eq("car_id", carId);
+  const fetchMaintenance = useCallback(async (carId) => {
+    if (!carId) return;
+    const { data, error } = await supabase
+      .from("maintenance")
+      .select(`
+        id, 
+        oil_change, 
+        oil_change_mileage, 
+        oil_change_date, 
+        air_filter_change, 
+        oil_filter_change, 
+        brake_check, 
+        tire_rotation, 
+        coolant_flush, 
+        addbyservice, 
+        service_id, 
+        user_id, 
+        car_id, 
+        profiles:service_id (service_name)
+      `)
+      .eq("car_id", carId);
 
-  if (error) {
-    console.error("❌ Ошибка при загрузке ТО:", error.message);
-    setMaintenanceRecords([]);
-    return;
-  }
+    if (error) {
+      console.error("❌ Ошибка при загрузке ТО:", error.message);
+      setMaintenanceRecords([]);
+      return;
+    }
 
-  const maintenanceWithServiceNames = data.map(maint => ({
-    ...maint,
-    serviceName: maint.profiles?.service_name || "Unknown",
-  }));
-  setMaintenanceRecords(maintenanceWithServiceNames || []);
-}, [supabase, user]); // eslint-disable-line react-hooks/exhaustive-deps
+    const maintenanceWithServiceNames = data.map(maint => ({
+      ...maint,
+      serviceName: maint.profiles?.service_name || "Unknown",
+    }));
+    setMaintenanceRecords(maintenanceWithServiceNames || []);
+  }, [supabase, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchRepairCategories = useCallback(async () => {
     if (repairCategories.length > 0) return;
@@ -214,6 +213,12 @@ const fetchMaintenance = useCallback(async (carId) => {
       return;
     }
 
+    // Валидация repairMileage
+    if (repairMileage && (isNaN(parseInt(repairMileage)) || parseInt(repairMileage) < 0)) {
+      alert(t("mileageMustBeNonNegative"));
+      return;
+    }
+
     const categoryName = repairCategory === "other"
       ? customCategory || "Other"
       : repairCategories.find(cat => String(cat.id) === String(repairCategory))?.name || "Other";
@@ -252,9 +257,12 @@ const fetchMaintenance = useCallback(async (carId) => {
 
   const addMaintenance = async () => {
     if (!car) return;
-    if (maintenance.oilChange && !maintenance.oilChangeMileage) {
-      alert(t("fillOilChangeMileage"));
-      return;
+
+    if (maintenance.oilChange) {
+      if (!maintenance.oilChangeMileage || (isNaN(parseInt(maintenance.oilChangeMileage)) || parseInt(maintenance.oilChangeMileage) < 0)) {
+        alert(t("oilChangeMileageMustBeNonNegative"));
+        return;
+      }
     }
 
     const today = new Date().toISOString().split("T")[0];
@@ -264,7 +272,7 @@ const fetchMaintenance = useCallback(async (carId) => {
       user_id: user.id,
       car_id: car.id,
       oil_change: maintenance.oilChange,
-      oil_change_mileage: maintenance.oilChange ? (maintenance.oilChangeMileage || null) : null,
+      oil_change_mileage: maintenance.oilChange ? parseInt(maintenance.oilChangeMileage) : null,
       oil_change_date: formattedDate,
       air_filter_change: maintenance.airFilterChange,
       oil_filter_change: maintenance.oilFilterChange,
@@ -289,8 +297,8 @@ const fetchMaintenance = useCallback(async (carId) => {
         allSelected: false
       });
       setMaintenanceDate("");
-      if (maintenance.oilChange && maintenance.oilChangeMileage && maintenance.oilChangeMileage > car.mileage) {
-        updateCarMileage(maintenance.oilChangeMileage);
+      if (maintenance.oilChange && maintenance.oilChangeMileage && parseInt(maintenance.oilChangeMileage) > car.mileage) {
+        updateCarMileage(parseInt(maintenance.oilChangeMileage));
       }
     }
   };
@@ -628,7 +636,18 @@ const fetchMaintenance = useCallback(async (carId) => {
               <input type="text" placeholder={repairCategory === "other" ? t('enterCustomCategory') : t('enterCustomSubcategory')} value={customCategory} onChange={(e) => setCustomCategory(e.target.value)} />
             )}
             <textarea placeholder={t('description')} value={repairDescription} onChange={(e) => setRepairDescription(e.target.value)} />
-            <input type="number" placeholder={t('mileageAtRepair')} value={repairMileage} onChange={(e) => setRepairMileage(e.target.value)} />
+            <input
+              type="number"
+              placeholder={t('mileageAtRepair')}
+              value={repairMileage}
+              min="0"
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "" || (parseInt(value) >= 0 && !isNaN(parseInt(value)))) {
+                  setRepairMileage(value);
+                }
+              }}
+            />
             <input type="date" value={repairDate || ""} onChange={(e) => setRepairDate(e.target.value)} />
             <button onClick={addRepair}>{t('save')}</button>
             <button onClick={() => setIsRepairModalOpen(false)}>{t('cancel')}</button>
@@ -675,7 +694,13 @@ const fetchMaintenance = useCallback(async (carId) => {
                   type="number" 
                   placeholder={t('mileageAtOilChange')} 
                   value={maintenance.oilChangeMileage} 
-                  onChange={(e) => setMaintenance({ ...maintenance, oilChangeMileage: e.target.value })} 
+                  min="0"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "" || (parseInt(value) >= 0 && !isNaN(parseInt(value)))) {
+                      setMaintenance({ ...maintenance, oilChangeMileage: value });
+                    }
+                  }} 
                 />
               )}
               <label className="checkbox-label">

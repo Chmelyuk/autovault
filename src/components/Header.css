@@ -469,3 +469,23 @@ body.light-theme .theme-switch-label {
         top: -25%;
     }
 }
+
+.error-message {
+    color: #ff4444;
+    margin: 10px 0;
+    font-size: 14px;
+    text-align: center;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    justify-content: center;
+}
+.success-message {
+    color: #00cc00;
+    margin: 10px 0;
+    font-size: 14px;
+    text-align: center;
+}

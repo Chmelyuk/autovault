@@ -213,8 +213,29 @@
      "Petrol": "Бензин",
      "airFilterChange": "Заміна повітряного фільтра",  
   "oilFilterChange": "Заміна масляного фільтра",
-   "noCarsAvailable": "Автом відсутні"
-  
+   "noCarsAvailable": "Авто відсутні",
+   "changePassword": "Змінити пароль",
+  "currentPassword": "Поточний пароль",
+  "newPassword": "Новий пароль",
+  "confirmPassword": "Підтвердіть пароль",
+  "fillAllPasswordFields": "Будь ласка, заповніть усі поля пароля",
+  "passwordsDoNotMatch": "Нові паролі не збігаються",
+  "passwordTooShort": "Пароль має містити щонайменше 6 символів",
+  "incorrectCurrentPassword": "Неправильний поточний пароль",
+  "passwordUpdateFailed": "Не вдалося оновити пароль",
+  "passwordUpdatedSuccessfully": "Пароль успішно оновлено",
+  "forgotPassword": "Забули пароль?",
+  "resetPassword": "Скинути пароль",
+  "sendResetOtp": "Надіслати OTP для скидання",
+  "resetOtpSent": "Код OTP надіслано на вашу електронну пошту.",
+  "resetOtpError": "Помилка надсилання коду OTP.",
+  "enterNewPassword": "Будь ласка, введіть новий пароль.",
+  "verifyAndReset": "Підтвердити та скинути",
+  "passwordUpdated": "Пароль успішно оновлено!",
+  "backToLogin": "Повернутися до входу",
+  "enterEmail": "Будь ласка, введіть вашу електронну пошту.",
+  "enterEmailPasswordAndAgree": "Будь ласка, введіть email, пароль і погодьтеся з умовами."
+    
 
   
 }

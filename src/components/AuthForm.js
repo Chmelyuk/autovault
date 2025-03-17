@@ -9,11 +9,15 @@ export default function AuthForm({ setUser, supabase }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [error, setError] = useState('');
   const [isChecked, setIsChecked] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [isResetPassword, setIsResetPassword] = useState(false);
+  const [resetOtpSent, setResetOtpSent] = useState(false);
+  const [resetMessage, setResetMessage] = useState('');
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
@@ -41,12 +45,11 @@ export default function AuthForm({ setUser, supabase }) {
       return;
     }
     try {
-      // Регистрация с отправкой OTP
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`, // Опционально: куда перенаправить после подтверждения
+          emailRedirectTo: `${window.location.origin}/`,
         },
       });
       if (error) throw error;
@@ -64,7 +67,7 @@ export default function AuthForm({ setUser, supabase }) {
       const { data, error } = await supabase.auth.verifyOtp({
         email,
         token: otp,
-        type: 'signup', // Тип OTP для регистрации
+        type: 'signup',
       });
       if (error) throw error;
       setUser(data.user);
@@ -74,6 +77,64 @@ export default function AuthForm({ setUser, supabase }) {
       if (profileError) throw profileError;
       console.log('OTP verified, navigating to dashboard');
       navigate('/');
+    } catch (error) {
+      setError(error.message || t('invalidOTP'));
+    }
+  };
+
+  const handleSendResetOtp = async () => {
+    setError('');
+    setResetMessage('');
+    if (!email) {
+      setError(t('enterEmail'));
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+      if (error) throw error;
+      setResetOtpSent(true);
+      setResetMessage(t('resetOtpSent'));
+      setTimeout(() => setResetMessage(''), 5000);
+    } catch (error) {
+      setError(error.message || t('resetOtpError'));
+    }
+  };
+
+  const handleVerifyResetOtp = async () => {
+    setError('');
+    if (!newPassword) {
+      setError(t('enterNewPassword'));
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token: otp,
+        type: 'email',
+      });
+      if (error) throw error;
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      if (updateError) throw updateError;
+
+      setResetMessage(t('passwordUpdated'));
+      setTimeout(() => {
+        setIsResetPassword(false);
+        setResetOtpSent(false);
+        setOtp('');
+        setNewPassword('');
+        setUser(null);
+      }, 2000);
     } catch (error) {
       setError(error.message || t('invalidOTP'));
     }
@@ -92,7 +153,9 @@ export default function AuthForm({ setUser, supabase }) {
         <button onClick={() => changeLanguage('uk')}>Українська</button>
       </div>
       <div className="auth-box">
-        <h2 className="auth-title">{t('signInSignUp')}</h2>
+        <h2 className="auth-title">
+          {isResetPassword ? t('resetPassword') : t('signInSignUp')}
+        </h2>
         <input
           type="email"
           placeholder={t('email')}
@@ -100,16 +163,16 @@ export default function AuthForm({ setUser, supabase }) {
           onChange={(e) => setEmail(e.target.value)}
           className="auth-input"
         />
-        <input
-          type="password"
-          placeholder={t('password')}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="auth-input"
-        />
 
-        {!showOtpInput ? (
+        {!isResetPassword && !showOtpInput ? (
           <>
+            <input
+              type="password"
+              placeholder={t('password')}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="auth-input"
+            />
             <button type="button" onClick={handleLogin} className="auth-button">
               {t('signIn')}
             </button>
@@ -128,7 +191,59 @@ export default function AuthForm({ setUser, supabase }) {
             >
               {t('registerService')}
             </button>
+            <button
+              type="button"
+              onClick={() => setIsResetPassword(true)}
+              className="auth-button link"
+            >
+              {t('forgotPassword')}
+            </button>
           </>
+        ) : isResetPassword && !resetOtpSent ? (
+          <>
+            <button type="button" onClick={handleSendResetOtp} className="auth-button">
+              {t('sendResetOtp')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsResetPassword(false)}
+              className="auth-button secondary"
+            >
+              {t('backToLogin')}
+            </button>
+          </>
+        ) : isResetPassword && resetOtpSent ? (
+          <div className="otp-container">
+            <input
+              type="text"
+              placeholder={t('enterOTP')}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              className="auth-input"
+            />
+            <input
+              type="password"
+              placeholder={t('newPassword')}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="auth-input"
+            />
+            <button type="button" onClick={handleVerifyResetOtp} className="auth-button">
+              {t('verifyAndReset')}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsResetPassword(false);
+                setResetOtpSent(false);
+                setOtp('');
+                setNewPassword('');
+              }}
+              className="auth-button secondary"
+            >
+              {t('cancel')}
+            </button>
+          </div>
         ) : (
           <div className="otp-container">
             <input
@@ -145,22 +260,25 @@ export default function AuthForm({ setUser, supabase }) {
         )}
 
         {error && <p className="auth-error">{error}</p>}
+        {resetMessage && <p className="auth-success">{resetMessage}</p>}
 
-        <div className="terms-checkbox-container">
-          <input
-            type="checkbox"
-            id="terms"
-            checked={isChecked}
-            onChange={() => setIsChecked(!isChecked)}
-            className="terms-checkbox"
-          />
-          <label htmlFor="terms" className="terms-label">
-            {t('agreeWithTerms')}{' '}
-            <span className="terms-link" onClick={() => setShowModal(true)}>
-              <strong>{t('termsAndConditions')}</strong>
-            </span>
-          </label>
-        </div>
+        {!isResetPassword && !showOtpInput && (
+          <div className="terms-checkbox-container">
+            <input
+              type="checkbox"
+              id="terms"
+              checked={isChecked}
+              onChange={() => setIsChecked(!isChecked)}
+              className="terms-checkbox"
+            />
+            <label htmlFor="terms" className="terms-label">
+              {t('agreeWithTerms')}{' '}
+              <span className="terms-link" onClick={() => setShowModal(true)}>
+                <strong>{t('termsAndConditions')}</strong>
+              </span>
+            </label>
+          </div>
+        )}
       </div>
 
       {showModal && (

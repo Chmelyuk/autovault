@@ -44,38 +44,39 @@ export default function CarDetails({ user, car, setCar }) {
   };
 
   const fetchModels = async (input) => {
-  const trimmedInput = input.trim();
-  if (trimmedInput.length < 2 || !brand) {
-    setSuggestedModels([]); // Очищаем модели, если бренд не выбран
-    return;
-  }
+    const trimmedInput = input.trim();
+    if (trimmedInput.length < 2 || !brand) {
+      setSuggestedModels([]);
+      return;
+    }
 
-  try {
-    const { data, error } = await supabase
-      .from("car_list")
-      .select("model")
-      .eq("brand", brand) // Фильтр по выбранному бренду
-      .ilike("model", `%${trimmedInput}%`);
+    try {
+      const { data, error } = await supabase
+        .from("car_list")
+        .select("model")
+        .eq("brand", brand)
+        .ilike("model", `%${trimmedInput}%`);
 
-    if (error) throw error;
+      if (error) throw error;
 
-    if (data.length > 0) {
-      const uniqueModels = [...new Set(data.map((item) => item.model))];
-      setSuggestedModels(uniqueModels);
-    } else {
+      if (data.length > 0) {
+        const uniqueModels = [...new Set(data.map((item) => item.model))];
+        setSuggestedModels(uniqueModels);
+      } else {
+        setSuggestedModels([]);
+      }
+    } catch (error) {
+      console.error("Ошибка при загрузке моделей:", error.message);
       setSuggestedModels([]);
     }
-  } catch (error) {
-    console.error("Ошибка при загрузке моделей:", error.message);
+  };
+
+  const handleBrandSelect = (selectedBrand) => {
+    setBrand(selectedBrand);
+    setModel("");
+    setSuggestedBrands([]);
     setSuggestedModels([]);
-  }
-};
-const handleBrandSelect = (selectedBrand) => {
-  setBrand(selectedBrand);
-  setModel("");  
-  setSuggestedBrands([]);
-  setSuggestedModels([]);  
-};
+  };
 
   const handleModelSelect = (selectedModel) => {
     setModel(selectedModel);
@@ -95,23 +96,29 @@ const handleBrandSelect = (selectedBrand) => {
     fetchBrands(value);
   };
 
-const handleModelChange = (e) => {
-  const value = e.target.value;
-  setModel(value);
-  if (brand) {
-    fetchModels(value); 
-  } else {
-    setSuggestedModels([]);  
-  }
-};
+  const handleModelChange = (e) => {
+    const value = e.target.value;
+    setModel(value);
+    if (brand) {
+      fetchModels(value);
+    } else {
+      setSuggestedModels([]);
+    }
+  };
 
   const addCar = async () => {
+    // Валидация mileage
+    if (mileage && (isNaN(parseInt(mileage)) || parseInt(mileage) < 0)) {
+      alert(t("mileageMustBeNonNegative")); // Убедитесь, что этот ключ есть в переводах
+      return;
+    }
+
     const newCar = { 
       brand, 
       model, 
       year, 
       engine, 
-      mileage, 
+      mileage: mileage ? parseInt(mileage) : null, // Преобразуем в число или оставляем null
       vin, 
       fuelType,
       transmissionType,
@@ -123,6 +130,8 @@ const handleModelChange = (e) => {
     
     if (!error) {
       setCar(data);
+    } else {
+      console.error("Ошибка при добавлении автомобиля:", error.message);
     }
   };
 
@@ -159,7 +168,7 @@ const handleModelChange = (e) => {
   };
 
   const handleImageError = () => {
-    setCarImage(logo_car); // Если изображение не загрузилось, используем стандартное
+    setCarImage(logo_car);
   };
 
   return car ? (
@@ -175,10 +184,6 @@ const handleModelChange = (e) => {
         />
       </div>
       <div className="info">
-        <p className="car-text">{car.brand} {car.model} ({car.year})</p>
-        <p className="car-text">{t('mileage')}: {car.mileage} {t('km')}</p>
-        <p className="car-text">{t('fuelType')}: {t(car.fuelType)}</p>
-        <p className="car-text">{t('transmission')}: {t(car.transmissionType)}</p>
         <button className="details-button" onClick={() => setShowDetails(!showDetails)}>
           {showDetails ? t('hideDetails') : t('showDetails')}
         </button>
@@ -186,6 +191,10 @@ const handleModelChange = (e) => {
           <>
             <p className="car-text">{t('engine')}: {car.engine} L {car.turbocharged && <span className="turbo">({t('turbocharged')})</span>}</p>
             <p className="car-text">{t('vin')}: {car.vin}</p>
+            <p className="car-text">{car.brand} {car.model} ({car.year})</p>
+            <p className="car-text">{t('mileage')}: {car.mileage} {t('km')}</p>
+            <p className="car-text">{t('fuelType')}: {t(car.fuelType)}</p>
+            <p className="car-text">{t('transmission')}: {t(car.transmissionType)}</p>
           </>
         )}
       </div>
@@ -211,14 +220,14 @@ const handleModelChange = (e) => {
         </ul>
       )}
       <input 
-  type="text" 
-  placeholder={t('model')} 
-  value={model} 
-  onChange={handleModelChange} 
-  onBlur={handleBlur} 
-  className="input-field"
-  disabled={!brand}  
-/>
+        type="text" 
+        placeholder={t('model')} 
+        value={model} 
+        onChange={handleModelChange} 
+        onBlur={handleBlur} 
+        className="input-field"
+        disabled={!brand}
+      />
       {suggestedModels.length > 0 && (
         <ul className="suggestions">
           {suggestedModels.map((suggestion, index) => (
@@ -228,10 +237,40 @@ const handleModelChange = (e) => {
           ))}
         </ul>
       )}
-      <input type="number" placeholder={t('year')} value={year} onChange={(e) => setYear(e.target.value)} className="input-field" />
-      <input type="text" placeholder={t('engine')} value={engine} onChange={(e) => setEngine(e.target.value)} className="input-field" />
-      <input type="number" placeholder={t('mileage')} value={mileage} onChange={(e) => setMileage(e.target.value)} className="input-field" />
-      <input type="text" placeholder={t('vin')} value={vin} onChange={(e) => setVin(e.target.value)} className="input-field" />
+      <input 
+        type="number" 
+        placeholder={t('year')} 
+        value={year} 
+        onChange={(e) => setYear(e.target.value)} 
+        className="input-field" 
+      />
+      <input 
+        type="text" 
+        placeholder={t('engine')} 
+        value={engine} 
+        onChange={(e) => setEngine(e.target.value)} 
+        className="input-field" 
+      />
+      <input 
+        type="number" 
+        placeholder={t('mileage')} 
+        value={mileage} 
+        min="0" // Ограничиваем ввод на уровне UI
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value === "" || (parseInt(value) >= 0 && !isNaN(parseInt(value)))) {
+            setMileage(value);
+          }
+        }} 
+        className="input-field" 
+      />
+      <input 
+        type="text" 
+        placeholder={t('vin')} 
+        value={vin} 
+        onChange={(e) => setVin(e.target.value)} 
+        className="input-field" 
+      />
       <label className="turbo-checkbox">
         <input
           type="checkbox"

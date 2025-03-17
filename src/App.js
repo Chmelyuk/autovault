@@ -5,6 +5,7 @@ import AuthForm from "./components/AuthForm";
 import Dashboard from "./components/Dashboard";
 import ServiceDashboard from "./components/ServiceDashboard";
 import ServiceRegistrationForm from "./components/ServiceRegistrationForm";
+import ResetPassword from "./components/ResetPassword"; // Импорт нового компонента
 import './i18n';
 
 const supabase = createClient(
@@ -134,7 +135,6 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
-      // Проверяем текущую сессию
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) {
         console.log("Session check error:", sessionError.message);
@@ -150,15 +150,13 @@ export default function App() {
         return;
       }
 
-      // Если сессия есть, выполняем signOut
       const { error: signOutError } = await supabase.auth.signOut();
       if (signOutError) {
         console.log('Sign out error:', signOutError.message, signOutError.status, signOutError.code);
-        // Если ошибка "Auth session missing", всё равно завершаем процесс
         if (signOutError.message === "Auth session missing!") {
           console.log("Session already missing on server, proceeding with logout");
         } else {
-          throw signOutError; // Другие ошибки передаём в catch
+          throw signOutError;
         }
       } else {
         console.log("Successfully signed out");
@@ -169,7 +167,7 @@ export default function App() {
     } catch (err) {
       console.log('Unexpected error during logout:', err);
       setUser(null);
-      navigate("/"); // В любом случае завершаем выход
+      navigate("/");
     }
   };
 
@@ -199,6 +197,10 @@ export default function App() {
               <Navigate to="/" replace />
             )
           }
+        />
+        <Route
+          path="/reset-password"
+          element={<ResetPassword supabase={supabase} setUser={setUser} />}
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -179,7 +179,30 @@
    "noAnalyticsData": "No analytics data available",
    "airFilterChange": "Air Filter Change",  
   "oilFilterChange": "Oil Filter Change",
-   "noCarsAvailable": "No cars available"
+   "noCarsAvailable": "No cars available",
+   "changePassword": "Change Password",
+  "currentPassword": "Current Password",
+  "newPassword": "New Password",
+  "confirmPassword": "Confirm Password",
+  "fillAllPasswordFields": "Please fill in all password fields",
+  "passwordsDoNotMatch": "New passwords do not match",
+  "passwordTooShort": "Password must be at least 6 characters long",
+  "incorrectCurrentPassword": "Incorrect current password",
+  "passwordUpdateFailed": "Failed to update password",
+  "passwordUpdatedSuccessfully": "Password updated successfully",
+ "forgotPassword": "Forgot Password?",
+  "resetPassword": "Reset Password",
+  "sendResetOtp": "Send Reset OTP",
+  "enterNewPassword": "Please enter a new password.",
+  "verifyAndReset": "Verify and Reset",
+  "passwordUpdated": "Password updated successfully!",
+   "backToLogin": "Back to Login",
+  "enterEmail": "Please enter your email.",
+ "resetOtpSent": "An OTP code has been sent to your email.",
+  "resetOtpError": "Error sending OTP code.",
+  "enterEmailPasswordAndAgree": "Please enter email, password, and agree to the terms.",
+  "mileageMustBeNonNegative": "Mileage must be a non-negative number",
+  "oilChangeMileageMustBeNonNegative": "Oil change mileage must be a non-negative number"
 
 }
    

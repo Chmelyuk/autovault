@@ -286,3 +286,18 @@ body {
 .auth-toggle-button{
     margin-top: 10px;
 }
+
+.auth-success {
+    color: #28a745;
+    margin-top: 10px;
+}
+
+.auth-button.link {
+    background: none;
+    border: none;
+    color: #007bff;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 10px;
+}

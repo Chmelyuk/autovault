@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './Header.css';
 import { QRCodeSVG } from 'qrcode.react';
 import QRScanner from './QRScanner';
@@ -15,11 +15,12 @@ export default function Header({ user, handleLogout, fetchCars, fetchRepairs, fe
   const [showAddCarModal, setShowAddCarModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showEditCarModal, setShowEditCarModal] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [isDarkTheme, setIsDarkTheme] = useState(() => {
     const savedTheme = localStorage.getItem('theme');
     return savedTheme ? savedTheme === 'dark' : true;
   });
-  const [hasLocationPermission, setHasLocationPermission] = useState(false); // Подняли состояние
+  const [hasLocationPermission, setHasLocationPermission] = useState(false);
   const [newCar, setNewCar] = useState({
     brand: '',
     model: '',
@@ -34,6 +35,13 @@ export default function Header({ user, handleLogout, fetchCars, fetchRepairs, fe
   const [editCar, setEditCar] = useState(null);
   const [suggestedBrands, setSuggestedBrands] = useState([]);
   const [suggestedModels, setSuggestedModels] = useState([]);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
   const { t, i18n } = useTranslation();
   const [car, setCar] = useState(selectedCar || null);
   const dropdownRef = useRef(null);
@@ -42,7 +50,6 @@ export default function Header({ user, handleLogout, fetchCars, fetchRepairs, fe
     setCar(selectedCar || null);
   }, [selectedCar]);
 
-  
   useEffect(() => {
     document.body.classList.toggle('light-theme', !isDarkTheme);
   }, [isDarkTheme]);
@@ -149,10 +156,19 @@ export default function Header({ user, handleLogout, fetchCars, fetchRepairs, fe
 
   const handleEditCarChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setEditCar((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+    if (name === 'mileage') {
+      if (value === '' || (parseInt(value) >= 0 && !isNaN(parseInt(value)))) {
+        setEditCar((prev) => ({
+          ...prev,
+          [name]: value,
+        }));
+      }
+    } else {
+      setEditCar((prev) => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      }));
+    }
 
     if (name === 'brand') fetchBrands(value);
     if (name === 'model' && editCar.brand) fetchModels(value, editCar.brand);
@@ -189,6 +205,79 @@ export default function Header({ user, handleLogout, fetchCars, fetchRepairs, fe
   const closeEditCarModal = () => {
     setShowEditCarModal(false);
     setEditCar(null);
+  };
+
+  const openChangePasswordModal = () => {
+    setShowChangePasswordModal(true);
+    setShowSettingsModal(false);
+    setIsDropdownOpen(false);
+  };
+
+  const closeChangePasswordModal = () => {
+    setShowChangePasswordModal(false);
+    setPasswordData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+    setPasswordError('');
+    setPasswordSuccess('');
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const changePassword = async () => {
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordError(t('fillAllPasswordFields'));
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError(t('passwordsDoNotMatch'));
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError(t('passwordTooShort'));
+      return;
+    }
+
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: passwordData.currentPassword
+      });
+
+      if (signInError) {
+        setPasswordError(t('incorrectCurrentPassword'));
+        return;
+      }
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: passwordData.newPassword
+      });
+
+      if (updateError) {
+        setPasswordError(t('passwordUpdateFailed') + ': ' + updateError.message);
+        return;
+      }
+
+      setPasswordSuccess(t('passwordUpdatedSuccessfully'));
+      setTimeout(() => {
+        closeChangePasswordModal();
+      }, 2000);
+    } catch (error) {
+      setPasswordError(t('passwordUpdateFailed') + ': ' + error.message);
+    }
   };
 
   const addNewCar = async () => {
@@ -307,10 +396,16 @@ export default function Header({ user, handleLogout, fetchCars, fetchRepairs, fe
   };
 
   const updateCar = async () => {
+    // Валидация mileage
+    if (editCar.mileage && (isNaN(parseInt(editCar.mileage)) || parseInt(editCar.mileage) < 0)) {
+      alert(t("mileageMustBeNonNegative"));
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('cars')
-        .update({ ...editCar })
+        .update({ ...editCar, mileage: editCar.mileage ? parseInt(editCar.mileage) : null })
         .eq('id', editCar.id)
         .select('*')
         .single();
@@ -375,7 +470,7 @@ export default function Header({ user, handleLogout, fetchCars, fetchRepairs, fe
         car={car} 
         supabase={supabase} 
         setCar={setCar} 
-        setHasLocationPermission={setHasLocationPermission} // Передаем setter
+        setHasLocationPermission={setHasLocationPermission}
       />
 
       {isDropdownOpen && (
@@ -439,9 +534,50 @@ export default function Header({ user, handleLogout, fetchCars, fetchRepairs, fe
               <div className='settings-edit-btns'>
                 <button onClick={handleEditModalOpen}>{t('editInfo')}</button>
                 <button onClick={openAddCarModal}>{t('addCar')}</button>
+                <button onClick={openChangePasswordModal}>{t('changePassword')}</button>
               </div>
             </div>
             <button onClick={closeSettingsModal}>{t('close')}</button>
+          </div>
+        </div>
+      )}
+
+      {showChangePasswordModal && (
+        <div className="modal" onClick={closeChangePasswordModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>{t('changePassword')}</h3>
+            <form onSubmit={(e) => { e.preventDefault(); changePassword(); }}>
+              <input
+                type="password"
+                name="currentPassword"
+                placeholder={t('currentPassword')}
+                value={passwordData.currentPassword}
+                onChange={handlePasswordChange}
+                className="input-field"
+              />
+              <input
+                type="password"
+                name="newPassword"
+                placeholder={t('newPassword')}
+                value={passwordData.newPassword}
+                onChange={handlePasswordChange}
+                className="input-field"
+              />
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder={t('confirmPassword')}
+                value={passwordData.confirmPassword}
+                onChange={handlePasswordChange}
+                className="input-field"
+              />
+              {passwordError && <p className="error-message">{passwordError}</p>}
+              {passwordSuccess && <p className="success-message">{passwordSuccess}</p>}
+              <div className="button-group">
+                <button type="submit">{t('save')}</button>
+                <button type="button" onClick={closeChangePasswordModal}>{t('cancel')}</button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -656,6 +792,7 @@ export default function Header({ user, handleLogout, fetchCars, fetchRepairs, fe
                   name="mileage"
                   placeholder={t('mileage')}
                   value={editCar.mileage}
+                  min="0" // Ограничение на уровне UI
                   onChange={handleEditCarChange}
                   className="input-field"
                 />

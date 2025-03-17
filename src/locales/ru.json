@@ -216,9 +216,29 @@
   "null": "Нет данных",
   "airFilterChange": "Замена воздушного фильтра",  
   "oilFilterChange": "Замена масляного фильтра",
-  "noCarsAvailable": "Автомобили отсутствуют"
-  
-
+  "noCarsAvailable": "Автомобили отсутствуют",
+  "changePassword": "Сменить пароль",
+  "currentPassword": "Текущий пароль",
+  "newPassword": "Новый пароль",
+  "confirmPassword": "Подтвердите пароль",
+  "fillAllPasswordFields": "Пожалуйста, заполните все поля пароля",
+  "passwordsDoNotMatch": "Новые пароли не совпадают",
+  "passwordTooShort": "Пароль должен содержать не менее 6 символов",
+  "incorrectCurrentPassword": "Неверный текущий пароль",
+  "passwordUpdateFailed": "Не удалось обновить пароль",
+  "passwordUpdatedSuccessfully": "Пароль успешно обновлен",
+  "forgotPassword": "Забыли пароль?",
+  "resetPassword": "Сбросить пароль",
+  "sendResetOtp": "Отправить OTP для сброса",
+  "resetOtpSent": "Код OTP отправлен на вашу почту.",
+  "resetOtpError": "Ошибка отправки кода OTP.",
+  "enterNewPassword": "Пожалуйста, введите новый пароль.",
+  "verifyAndReset": "Подтвердить и сбросить",
+  "passwordUpdated": "Пароль успешно обновлен!",
+   "backToLogin": "Вернуться к входу",
+  "enterEmail": "Пожалуйста, введите вашу почту.",
+  "enterEmailPasswordAndAgree": "Пожалуйста, введите email, пароль и согласитесь с условиями."
+ 
 
 
   
