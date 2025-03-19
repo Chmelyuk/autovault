@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/autovault/static/css/main.42c92278.css",
-    "main.js": "/autovault/static/js/main.de1fbc14.js",
+    "main.css": "/autovault/static/css/main.34fbfb19.css",
+    "main.js": "/autovault/static/js/main.1233f54b.js",
     "static/js/962.c6935944.chunk.js": "/autovault/static/js/962.c6935944.chunk.js",
     "static/media/calendar.png": "/autovault/static/media/calendar.4c2d2f55152038152e62.png",
     "static/media/repair.png": "/autovault/static/media/repair.e7a13b3d798dcbe52389.png",
@@ -15,12 +15,12 @@
     "static/media/oil.png": "/autovault/static/media/oil.bbbc2f269ddd6ca1a518.png",
     "static/media/cool.png": "/autovault/static/media/cool.beea1cdd7ae3792f1efe.png",
     "index.html": "/autovault/index.html",
-    "main.42c92278.css.map": "/autovault/static/css/main.42c92278.css.map",
-    "main.de1fbc14.js.map": "/autovault/static/js/main.de1fbc14.js.map",
+    "main.34fbfb19.css.map": "/autovault/static/css/main.34fbfb19.css.map",
+    "main.1233f54b.js.map": "/autovault/static/js/main.1233f54b.js.map",
     "962.c6935944.chunk.js.map": "/autovault/static/js/962.c6935944.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.42c92278.css",
-    "static/js/main.de1fbc14.js"
+    "static/css/main.34fbfb19.css",
+    "static/js/main.1233f54b.js"
   ]
 }
