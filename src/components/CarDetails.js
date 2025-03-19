@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "../supabaseClient";
 import { useTranslation } from "react-i18next";
 import './CarDetails.css';
@@ -21,6 +21,7 @@ export default function CarDetails({ user, car, setCar }) {
   const [showDetails, setShowDetails] = useState(false);
   const [carImage, setCarImage] = useState(logo_car);
   const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null); // Добавляем реф для input
 
   // Логи для отладки
   useEffect(() => {
@@ -137,7 +138,7 @@ export default function CarDetails({ user, car, setCar }) {
       .single();
 
     if (!error) {
-      setCar(data); // Устанавливаем новый автомобиль как текущий
+      setCar(data);
     } else {
       console.error("Ошибка при добавлении автомобиля:", error.message);
     }
@@ -180,41 +181,43 @@ export default function CarDetails({ user, car, setCar }) {
     }
   };
 
-  // Обновляем изображение при изменении car.id
   useEffect(() => {
     if (car && car.id) {
       fetchImage(car.id);
     } else {
-      setCarImage(logo_car); // Если нет автомобиля, показываем дефолтное изображение
+      setCarImage(logo_car);
     }
-  }, [car?.id]); // Зависимость от car.id, а не всего объекта car
+  }, [car?.id]);
 
   const handleImageClick = async () => {
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (!user || authError) {
-    console.error("Пользователь не авторизован:", authError?.message);
-    alert("Пожалуйста, войдите в систему для загрузки изображения");
-    return;
-  }
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (!user || authError) {
+      console.error("Пользователь не авторизован:", authError?.message);
+      alert("Пожалуйста, войдите в систему для загрузки изображения");
+      return;
+    }
 
-  if (!car || !car.id) {
-    alert("Выберите автомобиль перед загрузкой изображения");
-    return;
-  }
+    if (!car || !car.id) {
+      alert("Выберите автомобиль перед загрузкой изображения");
+      return;
+    }
 
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-  input.onchange = async (e) => {
+    // Вызываем click на существующем input через реф
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file && car && car.id) {
       setIsUploading(true);
       try {
         const options = {
-          maxSizeMB: 0.05,        // Максимальный размер 50 КБ (0.05 МБ)
-          maxWidthOrHeight: 800,  // Максимальная ширина или высота 800 пикселей
-          useWebWorker: true,     // Использование Web Worker
-          initialQuality: 0.7,    // Начальное качество 70%
+          maxSizeMB: 0.05,
+          maxWidthOrHeight: 800,
+          useWebWorker: true,
+          initialQuality: 0.7,
         };
 
         console.log("Original file size:", (file.size / 1024).toFixed(2), "KB");
@@ -225,7 +228,6 @@ export default function CarDetails({ user, car, setCar }) {
         const fileName = `car_${car.id}.${fileExt}`;
         const filePath = `${car.id}/${fileName}`;
 
-        // Удаление старого изображения
         if (car.image_path) {
           const { error: removeError } = await supabase.storage
             .from('car-images')
@@ -246,7 +248,6 @@ export default function CarDetails({ user, car, setCar }) {
           }
         }
 
-        // Загрузка нового изображения
         console.log("Uploading to path:", filePath);
         const { error: uploadError } = await supabase.storage
           .from('car-images')
@@ -261,7 +262,6 @@ export default function CarDetails({ user, car, setCar }) {
           throw uploadError;
         }
 
-        // Обновление пути в базе данных
         const { data: updatedCar, error: updateError } = await supabase
           .from('cars')
           .update({ image_path: filePath })
@@ -297,8 +297,6 @@ export default function CarDetails({ user, car, setCar }) {
       }
     }
   };
-  input.click();
-};
 
   const handleImageError = (e) => {
     console.error("Image failed to load:", carImage);
@@ -312,15 +310,24 @@ export default function CarDetails({ user, car, setCar }) {
         {isUploading ? (
           <div className="spinner-container">
             <div className="spinner"></div>
-            </div>
+          </div>
         ) : (
-          <img
-            src={carImage}
-            alt="Car"
-            onClick={handleImageClick}
-            onError={handleImageError}
-            className="car-image"
-          />
+          <>
+            <img
+              src={carImage}
+              alt="Car"
+              onClick={handleImageClick}
+              onError={handleImageError}
+              className="car-image"
+            />
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+            />
+          </>
         )}
       </div>
       <div className="info">
