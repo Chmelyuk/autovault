@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import { useTranslation } from "react-i18next";
 import './CarDetails.css';
@@ -21,11 +21,14 @@ export default function CarDetails({ user, car, setCar }) {
   const [showDetails, setShowDetails] = useState(false);
   const [carImage, setCarImage] = useState(logo_car);
   const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef(null); // Добавляем реф для input
 
-  // Логи для отладки
   useEffect(() => {
     console.log("Car prop updated:", car);
+    if (car && car.id) {
+      fetchImage(car.id);
+    } else {
+      setCarImage(logo_car);
+    }
   }, [car]);
 
   const fetchBrands = async (input) => {
@@ -159,8 +162,6 @@ export default function CarDetails({ user, car, setCar }) {
         .from('car-images')
         .getPublicUrl(filePath);
 
-      console.log(`Trying path: ${filePath}, URL: ${data?.publicUrl}`);
-
       try {
         const response = await fetch(data.publicUrl, { method: 'HEAD' });
         if (response.ok) {
@@ -173,23 +174,19 @@ export default function CarDetails({ user, car, setCar }) {
     }
 
     if (publicUrl) {
-      console.log("Setting image URL for car", carId, ":", publicUrl);
       setCarImage(publicUrl);
     } else {
-      console.error("Изображение не найдено для car.id:", carId);
       setCarImage(logo_car);
     }
   };
 
-  useEffect(() => {
-    if (car && car.id) {
-      fetchImage(car.id);
-    } else {
-      setCarImage(logo_car);
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !car || !car.id) {
+      console.error("Нет файла или car.id");
+      return;
     }
-  }, [car?.id]);
 
-  const handleImageClick = async () => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (!user || authError) {
       console.error("Пользователь не авторизован:", authError?.message);
@@ -197,108 +194,72 @@ export default function CarDetails({ user, car, setCar }) {
       return;
     }
 
-    if (!car || !car.id) {
-      alert("Выберите автомобиль перед загрузкой изображения");
-      return;
-    }
+    setIsUploading(true);
+    try {
+      const options = {
+        maxSizeMB: 0.05,
+        maxWidthOrHeight: 800,
+        useWebWorker: true,
+        initialQuality: 0.7,
+      };
 
-    // Вызываем click на существующем input через реф
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
+      console.log("Original file size:", (file.size / 1024).toFixed(2), "KB");
+      const compressedFile = await imageCompression(file, options);
+      console.log("Compressed file size:", (compressedFile.size / 1024).toFixed(2), "KB");
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (file && car && car.id) {
-      setIsUploading(true);
-      try {
-        const options = {
-          maxSizeMB: 0.05,
-          maxWidthOrHeight: 800,
-          useWebWorker: true,
-          initialQuality: 0.7,
-        };
+      const fileExt = file.name.split('.').pop().toLowerCase();
+      const fileName = `car_${car.id}.${fileExt}`;
+      const filePath = `${car.id}/${fileName}`;
 
-        console.log("Original file size:", (file.size / 1024).toFixed(2), "KB");
-        const compressedFile = await imageCompression(file, options);
-        console.log("Compressed file size:", (compressedFile.size / 1024).toFixed(2), "KB");
-
-        const fileExt = file.name.split('.').pop().toLowerCase();
-        const fileName = `car_${car.id}.${fileExt}`;
-        const filePath = `${car.id}/${fileName}`;
-
-        if (car.image_path) {
-          const { error: removeError } = await supabase.storage
-            .from('car-images')
-            .remove([car.image_path]);
-          if (removeError) {
-            console.warn("Не удалось удалить старое изображение:", removeError.message);
-          } else {
-            console.log("Старое изображение удалено:", car.image_path);
-          }
-        } else {
-          const possibleExtensions = ['jpg', 'png', 'jpeg', 'webp'];
-          const pathsToRemove = possibleExtensions.map(ext => `${car.id}/car_${car.id}.${ext}`);
-          const { error: removeError } = await supabase.storage
-            .from('car-images')
-            .remove(pathsToRemove);
-          if (removeError) {
-            console.log("Не удалось удалить старые файлы (возможно, их нет):", removeError.message);
-          }
-        }
-
-        console.log("Uploading to path:", filePath);
-        const { error: uploadError } = await supabase.storage
+      if (car.image_path) {
+        const { error: removeError } = await supabase.storage
           .from('car-images')
-          .upload(filePath, compressedFile, {
-            cacheControl: '3600',
-            upsert: true,
-          });
-
-        if (uploadError) {
-          console.error("Ошибка загрузки:", uploadError.message);
-          alert("Не удалось загрузить изображение: " + uploadError.message);
-          throw uploadError;
+          .remove([car.image_path]);
+        if (removeError) {
+          console.warn("Не удалось удалить старое изображение:", removeError.message);
         }
-
-        const { data: updatedCar, error: updateError } = await supabase
-          .from('cars')
-          .update({ image_path: filePath })
-          .eq('id', car.id)
-          .select("*")
-          .single();
-
-        if (updateError) {
-          console.error("Ошибка сохранения пути:", updateError.message);
-          alert("Не удалось сохранить путь к изображению. Пожалуйста, повторите попытку.");
-          throw updateError;
-        }
-
-        const { data: urlData } = supabase.storage
-          .from('car-images')
-          .getPublicUrl(filePath);
-
-        const freshUrl = `${urlData.publicUrl}?v=${Date.now()}`;
-        console.log("Image uploaded for car", car.id, "URL:", freshUrl);
-
-        const response = await fetch(freshUrl, { method: 'HEAD' });
-        if (response.ok) {
-          setCar(updatedCar);
-          setCarImage(freshUrl);
-        } else {
-          throw new Error("Загруженный файл недоступен");
-        }
-      } catch (error) {
-        console.error("Ошибка при обработке изображения:", error.message);
-        setCarImage(logo_car);
-      } finally {
-        setIsUploading(false);
       }
+
+      const { error: uploadError } = await supabase.storage
+        .from('car-images')
+        .upload(filePath, compressedFile, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error("Ошибка загрузки:", uploadError.message);
+        throw uploadError;
+      }
+
+      const { data: updatedCar, error: updateError } = await supabase
+        .from('cars')
+        .update({ image_path: filePath })
+        .eq('id', car.id)
+        .select("*")
+        .single();
+
+      if (updateError) {
+        console.error("Ошибка сохранения пути:", updateError.message);
+        throw updateError;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('car-images')
+        .getPublicUrl(filePath);
+
+      const freshUrl = `${urlData.publicUrl}?v=${Date.now()}`;
+      setCar(updatedCar);
+      setCarImage(freshUrl);
+    } catch (error) {
+      console.error("Ошибка при обработке изображения:", error.message);
+      setCarImage(logo_car);
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  const handleImageError = (e) => {
+  const handleImageError = () => {
     console.error("Image failed to load:", carImage);
     setCarImage(logo_car);
   };
@@ -312,22 +273,20 @@ export default function CarDetails({ user, car, setCar }) {
             <div className="spinner"></div>
           </div>
         ) : (
-          <>
+          <label className="car-image-button">
             <img
               src={carImage}
               alt="Car"
-              onClick={handleImageClick}
               onError={handleImageError}
               className="car-image"
             />
             <input
               type="file"
               accept="image/*"
-              ref={fileInputRef}
               style={{ display: 'none' }}
               onChange={handleFileChange}
             />
-          </>
+          </label>
         )}
       </div>
       <div className="info">
