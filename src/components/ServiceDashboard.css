@@ -52,7 +52,7 @@ body {
 
 .add-button,
 .delete-button {
-    background: linear-gradient(135deg, #1E293B, #334155);
+    background: linear-gradient(0deg, #1E293B, #334155);
     border: none;
     border-radius: 12px;
     padding: 12px 20px;
@@ -509,7 +509,7 @@ p {
 }
 /* Стили для кнопок остаются, но добавляем улучшения */
 .analytics-button {
-    background: linear-gradient(135deg, #1E293B, #334155);
+    background: linear-gradient(0deg, #1E293B, #334155);
         border: none;
         border-radius: 12px;
         padding: 12px 20px;

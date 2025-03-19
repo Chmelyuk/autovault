@@ -53,7 +53,7 @@ body.light-theme .header h1 {
 
 /* Стили для кнопок */
 button {
-    background: linear-gradient(135deg, #1E293B, #334155);
+    background: linear-gradient(0deg, #1E293B, #334155);
     border: none;
     border-radius: 12px;
     padding: 12px 20px;
@@ -66,19 +66,19 @@ button {
 }
 
 body.light-theme button {
-    background: linear-gradient(135deg, #e0e0e0, #d0d0d0);
+    background: linear-gradient(0deg, #e0e0e0, #d0d0d0);
     color: #333;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 button:hover {
-    background: linear-gradient(135deg, #334155, #4c66af);
+    background: linear-gradient(0deg, #334155, #4c66af);
     transform: translateY(-2px);
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
 }
 
 body.light-theme button:hover {
-    background: linear-gradient(135deg, #d0d0d0, #b0b0b0);
+    background: linear-gradient(0deg, #d0d0d0, #b0b0b0);
 }
 
 /* Стили для выбора автомобиля */
@@ -680,4 +680,39 @@ body.light-theme .view-text h3 {
 
 .oil-change::before {
     background: url('/src/components/oil.png') no-repeat center;
+}
+
+/* Стили для текста с датой */
+.date-with-icon,
+.repair-icon {
+    position: relative;
+    padding-left: 28px;
+    line-height: 1.5;
+}
+
+/* Псевдоэлемент для иконки календаря */
+.date-with-icon::before {
+    content: '';
+    /* Пустой content, изображение задаем через background */
+    position: absolute;
+    left: -3px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 25px;
+    height: 25px;
+    background: url('/src/components/calendar.png') no-repeat center;
+    background-size: contain;
+}
+ 
+.repair-icon::before {
+    content: '';
+    /* Пустой content, изображение задаем через background */
+    position: absolute;
+    left: -3px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 25px;
+    height: 25px;
+    background: url('/src/components/repair.png') no-repeat center;
+    background-size: contain;
 }

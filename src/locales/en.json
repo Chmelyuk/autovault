@@ -202,7 +202,8 @@
   "resetOtpError": "Error sending OTP code.",
   "enterEmailPasswordAndAgree": "Please enter email, password, and agree to the terms.",
   "mileageMustBeNonNegative": "Mileage must be a non-negative number",
-  "oilChangeMileageMustBeNonNegative": "Oil change mileage must be a non-negative number"
+  "oilChangeMileageMustBeNonNegative": "Oil change mileage must be a non-negative number",
+  "selectAtLeastOneMaintenance": "Please select at least one maintenance option"
 
 }
    

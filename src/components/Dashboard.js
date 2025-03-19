@@ -45,7 +45,17 @@ export default function Dashboard({ user, supabase, handleLogout }) {
     return localStorage.getItem('selectedCarId') || null;
   });
 
-  // Мемоизация функций
+  const isAnyMaintenanceSelected = () => {
+    return (
+      maintenance.oilChange ||
+      maintenance.airFilterChange ||
+      maintenance.oilFilterChange ||
+      maintenance.brakeCheck ||
+      maintenance.tireRotation ||
+      maintenance.coolantFlush
+    );
+  };
+
   const fetchRepairs = useCallback(async (carId) => {
     if (!carId) return;
     const { data, error } = await supabase
@@ -112,7 +122,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
       serviceName: maint.profiles?.service_name || "Unknown",
     }));
     setMaintenanceRecords(maintenanceWithServiceNames || []);
-  }, [supabase, user]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [supabase, user]);
 
   const fetchRepairCategories = useCallback(async () => {
     if (repairCategories.length > 0) return;
@@ -213,7 +223,6 @@ export default function Dashboard({ user, supabase, handleLogout }) {
       return;
     }
 
-    // Валидация repairMileage
     if (repairMileage && (isNaN(parseInt(repairMileage)) || parseInt(repairMileage) < 0)) {
       alert(t("mileageMustBeNonNegative"));
       return;
@@ -257,6 +266,11 @@ export default function Dashboard({ user, supabase, handleLogout }) {
 
   const addMaintenance = async () => {
     if (!car) return;
+
+    if (!isAnyMaintenanceSelected()) {
+      alert(t("selectAtLeastOneMaintenance"));
+      return;
+    }
 
     if (maintenance.oilChange) {
       if (!maintenance.oilChangeMileage || (isNaN(parseInt(maintenance.oilChangeMileage)) || parseInt(maintenance.oilChangeMileage) < 0)) {
@@ -519,11 +533,11 @@ export default function Dashboard({ user, supabase, handleLogout }) {
                   {record.category ? (
                     <>
                       <div className="record-group">
-                        <strong>🛠 {t(record.category)}</strong>
+                        <strong className='repair-icon'>{t(record.category)}</strong>
                         {record.subcategory && <p>{t('subcategory')}: {t(record.subcategory)}</p>}
                         {record.description && <p>{record.description}</p>}
                         {record.mileage && <p>{t('mileageAtRepair')}: {record.mileage} км</p>}
-                        {record.date && <p key="date">📅 {t('date')}: {new Date(record.date).toLocaleDateString()}</p>}
+                        {record.date && <p key="date" className="date-with-icon">{t('date')}: {new Date(record.date).toLocaleDateString()}</p>}
                       </div>
                       {record.addbyservice && (
                         <p className="added-by-service">
@@ -566,7 +580,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
 
                           if (record.oil_change_date) {
                             workTypes.push(
-                              <p key="date">📅 {t('date')}: {new Date(record.oil_change_date).toLocaleDateString()}</p>
+                              <p key="date" className="date-with-icon">{t('date')}: {new Date(record.oil_change_date).toLocaleDateString()}</p>
                             );
                           }
 
@@ -753,7 +767,7 @@ export default function Dashboard({ user, supabase, handleLogout }) {
               <button 
                 className="save-btn" 
                 onClick={addMaintenance} 
-                disabled={maintenance.oilChange && !maintenance.oilChangeMileage}
+                disabled={!isAnyMaintenanceSelected() || (maintenance.oilChange && !maintenance.oilChangeMileage)}
               >
                 {t('save')}
               </button>

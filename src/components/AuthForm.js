@@ -40,7 +40,7 @@ export default function AuthForm({ setUser, supabase }) {
   const handleOtpSignUp = async () => {
     setError('');
     if (!email || !password || !isChecked) {
-      setError(t('enterEmailPasswordAnd Agree'));
+      setError(t('enterEmailPasswordAndAgree'));
       setTimeout(() => setError(''), 3000);
       return;
     }
