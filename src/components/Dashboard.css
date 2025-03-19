@@ -896,6 +896,7 @@ body.light-theme .view-text h3 {
 .custom-selector-selected {
     background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%), url('https://www.transparenttextures.com/patterns/dark-mosaic.png');
     background-blend-mode: overlay;
+        margin-right: 20px;
     
 }
 
