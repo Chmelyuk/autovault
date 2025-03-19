@@ -113,13 +113,14 @@ body.light-theme .car-selector {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #0b1723 !important;
     color: #ffffff !important;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
     overflow: hidden;
     max-width: 100%;
     padding: 20px;
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%), url('https://www.transparenttextures.com/patterns/dark-mosaic.png');
+    background-blend-mode: overlay;
 }
 
 body.light-theme .car-details {
@@ -438,7 +439,7 @@ body.light-theme .cancel-btn {
 
 /* Стили для деталей автомобиля дополнительных элементов */
 .car-details-container {
-    background-color: #0b1723;
+    
     border-radius: 12px;
     padding: 16px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
@@ -446,7 +447,7 @@ body.light-theme .cancel-btn {
 }
 
 body.light-theme .car-details-container {
-    background-color: #ffffff;
+    
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
@@ -715,4 +716,205 @@ body.light-theme .view-text h3 {
     height: 25px;
     background: url('/src/components/repair.png') no-repeat center;
     background-size: contain;
+}
+
+/* Dashboard.css */
+
+/* Обертка селектора */
+.custom-selector-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    margin: 20px auto;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Выбранный элемент */
+.custom-selector-selected {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    /* Градиент темный */
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    color: #ecf0f1;
+    font-size: 16px;
+    font-weight: 500;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.custom-selector-selected:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+
+.custom-selector-selected.active {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Текст выбранного элемента */
+.selected-text {
+    flex-grow: 1;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* Стрелка */
+.arrow {
+    font-size: 14px;
+    margin-left: 10px;
+    transition: transform 0.3s ease;
+    color: #3498db;
+}
+
+.arrow.open {
+    transform: rotate(180deg);
+}
+
+/* Список опций */
+.custom-selector-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #34495e;
+    /* Темный фон */
+    border: none;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    max-height: 220px;
+    overflow-y: auto;
+    list-style: none;
+    padding: 8px 0;
+    margin: 0;
+    z-index: 100;
+    animation: fadeIn 0.25s ease-out;
+}
+
+/* Анимация появления */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Элемент списка */
+.option {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    font-size: 15px;
+    color: #ecf0f1;
+    cursor: pointer;
+    transition: background 0.2s ease, padding-left 0.2s ease, color 0.2s ease;
+}
+
+.option:hover {
+    background: rgba(52, 152, 219, 0.2);
+    /* Легкий голубой фон при наведении */
+    padding-left: 24px;
+    /* Легкий сдвиг вправо */
+    color: #3498db;
+}
+
+.option.selected {
+    background: rgba(52, 152, 219, 0.4);
+    font-weight: 600;
+    color: #3498db;
+}
+
+/* Иконка автомобиля */
+.car-icon {
+    margin-right: 12px;
+    font-size: 20px;
+    color: #bdc3c7;
+    transition: color 0.2s ease;
+}
+
+.option:hover .car-icon,
+.option.selected .car-icon {
+    color: #3498db;
+}
+
+/* Случай, когда нет опций */
+.no-options {
+    padding: 12px 20px;
+    font-size: 15px;
+    color: #95a5a6;
+    text-align: center;
+}
+
+/* Скроллбар для списка */
+.custom-selector-options::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-selector-options::-webkit-scrollbar-thumb {
+    background: #3498db;
+    border-radius: 4px;
+}
+
+.custom-selector-options::-webkit-scrollbar-track {
+    background: #2c3e50;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .custom-selector-wrapper {
+        max-width: 100%;
+        margin: 15px 10px;
+    }
+
+    .custom-selector-selected {
+        font-size: 14px;
+        padding: 12px 16px;
+    }
+
+    .option {
+        font-size: 14px;
+        padding: 10px 16px;
+    }
+
+    .car-icon {
+        font-size: 18px;
+    }
+}
+.custom-selector-selected {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%), url('https://www.transparenttextures.com/patterns/dark-mosaic.png');
+    background-blend-mode: overlay;
+    
+}
+
+.light-theme .custom-selector-selected {
+    background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%);
+    color: #2c3e50;
+}
+
+.light-theme .custom-selector-options {
+    background: #ecf0f1;
+    color: #2c3e50;
+}
+
+.light-theme .option:hover {
+    background: rgba(52, 152, 219, 0.1);
+}
+
+
+.light-theme .option {
+    color: #000000;
+    /* Невыбранные элементы черные */
 }

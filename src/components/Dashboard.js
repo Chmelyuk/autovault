@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef} from 'react';
 import Header from './Header';
 import CarDetails from './CarDetails';
 import ProgressBar from './ProgressBar';
@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import './Dashboard.css';
 import CircularProgressBar from './CircularProgressBar';
 
-export default function Dashboard({ user, supabase, handleLogout }) {
+export default function Dashboard({ user, supabase, handleLogout, isDarkTheme = true }) {
   const { t } = useTranslation();
   const [viewMode, setViewMode] = useState("tile");
   const [repairDate, setRepairDate] = useState("");
@@ -44,7 +44,24 @@ export default function Dashboard({ user, supabase, handleLogout }) {
   const [selectedCarId, setSelectedCarId] = useState(() => {
     return localStorage.getItem('selectedCarId') || null;
   });
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
+  const selectorRef = useRef(null);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (selectorRef.current && !selectorRef.current.contains(event.target)) {
+        setIsSelectorOpen(false);
+      }
+    };
+
+    if (isSelectorOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSelectorOpen]);
   const isAnyMaintenanceSelected = () => {
     return (
       maintenance.oilChange ||
@@ -54,6 +71,18 @@ export default function Dashboard({ user, supabase, handleLogout }) {
       maintenance.tireRotation ||
       maintenance.coolantFlush
     );
+  };
+const handleCustomCarSelection = async (carId) => {
+    const selected = cars.find(c => c.id === carId) || null;
+    setSelectedCarId(carId);
+    setCar(selected);
+    setIsSelectorOpen(false); // Закрываем селектор после выбора
+    if (selected) {
+      localStorage.setItem('selectedCarId', selected.id);
+      await Promise.all([fetchRepairs(selected.id), fetchMaintenance(selected.id)]);
+    } else {
+      localStorage.removeItem('selectedCarId');
+    }
   };
 
   const fetchRepairs = useCallback(async (carId) => {
@@ -468,23 +497,39 @@ export default function Dashboard({ user, supabase, handleLogout }) {
       />
 
       <div className="dashboard">
-        <div className="car-selector-wrapper">
-          <select
-            className="car-selector"
-            value={selectedCarId || ""}
-            onChange={handleCarSelection}
+         
+ <div className="custom-selector-wrapper">
+          <div
+            className="custom-selector-selected"
+            onClick={() => setIsSelectorOpen(!isSelectorOpen)}
           >
-            {cars.length === 0 ? (
-              <option value="">{t('noCarsAvailable')}</option>
-            ) : (
-              cars.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.brand} {c.model} ({c.year})
-                </option>
-              ))
-            )}
-          </select>
+            <span>
+              {selectedCarId
+                ? `${cars.find(c => c.id === selectedCarId)?.brand} ${cars.find(c => c.id === selectedCarId)?.model} (${cars.find(c => c.id === selectedCarId)?.year})`
+                : t('selectCar')}
+            </span>
+            <span className={`arrow ${isSelectorOpen ? 'open' : ''}`}>&#9660;</span>
+          </div>
+          {isSelectorOpen && (
+            <ul className="custom-selector-options">
+              {cars.length === 0 ? (
+                <li className="no-options">{t('noCarsAvailable')}</li>
+              ) : (
+                cars.map(c => (
+                  <li
+                    key={c.id}
+                    className={`option ${selectedCarId === c.id ? 'selected' : ''}`}
+                    onClick={() => handleCustomCarSelection(c.id)}
+                  >
+                   
+                    {c.brand} {c.model} ({c.year})
+                  </li>
+                ))
+              )}
+            </ul>
+          )}
         </div>
+
         <CarDetails user={user} supabase={supabase} car={car} setCar={setCar} />
 
         <div className="car-details-container">

@@ -3,6 +3,7 @@ import { supabase } from "../supabaseClient";
 import { useTranslation } from "react-i18next";
 import './CarDetails.css';
 import logo_car from '../components/logo_car.png';
+import imageCompression from 'browser-image-compression';
 
 export default function CarDetails({ user, car, setCar }) {
   const { t } = useTranslation();
@@ -18,9 +19,13 @@ export default function CarDetails({ user, car, setCar }) {
   const [suggestedModels, setSuggestedModels] = useState([]);
   const [turbocharged, setTurbocharged] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-  const [carImage, setCarImage] = useState(
-    car ? localStorage.getItem(`carImage_${car.id}`) || logo_car : logo_car
-  );
+  const [carImage, setCarImage] = useState(logo_car);
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Логи для отладки
+  useEffect(() => {
+    console.log("Car prop updated:", car);
+  }, [car]);
 
   const fetchBrands = async (input) => {
     const trimmedInput = input.trim();
@@ -107,67 +112,196 @@ export default function CarDetails({ user, car, setCar }) {
   };
 
   const addCar = async () => {
-    // Валидация mileage
     if (mileage && (isNaN(parseInt(mileage)) || parseInt(mileage) < 0)) {
-      alert(t("mileageMustBeNonNegative")); // Убедитесь, что этот ключ есть в переводах
+      alert(t("mileageMustBeNonNegative"));
       return;
     }
 
-    const newCar = { 
-      brand, 
-      model, 
-      year, 
-      engine, 
-      mileage: mileage ? parseInt(mileage) : null, // Преобразуем в число или оставляем null
-      vin, 
+    const newCar = {
+      brand,
+      model,
+      year,
+      engine,
+      mileage: mileage ? parseInt(mileage) : null,
+      vin,
       fuelType,
       transmissionType,
       turbocharged,
-      user_id: user.id 
+      user_id: user.id,
     };
 
-    const { data, error } = await supabase.from("cars").insert([newCar]).select("*").single();
-    
+    const { data, error } = await supabase
+      .from("cars")
+      .insert([newCar])
+      .select("*")
+      .single();
+
     if (!error) {
-      setCar(data);
+      setCar(data); // Устанавливаем новый автомобиль как текущий
     } else {
       console.error("Ошибка при добавлении автомобиля:", error.message);
     }
   };
 
-  useEffect(() => {
-    if (car && car.id) {
-      const storedImage = localStorage.getItem(`carImage_${car.id}`);
-      setCarImage(storedImage || logo_car);
+  const fetchImage = async (carId) => {
+    if (!carId) {
+      setCarImage(logo_car);
+      return;
     }
-  }, [car]);
 
-  const handleImageClick = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.onchange = (e) => {
-      const file = e.target.files[0];
-      if (file && car && car.id) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const result = reader.result;
-          localStorage.setItem(`carImage_${car.id}`, result);
-          setCarImage(result);
-        };
-        reader.onerror = () => {
-          console.error("Ошибка загрузки изображения, используется стандартное.");
-          setCarImage(logo_car);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        console.error("Нет файла или car.id, изображение не обновлено.");
+    const possibleExtensions = ['jpg', 'png', 'jpeg', 'webp'];
+    let publicUrl = null;
+
+    for (const ext of possibleExtensions) {
+      const filePath = `${carId}/car_${carId}.${ext}`;
+      const { data } = supabase.storage
+        .from('car-images')
+        .getPublicUrl(filePath);
+
+      console.log(`Trying path: ${filePath}, URL: ${data?.publicUrl}`);
+
+      try {
+        const response = await fetch(data.publicUrl, { method: 'HEAD' });
+        if (response.ok) {
+          publicUrl = `${data.publicUrl}?v=${Date.now()}`;
+          break;
+        }
+      } catch (fetchError) {
+        console.log(`File at ${filePath} not accessible:`, fetchError.message);
       }
-    };
-    input.click();
+    }
+
+    if (publicUrl) {
+      console.log("Setting image URL for car", carId, ":", publicUrl);
+      setCarImage(publicUrl);
+    } else {
+      console.error("Изображение не найдено для car.id:", carId);
+      setCarImage(logo_car);
+    }
   };
 
-  const handleImageError = () => {
+  // Обновляем изображение при изменении car.id
+  useEffect(() => {
+    if (car && car.id) {
+      fetchImage(car.id);
+    } else {
+      setCarImage(logo_car); // Если нет автомобиля, показываем дефолтное изображение
+    }
+  }, [car?.id]); // Зависимость от car.id, а не всего объекта car
+
+  const handleImageClick = async () => {
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (!user || authError) {
+    console.error("Пользователь не авторизован:", authError?.message);
+    alert("Пожалуйста, войдите в систему для загрузки изображения");
+    return;
+  }
+
+  if (!car || !car.id) {
+    alert("Выберите автомобиль перед загрузкой изображения");
+    return;
+  }
+
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (file && car && car.id) {
+      setIsUploading(true);
+      try {
+        const options = {
+          maxSizeMB: 0.05,        // Максимальный размер 50 КБ (0.05 МБ)
+          maxWidthOrHeight: 800,  // Максимальная ширина или высота 800 пикселей
+          useWebWorker: true,     // Использование Web Worker
+          initialQuality: 0.7,    // Начальное качество 70%
+        };
+
+        console.log("Original file size:", (file.size / 1024).toFixed(2), "KB");
+        const compressedFile = await imageCompression(file, options);
+        console.log("Compressed file size:", (compressedFile.size / 1024).toFixed(2), "KB");
+
+        const fileExt = file.name.split('.').pop().toLowerCase();
+        const fileName = `car_${car.id}.${fileExt}`;
+        const filePath = `${car.id}/${fileName}`;
+
+        // Удаление старого изображения
+        if (car.image_path) {
+          const { error: removeError } = await supabase.storage
+            .from('car-images')
+            .remove([car.image_path]);
+          if (removeError) {
+            console.warn("Не удалось удалить старое изображение:", removeError.message);
+          } else {
+            console.log("Старое изображение удалено:", car.image_path);
+          }
+        } else {
+          const possibleExtensions = ['jpg', 'png', 'jpeg', 'webp'];
+          const pathsToRemove = possibleExtensions.map(ext => `${car.id}/car_${car.id}.${ext}`);
+          const { error: removeError } = await supabase.storage
+            .from('car-images')
+            .remove(pathsToRemove);
+          if (removeError) {
+            console.log("Не удалось удалить старые файлы (возможно, их нет):", removeError.message);
+          }
+        }
+
+        // Загрузка нового изображения
+        console.log("Uploading to path:", filePath);
+        const { error: uploadError } = await supabase.storage
+          .from('car-images')
+          .upload(filePath, compressedFile, {
+            cacheControl: '3600',
+            upsert: true,
+          });
+
+        if (uploadError) {
+          console.error("Ошибка загрузки:", uploadError.message);
+          alert("Не удалось загрузить изображение: " + uploadError.message);
+          throw uploadError;
+        }
+
+        // Обновление пути в базе данных
+        const { data: updatedCar, error: updateError } = await supabase
+          .from('cars')
+          .update({ image_path: filePath })
+          .eq('id', car.id)
+          .select("*")
+          .single();
+
+        if (updateError) {
+          console.error("Ошибка сохранения пути:", updateError.message);
+          alert("Не удалось сохранить путь к изображению. Пожалуйста, повторите попытку.");
+          throw updateError;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('car-images')
+          .getPublicUrl(filePath);
+
+        const freshUrl = `${urlData.publicUrl}?v=${Date.now()}`;
+        console.log("Image uploaded for car", car.id, "URL:", freshUrl);
+
+        const response = await fetch(freshUrl, { method: 'HEAD' });
+        if (response.ok) {
+          setCar(updatedCar);
+          setCarImage(freshUrl);
+        } else {
+          throw new Error("Загруженный файл недоступен");
+        }
+      } catch (error) {
+        console.error("Ошибка при обработке изображения:", error.message);
+        setCarImage(logo_car);
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
+  input.click();
+};
+
+  const handleImageError = (e) => {
+    console.error("Image failed to load:", carImage);
     setCarImage(logo_car);
   };
 
@@ -175,13 +309,19 @@ export default function CarDetails({ user, car, setCar }) {
     <div className="car-details">
       <h3 className="car-title">{t('yourCar')}</h3>
       <div className="car-image-container">
-        <img
-          src={carImage}
-          alt="Car"
-          onClick={handleImageClick}
-          onError={handleImageError}
-          className="car-image"
-        />
+        {isUploading ? (
+          <div className="spinner-container">
+            <div className="spinner"></div>
+            </div>
+        ) : (
+          <img
+            src={carImage}
+            alt="Car"
+            onClick={handleImageClick}
+            onError={handleImageError}
+            className="car-image"
+          />
+        )}
       </div>
       <div className="info">
         <button className="details-button" onClick={() => setShowDetails(!showDetails)}>
@@ -202,12 +342,12 @@ export default function CarDetails({ user, car, setCar }) {
   ) : (
     <div className="add-car-form">
       <p className="no-car-message">{t('noCarMessage')}</p>
-      <input 
-        type="text" 
-        placeholder={t('brand')} 
-        value={brand} 
-        onChange={handleBrandChange} 
-        onBlur={handleBlur} 
+      <input
+        type="text"
+        placeholder={t('brand')}
+        value={brand}
+        onChange={handleBrandChange}
+        onBlur={handleBlur}
         className="input-field"
       />
       {suggestedBrands.length > 0 && (
@@ -219,12 +359,12 @@ export default function CarDetails({ user, car, setCar }) {
           ))}
         </ul>
       )}
-      <input 
-        type="text" 
-        placeholder={t('model')} 
-        value={model} 
-        onChange={handleModelChange} 
-        onBlur={handleBlur} 
+      <input
+        type="text"
+        placeholder={t('model')}
+        value={model}
+        onChange={handleModelChange}
+        onBlur={handleBlur}
         className="input-field"
         disabled={!brand}
       />
@@ -237,39 +377,39 @@ export default function CarDetails({ user, car, setCar }) {
           ))}
         </ul>
       )}
-      <input 
-        type="number" 
-        placeholder={t('year')} 
-        value={year} 
-        onChange={(e) => setYear(e.target.value)} 
-        className="input-field" 
+      <input
+        type="number"
+        placeholder={t('year')}
+        value={year}
+        onChange={(e) => setYear(e.target.value)}
+        className="input-field"
       />
-      <input 
-        type="text" 
-        placeholder={t('engine')} 
-        value={engine} 
-        onChange={(e) => setEngine(e.target.value)} 
-        className="input-field" 
+      <input
+        type="text"
+        placeholder={t('engine')}
+        value={engine}
+        onChange={(e) => setEngine(e.target.value)}
+        className="input-field"
       />
-      <input 
-        type="number" 
-        placeholder={t('mileage')} 
-        value={mileage} 
-        min="0" // Ограничиваем ввод на уровне UI
+      <input
+        type="number"
+        placeholder={t('mileage')}
+        value={mileage}
+        min="0"
         onChange={(e) => {
           const value = e.target.value;
           if (value === "" || (parseInt(value) >= 0 && !isNaN(parseInt(value)))) {
             setMileage(value);
           }
-        }} 
-        className="input-field" 
+        }}
+        className="input-field"
       />
-      <input 
-        type="text" 
-        placeholder={t('vin')} 
-        value={vin} 
-        onChange={(e) => setVin(e.target.value)} 
-        className="input-field" 
+      <input
+        type="text"
+        placeholder={t('vin')}
+        value={vin}
+        onChange={(e) => setVin(e.target.value)}
+        className="input-field"
       />
       <label className="turbo-checkbox">
         <input
