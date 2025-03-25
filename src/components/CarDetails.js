@@ -33,6 +33,35 @@ export default function CarDetails({ user, car, setCar, insuranceRecords, onInsu
     return daysUntilExpiration <= 30;
   };
 
+  const isInsuranceExpiredByTenDays = (expirationDate) => {
+    const expirationDateObj = new Date(expirationDate);
+    const currentDate = new Date();
+    const daysSinceExpiration = Math.ceil((currentDate - expirationDateObj) / (1000 * 60 * 60 * 24));
+    return daysSinceExpiration > 10; // Истекло более 10 дней назад
+  };
+
+  const autoDeleteExpiredInsurance = async () => {
+    const expiredRecords = insuranceRecords.filter((insurance) =>
+      isInsuranceExpiredByTenDays(insurance.expiration_date)
+    );
+
+    for (const insurance of expiredRecords) {
+      const { error } = await supabase
+        .from('insurance')
+        .delete()
+        .eq('id', insurance.id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error(`Ошибка при удалении страховки ${insurance.id}:`, error.message);
+      } else {
+        if (onInsuranceDelete) {
+          onInsuranceDelete(insurance.id);
+        }
+      }
+    }
+  };
+
   useEffect(() => {
     if (car && car.id) {
       fetchImage(car.id);
@@ -40,6 +69,12 @@ export default function CarDetails({ user, car, setCar, insuranceRecords, onInsu
       setCarImage(logo_car);
     }
   }, [car?.id]);
+
+  useEffect(() => {
+    if (insuranceRecords && insuranceRecords.length > 0) {
+      autoDeleteExpiredInsurance();
+    }
+  }, [insuranceRecords]);
 
   const fetchBrands = async (input) => {
     const trimmedInput = input.trim();
@@ -322,7 +357,6 @@ export default function CarDetails({ user, car, setCar, insuranceRecords, onInsu
     if (error) {
       console.error("Ошибка при удалении страховки:", error.message);
     } else {
-      // Уведомляем родительский компонент об удалении
       if (onInsuranceDelete) {
         onInsuranceDelete(insuranceId);
       }
@@ -378,18 +412,23 @@ export default function CarDetails({ user, car, setCar, insuranceRecords, onInsu
                     >
                       {new Date(insurance.expiration_date).toLocaleDateString()}
                       {isInsuranceExpiringSoon(insurance.expiration_date) && ' !'}
+                      {isInsuranceExpiredByTenDays(insurance.expiration_date) && ' (удаляется)'}
                     </span>
                     )
-                    <a
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); startEditingInsurance(insurance); }}
-                      className="insurance-edit-btn"
-                    />
-                    <a
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); deleteInsurance(insurance.id); }}
-                      className="insurance-delete-btn"
-                    />
+                    {!isInsuranceExpiredByTenDays(insurance.expiration_date) && (
+                      <>
+                        <a
+                          href="#"
+                          onClick={(e) => { e.preventDefault(); startEditingInsurance(insurance); }}
+                          className="insurance-edit-btn"
+                        />
+                        <a
+                          href="#"
+                          onClick={(e) => { e.preventDefault(); deleteInsurance(insurance.id); }}
+                          className="insurance-delete-btn"
+                        />
+                      </>
+                    )}
                   </p>
                 </div>
               ))
