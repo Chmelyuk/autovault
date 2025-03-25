@@ -533,7 +533,11 @@ export default function Dashboard({ user, supabase, handleLogout, isDarkTheme = 
       localStorage.removeItem('selectedCarId');
     }
   };
-
+const handleInsuranceDelete = (deletedInsuranceId) => {
+  setInsuranceRecords((prevRecords) =>
+    prevRecords.filter((record) => record.id !== deletedInsuranceId)
+  );
+};
   return (
     <>
      <Header
@@ -584,7 +588,8 @@ export default function Dashboard({ user, supabase, handleLogout, isDarkTheme = 
           supabase={supabase}
           car={car}
           setCar={setCar}
-          insuranceRecords={insuranceRecords} // Передаем записи о страховке
+          insuranceRecords={insuranceRecords} 
+          onInsuranceDelete={handleInsuranceDelete}
         />
 
         <div className="car-details-container">

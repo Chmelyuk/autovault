@@ -5,7 +5,7 @@ import './CarDetails.css';
 import logo_car from '../components/logo_car.png';
 import imageCompression from 'browser-image-compression';
 
-export default function CarDetails({ user, car, setCar, insuranceRecords }) {
+export default function CarDetails({ user, car, setCar, insuranceRecords, onInsuranceDelete }) {
   const { t } = useTranslation();
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
@@ -321,6 +321,11 @@ export default function CarDetails({ user, car, setCar, insuranceRecords }) {
 
     if (error) {
       console.error("Ошибка при удалении страховки:", error.message);
+    } else {
+      // Уведомляем родительский компонент об удалении
+      if (onInsuranceDelete) {
+        onInsuranceDelete(insuranceId);
+      }
     }
   };
 
@@ -389,7 +394,7 @@ export default function CarDetails({ user, car, setCar, insuranceRecords }) {
                 </div>
               ))
             ) : (
-              <p className="car-text">{t('noInsuranceData')}</p>
+              <p className="car-text">{t(' ')}</p>
             )}
           </>
         )}
