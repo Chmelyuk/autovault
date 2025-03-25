@@ -21,15 +21,39 @@ export default function CarDetails({ user, car, setCar }) {
   const [showDetails, setShowDetails] = useState(false);
   const [carImage, setCarImage] = useState(logo_car);
   const [isUploading, setIsUploading] = useState(false);
+  const [editingInsuranceId, setEditingInsuranceId] = useState(null);
+  const [editedInsuranceCompany, setEditedInsuranceCompany] = useState("");
+  const [editedExpirationDate, setEditedExpirationDate] = useState("");
+  const [insuranceRecords, setInsuranceRecords] = useState([]);
+  const [isEditInsuranceModalOpen, setIsEditInsuranceModalOpen] = useState(false);
+
+  const isInsuranceExpiringSoon = (expirationDate) => {
+    const expirationDateObj = new Date(expirationDate);
+    const currentDate = new Date();
+    const daysUntilExpiration = Math.ceil((expirationDateObj - currentDate) / (1000 * 60 * 60 * 24));
+    return daysUntilExpiration <= 30;
+  };
 
   useEffect(() => {
     console.log("Car prop updated:", car);
     if (car && car.id) {
-      fetchImage(car.id);
-    } else {
-      setCarImage(logo_car);
+      fetchInsuranceRecords(car.id);
     }
   }, [car]);
+
+  const fetchInsuranceRecords = async (carId) => {
+    try {
+      const { data, error } = await supabase
+        .from('insurance')
+        .select('*')
+        .eq('car_id', carId);
+
+      if (error) throw error;
+      setInsuranceRecords(data || []);
+    } catch (error) {
+      console.error("Ошибка при загрузке страховок:", error.message);
+    }
+  };
 
   const fetchBrands = async (input) => {
     const trimmedInput = input.trim();
@@ -162,6 +186,8 @@ export default function CarDetails({ user, car, setCar }) {
         .from('car-images')
         .getPublicUrl(filePath);
 
+      console.log(`Trying path: ${filePath}, URL: ${data?.publicUrl}`);
+
       try {
         const response = await fetch(data.publicUrl, { method: 'HEAD' });
         if (response.ok) {
@@ -174,19 +200,23 @@ export default function CarDetails({ user, car, setCar }) {
     }
 
     if (publicUrl) {
+      console.log("Setting image URL for car", carId, ":", publicUrl);
       setCarImage(publicUrl);
     } else {
+      console.error("Изображение не найдено для car.id:", carId);
       setCarImage(logo_car);
     }
   };
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file || !car || !car.id) {
-      console.error("Нет файла или car.id");
-      return;
+  useEffect(() => {
+    if (car && car.id) {
+      fetchImage(car.id);
+    } else {
+      setCarImage(logo_car);
     }
+  }, [car?.id]);
 
+  const handleImageClick = async () => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (!user || authError) {
       console.error("Пользователь не авторизован:", authError?.message);
@@ -194,74 +224,164 @@ export default function CarDetails({ user, car, setCar }) {
       return;
     }
 
-    setIsUploading(true);
-    try {
-      const options = {
-        maxSizeMB: 0.05,
-        maxWidthOrHeight: 800,
-        useWebWorker: true,
-        initialQuality: 0.7,
-      };
+    if (!car || !car.id) {
+      alert("Выберите автомобиль перед загрузкой изображения");
+      return;
+    }
 
-      console.log("Original file size:", (file.size / 1024).toFixed(2), "KB");
-      const compressedFile = await imageCompression(file, options);
-      console.log("Compressed file size:", (compressedFile.size / 1024).toFixed(2), "KB");
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (file && car && car.id) {
+        setIsUploading(true);
+        try {
+          const options = {
+            maxSizeMB: 0.05,
+            maxWidthOrHeight: 800,
+            useWebWorker: true,
+            initialQuality: 0.7,
+          };
 
-      const fileExt = file.name.split('.').pop().toLowerCase();
-      const fileName = `car_${car.id}.${fileExt}`;
-      const filePath = `${car.id}/${fileName}`;
+          console.log("Original file size:", (file.size / 1024).toFixed(2), "KB");
+          const compressedFile = await imageCompression(file, options);
+          console.log("Compressed file size:", (compressedFile.size / 1024).toFixed(2), "KB");
 
-      if (car.image_path) {
-        const { error: removeError } = await supabase.storage
-          .from('car-images')
-          .remove([car.image_path]);
-        if (removeError) {
-          console.warn("Не удалось удалить старое изображение:", removeError.message);
+          const fileExt = file.name.split('.').pop().toLowerCase();
+          const fileName = `car_${car.id}.${fileExt}`;
+          const filePath = `${car.id}/${fileName}`;
+
+          if (car.image_path) {
+            const { error: removeError } = await supabase.storage
+              .from('car-images')
+              .remove([car.image_path]);
+            if (removeError) {
+              console.warn("Не удалось удалить старое изображение:", removeError.message);
+            } else {
+              console.log("Старое изображение удалено:", car.image_path);
+            }
+          } else {
+            const possibleExtensions = ['jpg', 'png', 'jpeg', 'webp'];
+            const pathsToRemove = possibleExtensions.map(ext => `${car.id}/car_${car.id}.${ext}`);
+            const { error: removeError } = await supabase.storage
+              .from('car-images')
+              .remove(pathsToRemove);
+            if (removeError) {
+              console.log("Не удалось удалить старые файлы (возможно, их нет):", removeError.message);
+            }
+          }
+
+          console.log("Uploading to path:", filePath);
+          const { error: uploadError } = await supabase.storage
+            .from('car-images')
+            .upload(filePath, compressedFile, {
+              cacheControl: '3600',
+              upsert: true,
+            });
+
+          if (uploadError) {
+            console.error("Ошибка загрузки:", uploadError.message);
+            throw uploadError;
+          }
+
+          const { data: updatedCar, error: updateError } = await supabase
+            .from('cars')
+            .update({ image_path: filePath })
+            .eq('id', car.id)
+            .select("*")
+            .single();
+
+          if (updateError) {
+            console.error("Ошибка сохранения пути:", updateError.message);
+            throw updateError;
+          }
+
+          const { data: urlData } = supabase.storage
+            .from('car-images')
+            .getPublicUrl(filePath);
+
+          const freshUrl = `${urlData.publicUrl}?v=${Date.now()}`;
+          console.log("Image uploaded for car", car.id, "URL:", freshUrl);
+
+          const response = await fetch(freshUrl, { method: 'HEAD' });
+          if (response.ok) {
+            setCar(updatedCar);
+            setCarImage(freshUrl);
+          } else {
+            throw new Error("Загруженный файл недоступен");
+          }
+        } catch (error) {
+          console.error("Ошибка при обработке изображения:", error.message);
+          setCarImage(logo_car);
+        } finally {
+          setIsUploading(false);
         }
       }
+    };
+    input.click();
+  };
 
-      const { error: uploadError } = await supabase.storage
-        .from('car-images')
-        .upload(filePath, compressedFile, {
-          cacheControl: '3600',
-          upsert: true,
-        });
+  const handleImageError = (e) => {
+    console.error("Image failed to load:", carImage);
+    setCarImage(logo_car);
+  };
 
-      if (uploadError) {
-        console.error("Ошибка загрузки:", uploadError.message);
-        throw uploadError;
-      }
+  const startEditingInsurance = (insurance) => {
+    setEditingInsuranceId(insurance.id);
+    setEditedInsuranceCompany(insurance.insurance_company);
+    setEditedExpirationDate(new Date(insurance.expiration_date).toISOString().split('T')[0]);
+    setIsEditInsuranceModalOpen(true);
+  };
 
-      const { data: updatedCar, error: updateError } = await supabase
-        .from('cars')
-        .update({ image_path: filePath })
-        .eq('id', car.id)
-        .select("*")
-        .single();
+  const saveEditedInsurance = async (insuranceId) => {
+    if (!editedInsuranceCompany || !editedExpirationDate) {
+      alert(t('fillAllFields'));
+      return;
+    }
 
-      if (updateError) {
-        console.error("Ошибка сохранения пути:", updateError.message);
-        throw updateError;
-      }
+    const { data, error } = await supabase
+      .from('insurance')
+      .update({
+        insurance_company: editedInsuranceCompany,
+        expiration_date: editedExpirationDate,
+      })
+      .eq('id', insuranceId)
+      .select("*")
+      .single();
 
-      const { data: urlData } = supabase.storage
-        .from('car-images')
-        .getPublicUrl(filePath);
-
-      const freshUrl = `${urlData.publicUrl}?v=${Date.now()}`;
-      setCar(updatedCar);
-      setCarImage(freshUrl);
-    } catch (error) {
-      console.error("Ошибка при обработке изображения:", error.message);
-      setCarImage(logo_car);
-    } finally {
-      setIsUploading(false);
+    if (error) {
+      console.error("Ошибка при обновлении страховки:", error.message);
+    } else {
+      const updatedRecords = insuranceRecords.map(record =>
+        record.id === insuranceId ? data : record
+      );
+      setInsuranceRecords(updatedRecords);
+      setEditingInsuranceId(null);
+      setIsEditInsuranceModalOpen(false);
     }
   };
 
-  const handleImageError = () => {
-    console.error("Image failed to load:", carImage);
-    setCarImage(logo_car);
+  const cancelEditInsuranceModal = () => {
+    setIsEditInsuranceModalOpen(false);
+    setEditingInsuranceId(null);
+    setEditedInsuranceCompany("");
+    setEditedExpirationDate("");
+  };
+
+  const deleteInsurance = async (insuranceId) => {
+    const { error } = await supabase
+      .from('insurance')
+      .delete()
+      .eq('id', insuranceId)
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error("Ошибка при удалении страховки:", error.message);
+    } else {
+      const updatedRecords = insuranceRecords.filter(record => record.id !== insuranceId);
+      setInsuranceRecords(updatedRecords);
+    }
   };
 
   return car ? (
@@ -273,20 +393,13 @@ export default function CarDetails({ user, car, setCar }) {
             <div className="spinner"></div>
           </div>
         ) : (
-          <label className="car-image-button">
-            <img
-              src={carImage}
-              alt="Car"
-              onError={handleImageError}
-              className="car-image"
-            />
-            <input
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
-            />
-          </label>
+          <img
+            src={carImage}
+            alt="Car"
+            onClick={handleImageClick}
+            onError={handleImageError}
+            className="car-image"
+          />
         )}
       </div>
       <div className="info">
@@ -301,9 +414,76 @@ export default function CarDetails({ user, car, setCar }) {
             <p className="car-text">{t('mileage')}: {car.mileage} {t('km')}</p>
             <p className="car-text">{t('fuelType')}: {t(car.fuelType)}</p>
             <p className="car-text">{t('transmission')}: {t(car.transmissionType)}</p>
+            {insuranceRecords.length > 0 ? (
+              insuranceRecords.map((insurance, index) => (
+                <div key={index} className="insurance-record">
+                  <p className="car-text">
+                    {t('insurance')}: {insurance.insurance_company} (
+                    <span
+                      style={{
+                        color: isInsuranceExpiringSoon(insurance.expiration_date) ? '#e74c3c' : '#bad3eb',
+                      }}
+                    >
+                      {new Date(insurance.expiration_date).toLocaleDateString()}
+                      {isInsuranceExpiringSoon(insurance.expiration_date) && ' !'}
+                    </span>
+                    )
+                    <a
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); startEditingInsurance(insurance); }}
+                      className="insurance-edit-btn"
+                    />
+                    <a
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); deleteInsurance(insurance.id); }}
+                      className="insurance-delete-btn"
+                    />
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="car-text">{t(' ')}</p>
+            )}
           </>
         )}
       </div>
+      {isEditInsuranceModalOpen && (
+        <div className="modal" onClick={cancelEditInsuranceModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>{t('editInsurance')}</h3>
+            <form
+              className="edit-insurance-modal"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!editedInsuranceCompany || !editedExpirationDate) {
+                  alert(t('fillAllFields'));
+                  return;
+                }
+                saveEditedInsurance(editingInsuranceId);
+                setIsEditInsuranceModalOpen(false);
+              }}
+            >
+              <input
+                type="text"
+                placeholder={t('insuranceCompany')}
+                value={editedInsuranceCompany}
+                onChange={(e) => setEditedInsuranceCompany(e.target.value)}
+              />
+              <input
+                type="date"
+                value={editedExpirationDate}
+                onChange={(e) => setEditedExpirationDate(e.target.value)}
+              />
+              <div className="modal-buttons">
+                <button type="submit" className="save-btn">{t('save')}</button>
+                <button type="button" className="cancel-btn" onClick={cancelEditInsuranceModal}>
+                  {t('cancel')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   ) : (
     <div className="add-car-form">

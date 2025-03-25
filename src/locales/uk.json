@@ -234,7 +234,13 @@
   "passwordUpdated": "Пароль успішно оновлено!",
   "backToLogin": "Повернутися до входу",
   "enterEmail": "Будь ласка, введіть вашу електронну пошту.",
-  "enterEmailPasswordAndAgree": "Будь ласка, введіть email, пароль і погодьтеся з умовами."
+  "enterEmailPasswordAndAgree": "Будь ласка, введіть email, пароль і погодьтеся з умовами.",
+  "addInsurance": "Додати страховку",
+  "insuranceCompany": "Страхова компанія",
+  "contractDate": "Дата договору",
+  "insurance": "Страховка",
+  "editInsurance": "Редагувати страховку",
+  "fillRequiredFields": "Будь ласка, заповніть усі обов'язкові поля"
     
 
   

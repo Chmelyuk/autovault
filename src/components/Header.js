@@ -7,7 +7,7 @@ import CarTracker from './CarTracker';
 import { supabase } from "../supabaseClient";
 import logo from '../components/logo.png';
 
-export default function Header({ user, handleLogout, fetchCars, fetchRepairs, fetchMaintenance, selectedCar, cars = [] }) {
+export default function Header({ user, handleLogout, fetchCars, fetchRepairs, fetchMaintenance, fetchInsurance, selectedCar, cars = [] }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
   const [qrData, setQrData] = useState(null);
@@ -375,10 +375,23 @@ export default function Header({ user, handleLogout, fetchCars, fetchRepairs, fe
         return;
       }
 
-      console.log("✅ Автомобиль, ремонты и записи ТО успешно переданы новому владельцу!");
-      fetchCars();
-      fetchRepairs(carId);
-      fetchMaintenance(carId);
+      const { error: insuranceUpdateError } = await supabase
+        .from("insurance")
+        .update({ user_id: user.id })
+        .eq("car_id", carId);
+
+      if (insuranceUpdateError) {
+        console.error("❌ Ошибка при обновлении страховок:", insuranceUpdateError);
+        return;
+      }
+
+      console.log("✅ Автомобиль, ремонты, ТО и страховки успешно переданы новому владельцу!");
+      await Promise.all([
+        fetchCars(),
+        fetchRepairs(carId),
+        fetchMaintenance(carId),
+        fetchInsurance(carId),
+      ]);
       setShowQRScanner(false);
       setIsDropdownOpen(false);
     } catch (error) {
@@ -396,7 +409,6 @@ export default function Header({ user, handleLogout, fetchCars, fetchRepairs, fe
   };
 
   const updateCar = async () => {
-    // Валидация mileage
     if (editCar.mileage && (isNaN(parseInt(editCar.mileage)) || parseInt(editCar.mileage) < 0)) {
       alert(t("mileageMustBeNonNegative"));
       return;
@@ -727,7 +739,7 @@ export default function Header({ user, handleLogout, fetchCars, fetchRepairs, fe
                   <input
                     type="text"
                     name="brand"
-                    placeholder={t('brand')}
+                    placeholder={t(' ex-brand')}
                     value={editCar.brand}
                     onChange={handleEditCarChange}
                     onBlur={handleBlur}
@@ -792,7 +804,7 @@ export default function Header({ user, handleLogout, fetchCars, fetchRepairs, fe
                   name="mileage"
                   placeholder={t('mileage')}
                   value={editCar.mileage}
-                  min="0" // Ограничение на уровне UI
+                  min="0"
                   onChange={handleEditCarChange}
                   className="input-field"
                 />

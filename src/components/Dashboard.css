@@ -156,10 +156,12 @@ body.light-theme .car-details img {
 .action-buttons {
     display: flex;
     margin-bottom: 20px;
+    justify-content: space-between;
 }
 
 .add-button {
     margin-right: 10px;
+ 
 }
 
 /* Стили для истории ремонтов и ТО */
@@ -377,6 +379,7 @@ body.light-theme .checkbox-label {
 .modal-actions {
     display: flex;
     justify-content: center;
+    
 }
 
 .select-all-btn {
@@ -897,6 +900,7 @@ body.light-theme .view-text h3 {
     background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%), url('https://www.transparenttextures.com/patterns/dark-mosaic.png');
     background-blend-mode: overlay;
         margin-right: 20px;
+        
     
 }
 

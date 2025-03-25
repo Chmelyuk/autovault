@@ -203,7 +203,13 @@
   "enterEmailPasswordAndAgree": "Please enter email, password, and agree to the terms.",
   "mileageMustBeNonNegative": "Mileage must be a non-negative number",
   "oilChangeMileageMustBeNonNegative": "Oil change mileage must be a non-negative number",
-  "selectAtLeastOneMaintenance": "Please select at least one maintenance option"
+  "selectAtLeastOneMaintenance": "Please select at least one maintenance option",
+  "addInsurance": "Add Insurance",
+  "insuranceCompany": "Insurance Company",
+  "contractDate": "Contract Date",
+  "insurance": "Insurance",
+  "editInsurance": "Edit Insurance",
+  "fillRequiredFields": "Please fill in all required fields"
 
 }
    

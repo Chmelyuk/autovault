@@ -1,3 +1,4 @@
+/* Основной контейнер деталей автомобиля */
 .car-details {
     display: flex;
     flex-direction: column;
@@ -10,22 +11,17 @@
     max-width: 100%;
     padding: 20px;
     margin: 0 auto;
-    /* Центрирование контейнера */
 }
 
 /* Стили для изображения автомобиля */
 .car-details img {
     width: 100%;
-    /* Занимает всю ширину контейнера */
     max-width: 400px;
-    /* Ограничение ширины по умолчанию */
     height: auto;
-    /* Сохранение пропорций */
     border-radius: 10px;
     border: 2px solid #ffffff33;
     margin-bottom: 20px;
     object-fit: cover;
-    /* Обрезка изображения для сохранения пропорций */
 }
 
 /* Контейнер информации */
@@ -44,13 +40,17 @@
 /* Текст автомобиля */
 .car-text {
     color: #bad3eb;
-    margin: 10px 0;
+     
     font-size: 16px;
+    margin: 2%;
+    align-items: center;
+    flex-wrap: nowrap;
 }
 
 .light-theme .car-text {
     color: black;
 }
+
 /* Turbo выделение */
 .car-details .turbo {
     color: #e74c3c;
@@ -162,29 +162,222 @@
     height: 20px;
 }
 
+/* Стили для контейнера спиннера */
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+/* Стили спиннера */
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Анимация вращения */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Стили для контейнера записи о страховке */
+.insurance-record {
+        display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+            width: 100%;
+            flex-wrap: nowrap;
+            /* background-color: #1a2a3a; */
+            padding: 10px;
+            border-radius: 8px;
+}
+ 
+/* Стили для ссылки "Редактировать" */
+.insurance-edit-btn {
+    margin-left: 12px;
+    background: url('/src/components/pencil.png') no-repeat center;
+     
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    background-size: 15px 30px;
+         transition: background-color 0.3s ease, transform 0.2s ease;
+    display: inline-block;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+.insurance-edit-btn:hover {
+     
+    transform: scale(1.1);
+}
+
+/* Стили для ссылки "Удалить" */
+.insurance-delete-btn {
+    margin-left: 8px;
+    background: url('/src/components/trash.png') no-repeat center;
+width: 30px;
+    height: 30px;
+    cursor: pointer;
+    background-size: 25px 30px;
+    
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: inline-block;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+.insurance-delete-btn:hover {
+    
+    transform: scale(1.1);
+}
+
+/* Стили для ссылки "Подтвердить удаление" (с эмодзи ✅) */
+.insurance-delete-btn[href="#"]:has(> :where(✅)) {
+         background-image: none;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.insurance-delete-btn[href="#"]:has(> :where(✅)):hover {
+    background-color: #218838;
+    transform: scale(1.1);
+}
+
+/* Стили для ссылки "Отмена удаления" (с эмодзи ❌) */
+.insurance-cancel-btn {
+    margin-left: 8px;
+     
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+.insurance-cancel-btn:hover {
+    background-color: #c82333;
+    transform: scale(1.1);
+}
+
+/* Переопределяем общий ховер для ссылок внутри .car-text */
+.car-text a:hover {
+    background-color: inherit;
+}
+
+/* Стили для формы редактирования страховки в модальном окне */
+.edit-insurance-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.edit-insurance-modal input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #555;
+    background-color: #333;
+    color: #ffffff;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.edit-insurance-modal input:focus {
+    border-color: #f39c12;
+    outline: none;
+}
+
+.light-theme .edit-insurance-modal input {
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+.edit-insurance-modal .modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    gap: 10px;
+}
+
+.edit-insurance-modal .save-btn,
+.edit-insurance-modal .cancel-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    border: none;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.edit-insurance-modal .save-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.edit-insurance-modal .save-btn:hover {
+    background-color: #218838;
+    transform: scale(1.05);
+}
+
+.edit-insurance-modal .cancel-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.edit-insurance-modal .cancel-btn:hover {
+    background-color: #c82333;
+    transform: scale(1.05);
+}
+
 /* Медиа-запросы для мобильных устройств */
 @media (max-width: 768px) {
     .car-details {
         padding: 15px;
-        /* Уменьшаем отступы */
     }
 
     .car-details img {
         max-width: 100%;
-        /* Полная ширина на мобильных */
         max-height: 250px;
-        /* Ограничение высоты для компактности */
     }
 
     .car-title {
         font-size: 20px;
-        /* Уменьшаем заголовок */
         margin-bottom: 15px;
     }
 
     .car-text {
         font-size: 14px;
-        /* Уменьшаем текст */
     }
 
     .details-button {
@@ -196,7 +389,17 @@
     .add-car-form {
         padding: 15px;
         max-width: 100%;
-        /* Полная ширина на мобильных */
+    }
+
+    .edit-insurance-modal input {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    .edit-insurance-modal .save-btn,
+    .edit-insurance-modal .cancel-btn {
+        font-size: 14px;
+        padding: 8px;
     }
 }
 
@@ -207,7 +410,6 @@
 
     .car-details img {
         max-height: 200px;
-        /* Еще меньше для маленьких экранов */
     }
 
     .car-title {
@@ -239,42 +441,6 @@
     .car-details img {
         max-width: 500px !important;
         height: auto;
-        /* Убираем фиксированную высоту */
         object-fit: contain;
-        /* Показываем изображение целиком */
-    }
-}
-
-/* CarDetails.css */
-
-/* Стили для контейнера спиннера */
-.spinner-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    /* Убедитесь, что контейнер занимает место изображения */
-}
-
-/* Стили спиннера */
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
-    /* Светло-серый фон */
-    border-top: 4px solid #3498db;
-    /* Синий цвет для вращения */
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-/* Анимация вращения */
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
     }
 }

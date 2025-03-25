@@ -237,7 +237,13 @@
   "passwordUpdated": "Пароль успешно обновлен!",
    "backToLogin": "Вернуться к входу",
   "enterEmail": "Пожалуйста, введите вашу почту.",
-  "enterEmailPasswordAndAgree": "Пожалуйста, введите email, пароль и согласитесь с условиями."
+  "enterEmailPasswordAndAgree": "Пожалуйста, введите email, пароль и согласитесь с условиями.",
+  "addInsurance": "Добавить страховку",
+  "insuranceCompany": "Страховая компания",
+  "contractDate": "Дата договора",
+  "insurance": "Страховка",
+  "editInsurance": "Редактировать страховку",
+  "fillRequiredFields": "Пожалуйста, заполните все обязательные поля"
  
 
 
