@@ -5,7 +5,7 @@ import './CarDetails.css';
 import logo_car from '../components/logo_car.png';
 import imageCompression from 'browser-image-compression';
 
-export default function CarDetails({ user, car, setCar }) {
+export default function CarDetails({ user, car, setCar, insuranceRecords }) {
   const { t } = useTranslation();
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
@@ -21,15 +21,25 @@ export default function CarDetails({ user, car, setCar }) {
   const [showDetails, setShowDetails] = useState(false);
   const [carImage, setCarImage] = useState(logo_car);
   const [isUploading, setIsUploading] = useState(false);
+  const [editingInsuranceId, setEditingInsuranceId] = useState(null);
+  const [editedInsuranceCompany, setEditedInsuranceCompany] = useState("");
+  const [editedExpirationDate, setEditedExpirationDate] = useState("");
+  const [isEditInsuranceModalOpen, setIsEditInsuranceModalOpen] = useState(false);
+
+  const isInsuranceExpiringSoon = (expirationDate) => {
+    const expirationDateObj = new Date(expirationDate);
+    const currentDate = new Date();
+    const daysUntilExpiration = Math.ceil((expirationDateObj - currentDate) / (1000 * 60 * 60 * 24));
+    return daysUntilExpiration <= 30;
+  };
 
   useEffect(() => {
-    console.log("Car prop updated:", car);
     if (car && car.id) {
       fetchImage(car.id);
     } else {
       setCarImage(logo_car);
     }
-  }, [car]);
+  }, [car?.id]);
 
   const fetchBrands = async (input) => {
     const trimmedInput = input.trim();
@@ -264,6 +274,56 @@ export default function CarDetails({ user, car, setCar }) {
     setCarImage(logo_car);
   };
 
+  const startEditingInsurance = (insurance) => {
+    setEditingInsuranceId(insurance.id);
+    setEditedInsuranceCompany(insurance.insurance_company);
+    setEditedExpirationDate(new Date(insurance.expiration_date).toISOString().split('T')[0]);
+    setIsEditInsuranceModalOpen(true);
+  };
+
+  const saveEditedInsurance = async (insuranceId) => {
+    if (!editedInsuranceCompany || !editedExpirationDate) {
+      alert(t('fillAllFields'));
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('insurance')
+      .update({
+        insurance_company: editedInsuranceCompany,
+        expiration_date: editedExpirationDate,
+      })
+      .eq('id', insuranceId)
+      .select("*")
+      .single();
+
+    if (error) {
+      console.error("Ошибка при обновлении страховки:", error.message);
+    } else {
+      setEditingInsuranceId(null);
+      setIsEditInsuranceModalOpen(false);
+    }
+  };
+
+  const cancelEditInsuranceModal = () => {
+    setIsEditInsuranceModalOpen(false);
+    setEditingInsuranceId(null);
+    setEditedInsuranceCompany("");
+    setEditedExpirationDate("");
+  };
+
+  const deleteInsurance = async (insuranceId) => {
+    const { error } = await supabase
+      .from('insurance')
+      .delete()
+      .eq('id', insuranceId)
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error("Ошибка при удалении страховки:", error.message);
+    }
+  };
+
   return car ? (
     <div className="car-details">
       <h3 className="car-title">{t('yourCar')}</h3>
@@ -301,9 +361,75 @@ export default function CarDetails({ user, car, setCar }) {
             <p className="car-text">{t('mileage')}: {car.mileage} {t('km')}</p>
             <p className="car-text">{t('fuelType')}: {t(car.fuelType)}</p>
             <p className="car-text">{t('transmission')}: {t(car.transmissionType)}</p>
+            {insuranceRecords.length > 0 ? (
+              insuranceRecords.map((insurance, index) => (
+                <div key={index} className="insurance-record">
+                  <p className="car-text">
+                    {t('insurance')}: {insurance.insurance_company} (
+                    <span
+                      style={{
+                        color: isInsuranceExpiringSoon(insurance.expiration_date) ? '#e74c3c' : '#bad3eb',
+                      }}
+                    >
+                      {new Date(insurance.expiration_date).toLocaleDateString()}
+                      {isInsuranceExpiringSoon(insurance.expiration_date) && ' !'}
+                    </span>
+                    )
+                    <a
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); startEditingInsurance(insurance); }}
+                      className="insurance-edit-btn"
+                    />
+                    <a
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); deleteInsurance(insurance.id); }}
+                      className="insurance-delete-btn"
+                    />
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="car-text">{t('noInsuranceData')}</p>
+            )}
           </>
         )}
       </div>
+      {isEditInsuranceModalOpen && (
+        <div className="modal" onClick={cancelEditInsuranceModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>{t('editInsurance')}</h3>
+            <form
+              className="edit-insurance-modal"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!editedInsuranceCompany || !editedExpirationDate) {
+                  alert(t('fillAllFields'));
+                  return;
+                }
+                saveEditedInsurance(editingInsuranceId);
+              }}
+            >
+              <input
+                type="text"
+                placeholder={t('insuranceCompany')}
+                value={editedInsuranceCompany}
+                onChange={(e) => setEditedInsuranceCompany(e.target.value)}
+              />
+              <input
+                type="date"
+                value={editedExpirationDate}
+                onChange={(e) => setEditedExpirationDate(e.target.value)}
+              />
+              <div className="modal-buttons">
+                <button type="submit" className="save-btn">{t('save')}</button>
+                <button type="button" className="cancel-btn" onClick={cancelEditInsuranceModal}>
+                  {t('cancel')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   ) : (
     <div className="add-car-form">
