@@ -209,7 +209,8 @@
   "contractDate": "Contract Date",
   "insurance": "Insurance",
   "editInsurance": "Edit Insurance",
-  "fillRequiredFields": "Please fill in all required fields"
+  "fillRequiredFields": "Please fill in all required fields",
+  "yearError": "Year must be 1900 and current year"
 
 }
    

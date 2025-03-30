@@ -25,6 +25,7 @@ export default function CarDetails({ user, car, setCar, insuranceRecords, onInsu
   const [editedInsuranceCompany, setEditedInsuranceCompany] = useState("");
   const [editedExpirationDate, setEditedExpirationDate] = useState("");
   const [isEditInsuranceModalOpen, setIsEditInsuranceModalOpen] = useState(false);
+  const [yearError, setYearError] = useState("");
 
   const isInsuranceExpiringSoon = (expirationDate) => {
     const expirationDateObj = new Date(expirationDate);
@@ -513,18 +514,28 @@ export default function CarDetails({ user, car, setCar, insuranceRecords, onInsu
           ))}
         </ul>
       )}
-     <input
-  type="number"
-  placeholder={t('year')}
-  value={year}
-  onChange={(e) => {
-    const value = e.target.value;
-    if (value === "" || (parseInt(value) >= 0 && !isNaN(parseInt(value)))) {
+    <div className="input-container">
+  <input
+    type="text"
+    placeholder={t('year')}
+    value={year}
+    onChange={(e) => {
+      const value = e.target.value;
       setYear(value);
-    }
-  }}
-  className="input-field"
-/>
+      const numValue = parseInt(value, 10);
+      const currentYear = new Date().getFullYear();
+      if (value === "") {
+        setYearError("");
+      } else if (isNaN(numValue) || numValue < 1900 || numValue > currentYear) {
+        setYearError(t('yearError'));
+      } else {
+        setYearError("");
+      }
+    }}
+    className="input-field"
+  />
+  {yearError && <span className="year-error">{yearError}</span>}
+</div>
       <input
         type="text"
         placeholder={t('engine')}

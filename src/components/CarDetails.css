@@ -103,6 +103,8 @@
     padding: 10px;
     border-radius: 5px;
     font-size: 16px;
+        width: 90%;
+        margin-top: 0;
 }
 
 .add-car-form input:focus,
@@ -113,7 +115,6 @@
 
 .add-car-form button {
     background-color: #f39c12;
-    color: #000;
     font-size: 18px;
     padding: 10px;
     border: none;
@@ -417,7 +418,8 @@ width: 30px;
     }
 
     .car-text {
-        font-size: 12px;
+            font-size: 1rem;
+                padding: 0.2rem;
     }
 
     .details-button {
@@ -443,4 +445,17 @@ width: 30px;
         height: auto;
         object-fit: contain;
     }
+}
+
+.input-container {
+    position: relative;
+   
+    
+}
+
+.year-error {
+    color: red;
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
 }
