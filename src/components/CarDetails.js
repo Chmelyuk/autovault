@@ -37,7 +37,7 @@ export default function CarDetails({ user, car, setCar, insuranceRecords, onInsu
     const expirationDateObj = new Date(expirationDate);
     const currentDate = new Date();
     const daysSinceExpiration = Math.ceil((currentDate - expirationDateObj) / (1000 * 60 * 60 * 24));
-    return daysSinceExpiration > 10; // Истекло более 10 дней назад
+    return daysSinceExpiration > 10;
   };
 
   const autoDeleteExpiredInsurance = async () => {
@@ -513,18 +513,28 @@ export default function CarDetails({ user, car, setCar, insuranceRecords, onInsu
           ))}
         </ul>
       )}
-      <input
-        type="number"
-        placeholder={t('year')}
-        value={year}
-        onChange={(e) => setYear(e.target.value)}
-        className="input-field"
-      />
+     <input
+  type="number"
+  placeholder={t('year')}
+  value={year}
+  onChange={(e) => {
+    const value = e.target.value;
+    if (value === "" || (parseInt(value) >= 0 && !isNaN(parseInt(value)))) {
+      setYear(value);
+    }
+  }}
+  className="input-field"
+/>
       <input
         type="text"
         placeholder={t('engine')}
         value={engine}
-        onChange={(e) => setEngine(e.target.value)}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value === '' || /^\d*\.?\d*$/.test(value)) {
+            setEngine(value);
+          }
+        }}
         className="input-field"
       />
       <input
