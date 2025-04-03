@@ -177,14 +177,15 @@ export default function Dashboard({ user, supabase, handleLogout, isDarkTheme = 
   }, [supabase, user]);
 
   const fetchRepairCategories = useCallback(async () => {
-    if (repairCategories.length > 0) return;
-    const { data, error } = await supabase.from("repair_categories").select("id, name");
-    if (error) {
-      console.error("Ошибка при загрузке категорий:", error.message);
-    } else {
-      setRepairCategories(data.map(cat => ({ ...cat, name: t(cat.name) })));
-    }
-  }, [supabase, t, repairCategories.length]);
+  if (repairCategories.length > 0) return;
+  const { data, error } = await supabase.from("repair_categories").select("id, name");
+  if (error) {
+    console.error("Ошибка при загрузке категорий:", error.message);
+  } else {
+    console.log("Raw repairCategories:", data); // Отладка
+    setRepairCategories(data || []);
+  }
+}, [supabase, repairCategories.length]);
 
   const fetchCars = useCallback(async () => {
     if (!user) return;
@@ -239,18 +240,19 @@ export default function Dashboard({ user, supabase, handleLogout, isDarkTheme = 
   };
 
   const fetchRepairSubcategories = async (categoryId) => {
-    if (!categoryId || categoryId === "other") return;
-    const { data, error } = await supabase
-      .from("repair_subcategories")
-      .select("*")
-      .eq("category_id", categoryId);
+  if (!categoryId || categoryId === "other") return;
+  const { data, error } = await supabase
+    .from("repair_subcategories")
+    .select("*")
+    .eq("category_id", categoryId);
 
-    if (error) {
-      console.error("Ошибка при загрузке подкатегорий:", error.message);
-    } else {
-      setRepairSubcategories(data.map(sub => ({ ...sub, name: t(sub.name) })));
-    }
-  };
+  if (error) {
+    console.error("Ошибка при загрузке подкатегорий:", error.message);
+  } else {
+    console.log("Raw repairSubcategories:", data); // Отладка
+    setRepairSubcategories(data || []);
+  }
+};
 
   const updateCarMileage = async (newMileage) => {
     if (!car || !newMileage || newMileage <= car.mileage) return;
@@ -270,51 +272,58 @@ export default function Dashboard({ user, supabase, handleLogout, isDarkTheme = 
   };
 
   const addRepair = async () => {
-    if (!car || !repairCategory) {
-      alert(t("fillRequiredFields"));
-      return;
-    }
+  if (!car || !repairCategory) {
+    alert(t("fillRequiredFields"));
+    return;
+  }
 
-    if (repairMileage && (isNaN(parseInt(repairMileage)) || parseInt(repairMileage) < 0)) {
-      alert(t("mileageMustBeNonNegative"));
-      return;
-    }
+  if (repairMileage && (isNaN(parseInt(repairMileage)) || parseInt(repairMileage) < 0)) {
+    alert(t("mileageMustBeNonNegative"));
+    return;
+  }
 
-    const categoryName = repairCategory === "other"
-      ? customCategory || "Other"
-      : repairCategories.find(cat => String(cat.id) === String(repairCategory))?.name || "Other";
+  console.log("repairCategory:", repairCategory); // Отладка
+  const selectedCategory = repairCategories.find(cat => String(cat.id) === String(repairCategory));
+  const categoryName = repairCategory === "other"
+    ? customCategory || "Other"
+    : selectedCategory ? selectedCategory.name : "Other";
+  console.log("categoryName:", categoryName); // Отладка
 
-    const subcategoryName = repairSubcategory === "other"
-      ? customCategory
-      : repairSubcategories.find(sub => String(sub.id) === String(repairSubcategory))?.name || repairSubcategory;
+  console.log("repairSubcategory:", repairSubcategory); // Отладка
+  const selectedSubcategory = repairSubcategories.find(sub => String(sub.id) === String(repairSubcategory));
+  const subcategoryName = repairSubcategory === "other"
+    ? customCategory
+    : selectedSubcategory ? selectedSubcategory.name : null;
+  console.log("subcategoryName:", subcategoryName); // Отладка
 
-    const today = new Date().toISOString().split("T")[0];
-    const formattedDate = repairDate || today;
+  const today = new Date().toISOString().split("T")[0];
+  const formattedDate = repairDate || today;
 
-    const { data, error } = await supabase.from("repairs").insert([{
-      user_id: user.id,
-      car_id: car.id,
-      category: categoryName,
-      subcategory: subcategoryName || null,
-      description: repairDescription || null,
-      mileage: repairMileage ? parseInt(repairMileage) : null,
-      date: formattedDate,
-    }]).select("*");
+  const { data, error } = await supabase.from("repairs").insert([{
+    user_id: user.id,
+    car_id: car.id,
+    category: categoryName,
+    subcategory: subcategoryName || null,
+    description: repairDescription || null,
+    mileage: repairMileage ? parseInt(repairMileage) : null,
+    date: formattedDate,
+  }]).select("*");
 
-    if (error) {
-      console.error("Ошибка при добавлении ремонта:", error.message);
-    } else {
-      setRepairs(prev => [...prev, ...data]);
-      setIsRepairModalOpen(false);
-      setRepairCategory("");
-      setRepairSubcategory("");
-      setCustomCategory("");
-      setRepairDescription("");
-      setRepairMileage("");
-      setRepairDate("");
-      if (repairMileage && parseInt(repairMileage) > car.mileage) updateCarMileage(parseInt(repairMileage));
-    }
-  };
+  if (error) {
+    console.error("Ошибка при добавлении ремонта:", error.message);
+  } else {
+    console.log("Записанные данные:", data); // Отладка
+    setRepairs(prev => [...prev, ...data]);
+    setIsRepairModalOpen(false);
+    setRepairCategory("");
+    setRepairSubcategory("");
+    setCustomCategory("");
+    setRepairDescription("");
+    setRepairMileage("");
+    setRepairDate("");
+    if (repairMileage && parseInt(repairMileage) > car.mileage) updateCarMileage(parseInt(repairMileage));
+  }
+};
 
   const addMaintenance = async () => {
     if (!car) return;
@@ -739,20 +748,20 @@ const handleInsuranceDelete = (deletedInsuranceId) => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>{t('addRepair')}</h3>
             <select value={repairCategory} onChange={(e) => { setRepairCategory(e.target.value); fetchRepairSubcategories(e.target.value); }}>
-              <option value="">{t('selectCategory')}</option>
-              {repairCategories.map(cat => (
-                <option key={cat.id} value={cat.id}>{t(cat.name)}</option>
-              ))}
-              <option value="other">{t('other')}</option>
-            </select>
+  <option value="">{t('selectCategory')}</option>
+  {repairCategories.map(cat => (
+    <option key={cat.id} value={cat.id}>{t(cat.name)}</option>
+  ))}
+  <option value="other">{t('other')}</option>
+</select>
             {repairCategory && repairCategory !== "other" && (
               <select value={repairSubcategory} onChange={(e) => setRepairSubcategory(e.target.value)}>
-                <option value="">{t('selectSubcategory')}</option>
-                {repairSubcategories.map(sub => (
-                  <option key={sub.id} value={sub.name}>{t(sub.name)}</option>
-                ))}
-                <option value="other">{t('other')}</option>
-              </select>
+  <option value="">{t('selectSubcategory')}</option>
+  {repairSubcategories.map(sub => (
+    <option key={sub.id} value={sub.id}>{t(sub.name)}</option>
+  ))}
+  <option value="other">{t('other')}</option>
+</select>
             )}
             {(repairCategory === "other" || repairSubcategory === "other") && (
               <input type="text" placeholder={repairCategory === "other" ? t('enterCustomCategory') : t('enterCustomSubcategory')} value={customCategory} onChange={(e) => setCustomCategory(e.target.value)} />
